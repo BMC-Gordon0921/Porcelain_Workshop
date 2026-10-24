@@ -15,7 +15,7 @@ await page.route('**/__map-test-fixture',route=>route.fulfill({contentType:'text
 async function enter(){await page.locator('#unfold-map').click();await page.locator('#start-button').click();}
 async function seed(c){await page.goto(url+'__map-test-fixture');await page.evaluate(({key,data})=>{localStorage.setItem(key,JSON.stringify(data));sessionStorage.setItem(key,JSON.stringify(data));},{key:SAVE_KEY,data:c.serialize()});await page.goto(url);await enter();}
 const read=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),SAVE_KEY);
-const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(9);c.submit();};
+const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(60);c.submit();};
 try{
  await page.goto(url);await page.locator('#unfold-map').waitFor();
  assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');assert.equal(await page.locator('.opening-map-phase').isVisible(),false);
@@ -31,7 +31,7 @@ try{
  await page.locator('#map-continue').click();await page.locator('#brief-done').click();await page.screenshot({path:out+'map-location-1.png'});
  console.log('PASS: introduction precedes map; explicit map entry, pause, skip, rewind/resume; future pins cannot skip progression');
  // Replaying the opening never resets a sculpture or wallet.
- const edited=new SculptureChallenge();edited.collectClay();edited.piece.pixels[5000]=2;edited.money=70;await seed(edited);await page.locator('#brief-done').click();const beforeReplay=await read();await page.locator('#map-button').click();await page.locator('#map-replay-opening').click();assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');await enter();assert.deepEqual(await read(),beforeReplay);
+ const edited=new SculptureChallenge();edited.collectClay();edited.piece.pixels[5000]=2;edited.money=70;await seed(edited);await page.locator('#brief-done').click();const beforeReplay=await read();await page.locator('#map-button').click();await page.locator('#map-replay-opening').click();assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');await enter();const afterReplay=await read();assert.ok(afterReplay.efficiency.elapsedMs>=beforeReplay.efficiency.elapsedMs);assert.ok(afterReplay.efficiency.elapsedMs-beforeReplay.efficiency.elapsedMs<2000);assert.deepEqual({...afterReplay,efficiency:beforeReplay.efficiency},beforeReplay);
  console.log('PASS: replay preserves live clay, money and scene');
  let c=new SculptureChallenge();
  for(let scene=0;scene<3;scene++){

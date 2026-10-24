@@ -1,20 +1,22 @@
 // A small, deterministic relief canvas: 0 is empty, 1–5 are actual clay/paint colors.
 export const SIZE = 112;
 import {SCENES, DECAL_PRICE, rewardForScore} from './campaign.js';
+import {WORKBENCH_IDS,UPGRADE_COSTS,freshWorkshopLevels,restoreWorkshopLevels,KILN_ROUNDS,kilnRoundCount,kilnWindows,aggregateKilnGrade,orderIncome,EFFICIENCY_LIMIT_MS} from './workshop.js';
 export const PASS_SCORE = 80;
 // Firing is a timing beat: a needle sweeps an annulus, Space locks the heat in.
-export const KILN_SECONDS = 9;
-export const KILN_WINDOWS = {perfect:[.62,.7],good:[.5,.8]};
+export const KILN_SECONDS = KILN_ROUNDS[0].seconds;
+export const KILN_WINDOWS = kilnWindows(0);
 export const KILN_GRADES = {
  perfect:{id:'perfect',label:'完美',multiplier:1.25},
  good:{id:'good',label:'成功',multiplier:1.1},
  plain:{id:'plain',label:'一般',multiplier:1},
 };
-export function kilnGradeAt(progress){
+export function kilnGradeAt(progress,round=0){
  // Timer arithmetic can put an exact boundary one floating-point step outside.
  const p=Math.round(Math.min(1,Math.max(0,progress))*1e12)/1e12;
- if(p>=KILN_WINDOWS.perfect[0]&&p<=KILN_WINDOWS.perfect[1])return KILN_GRADES.perfect;
- if(p>=KILN_WINDOWS.good[0]&&p<=KILN_WINDOWS.good[1])return KILN_GRADES.good;
+ const windows=kilnWindows(round);
+ if(p>=windows.perfect[0]-1e-12&&p<=windows.perfect[1]+1e-12)return KILN_GRADES.perfect;
+ if(p>=windows.good[0]-1e-12&&p<=windows.good[1]+1e-12)return KILN_GRADES.good;
  return KILN_GRADES.plain;
 }
 export const PALETTE = [null, '#f2efe5', '#315fa9'];
@@ -61,11 +63,35 @@ export function makeBlank(){
  return pixels;
 }
 export const STATION_TOOLS={wheel:'push',carve:'cut',paint:'paint'};
+function rowBounds(pixels,row,horizontal=true){
+ const at=a=>horizontal?pixels[row*SIZE+a]:pixels[a*SIZE+row];
+ let left=0,right=SIZE-1;while(left<SIZE&&!at(left))left++;while(right>=left&&!at(right))right--;
+ return {left,right};
+}
+export function suppliedClay(target,level=1){
+ const blank=makeBlank(),amount=[0,.3,.5][level-1]||0;if(!amount)return blank;
+ const result=new Uint8Array(SIZE*SIZE);
+ const vertical=p=>{let top=0,bottom=SIZE-1;while(top<SIZE&&rowBounds(p,top).right<rowBounds(p,top).left)top++;while(bottom>top&&rowBounds(p,bottom).right<rowBounds(p,bottom).left)bottom--;return {top,bottom};};
+ const b=vertical(blank),t=vertical(target),top=Math.round(b.top+(t.top-b.top)*amount),bottom=Math.round(b.bottom+(t.bottom-b.bottom)*amount);
+ for(let y=top;y<=bottom;y++){
+  const f=(y-top)/(bottom-top),br=rowBounds(blank,Math.round(b.top+f*(b.bottom-b.top))),tr=rowBounds(target,Math.round(t.top+f*(t.bottom-t.top)));
+  const left=Math.round(br.left+(tr.left-br.left)*amount),right=Math.round(br.right+(tr.right-br.right)*amount);
+  for(let x=left;x<=right;x++)result[y*SIZE+x]=1;
+ }return result;
+}
+export function protectedCut(pixels,before,target,level){
+ if(level<2)return;
+ for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){
+  const i=y*SIZE+x;if(!target[i]||!before[i]||pixels[i])continue;
+  const interior=x>0&&y>0&&x<SIZE-1&&y<SIZE-1&&target[i-1]&&target[i+1]&&target[i-SIZE]&&target[i+SIZE];
+  if(level===3||interior)pixels[i]=before[i];
+ }
+}
 export const pixelsEqual=(a,b)=>a.length===b.length&&a.every((v,i)=>v===b[i]);
 // Pick an exterior edge once, independently of the eventual drag direction.
-export function clayEdge(pixels,x,y,radius=18){
+export function clayEdge(pixels,x,y,radius=18,tolerance=0){
  if(!Number.isFinite(x+y+radius))return null;
- radius=Math.max(14,Math.min(26,radius));let best=null,distance=radius;
+ radius=Math.max(14,Math.min(26,radius))+tolerance;let best=null,distance=radius;
  for(const horizontal of [true,false]){
   const cross=horizontal?y:x;
   const index=(a,b)=>horizontal?b*SIZE+a:a*SIZE+b;
@@ -80,20 +106,23 @@ export function clayEdge(pixels,x,y,radius=18){
  }
  return best;
 }
-export function pushClay(pixels,x0,y0,x1,y1,radius=18,grab=undefined){
+export function pushClay(pixels,x0,y0,x1,y1,radius=18,grab=undefined,options={}){
  if(!Number.isFinite(x0+y0+x1+y1+radius))return false;
  radius=Math.max(14,Math.min(26,radius));
  const dx=x1-x0,dy=y1-y0;if(Math.hypot(dx,dy)<.75)return false;
  grab=grab===undefined?clayEdge(pixels,x0,y0,radius):grab;if(!grab)return false;
- const {horizontal,fromLeft}=grab,along=horizontal?grab.x:grab.y,cross=horizontal?grab.y:grab.x,delta=horizontal?dx:dy,before=pixels.slice();let changed=false;
+ const {horizontal,fromLeft}=grab,along=horizontal?grab.x:grab.y,cross=horizontal?grab.y:grab.x,rawDelta=horizontal?dx:dy,delta=options.target?Math.max(-28,Math.min(28,rawDelta)):rawDelta,before=pixels.slice();let changed=false;
  const index=(a,b)=>horizontal?b*SIZE+a:a*SIZE+b;
  // Compress/stretch whole bands of clay under a broad hand. Paint moves with the clay.
  for(let row=Math.max(0,Math.floor(cross-radius));row<Math.min(SIZE,Math.ceil(cross+radius));row++){
   let left=0,right=SIZE-1;while(left<SIZE&&!before[index(left,row)])left++;while(right>left&&!before[index(right,row)])right--;
   if(right-left<5)continue;const edge=fromLeft?left:right;if(Math.abs(along-edge)>radius)continue;
   const d=Math.abs(row+.5-cross)/radius;if(d>=1)continue;const influence=(1+Math.cos(d*Math.PI))/2;
-  const newLeft=fromLeft?Math.max(0,Math.min(right-5,Math.round(left+delta*influence))):left;
-  const newRight=fromLeft?right:Math.min(SIZE-1,Math.max(left+5,Math.round(right+delta*influence)));
+  let shift=delta*influence;
+  if(options.target&&Math.abs(delta)>=.75){const target=rowBounds(options.target,row,horizontal),wanted=fromLeft?target.left:target.right,proposed=edge+shift,level=options.level||1;if(target.right>=target.left&&Math.abs(wanted-proposed)<=level)shift+=(wanted-proposed)*[.25,.4,.55][level-1];}
+  let newLeft=fromLeft?Math.max(0,Math.min(right-5,Math.round(left+shift))):left;
+  let newRight=fromLeft?right:Math.min(SIZE-1,Math.max(left+5,Math.round(right+shift)));
+  if(options.symmetric&&horizontal){if(fromLeft)newRight=Math.min(SIZE-1,Math.max(newLeft+5,right-(newLeft-left)));else newLeft=Math.max(0,Math.min(newRight-5,left-(newRight-right)));}
   for(let a=Math.min(left,newLeft);a<=Math.max(right,newRight);a++)pixels[index(a,row)]=0;
   for(let a=newLeft;a<=newRight;a++){const src=Math.round(left+(a-newLeft)/(newRight-newLeft)*(right-left));pixels[index(a,row)]=before[index(src,row)];}
  }
@@ -124,7 +153,14 @@ export function compareSculpture(actual,target){
  return {score:Math.floor(raw*10+1e-8)/10,shape:Math.floor(shape*10+1e-8)/10,paint:Math.floor(paint*10+1e-8)/10,passed:raw+1e-9>=PASS_SCORE,missing,excess};
 }
 export class SculptureChallenge {
- constructor(){this.scene=0;this.phase='levels';this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.submissions=0;this.results=[];this.collection=[];this.kiln=null;this.revision=0;this.newPiece();}
+ constructor(){this.scene=0;this.phase='levels';this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.submissions=0;this.results=[];this.collection=[];this.workshopLevels=freshWorkshopLevels();this.kiln=null;this.revision=0;this.newPiece();}
+ stationLevel(id){return this.workshopLevels[this.scene][id]||1;}
+ upgradeStation(id,expectedLevel=this.stationLevel(id)){
+  if(!WORKBENCH_IDS.includes(id)||this.completed||this.stationLevel(id)!==expectedLevel||expectedLevel>=3)return false;
+  const cost=UPGRADE_COSTS[expectedLevel];if(this.money<cost)return false;
+  this.finishStroke();this.money-=cost;this.workshopLevels[this.scene][id]++;return true;
+ }
+ advanceEfficiency(ms){if(this.hasClay&&this.canWork&&this.efficiency.eligible&&Number.isFinite(ms)&&ms>0)this.efficiency.elapsedMs+=ms;}
  get completed(){return this.phase==='complete';}
  get sceneInfo(){return SCENES[this.scene];}
  get sceneResults(){return this.results.filter(r=>r.scene===this.scene);}
@@ -135,8 +171,8 @@ export class SculptureChallenge {
  get canPurchase(){return this.phase==='ready'&&this.sceneComplete&&this.money>=DECAL_PRICE;}
  get preset(){return PRESETS[this.level];}
  get orders(){return Array.from({length:3},(_,i)=>({id:this.submissions+i+1,design:PRESETS[(this.level+i)%PRESETS.length].id}));}
- newPiece(){this.target=createTarget(this.preset.id);this.piece={design:this.preset.id,stage:'sculpting',pixels:makeBlank(),revision:++this.revision};this.undoStack=[];this.redoStack=[];this.pendingStroke=null;this.edits=0;this.hasClay=false;this.activeStation=null;this.fired=false;this.kiln=null;this.kilnResult=null;}
- collectClay(){if(!this.canWork)return false;this.newPiece();this.hasClay=true;return true;}
+ newPiece(){this.target=createTarget(this.preset.id);this.piece={design:this.preset.id,stage:'sculpting',pixels:suppliedClay(this.target,this.stationLevel('clay')),revision:++this.revision};this.undoStack=[];this.redoStack=[];this.pendingStroke=null;this.edits=0;this.hasClay=false;this.activeStation=null;this.fired=false;this.kiln=null;this.kilnResult=null;this.efficiency={elapsedMs:0,limitMs:EFFICIENCY_LIMIT_MS,eligible:false};}
+ collectClay(){if(!this.canWork)return false;this.newPiece();this.hasClay=true;this.efficiency.eligible=true;return true;}
  startStation(station){if(!this.hasClay||!STATION_TOOLS[station]||!this.canWork)return false;this.finishStroke();this.activeStation=station;return true;}
  endStation(){this.finishStroke();this.activeStation=null;}
  beginStroke(){
@@ -149,10 +185,16 @@ export class SculptureChallenge {
   this.undoStack.push({pixels:before.pixels,station:before.station});if(this.undoStack.length>50)this.undoStack.shift();this.redoStack=[];return true;
  }
  invalidateFiring(){this.kiln=null;this.kilnResult=null;this.fired=false;}
- stroke(x0,y0,x1,y1,radius,tool,color,base=null,grab=undefined){
+ stroke(x0,y0,x1,y1,radius,tool,color,base=null,grab=undefined,options={}){
   if(!this.hasClay||STATION_TOOLS[this.activeStation]!==tool)return false;
   const previous=this.piece.pixels.slice();if(tool==='push'&&base)this.piece.pixels=base.slice();
-  if(tool==='push')pushClay(this.piece.pixels,x0,y0,x1,y1,radius,grab);else applyBrush(this.piece.pixels,x0,y0,x1,y1,radius,tool,color);
+  if(tool==='paint'&&options.line&&base&&this.stationLevel('paint')>=2)this.piece.pixels=base.slice();
+  if(tool==='push')pushClay(this.piece.pixels,x0,y0,x1,y1,radius,grab,{target:this.target,level:this.stationLevel('wheel'),symmetric:options.symmetric!==false});
+  else {
+   const before=this.piece.pixels.slice();applyBrush(this.piece.pixels,x0,y0,x1,y1,radius,tool,color);
+   if(tool==='cut'&&options.protect!==false)protectedCut(this.piece.pixels,before,this.target,this.stationLevel('carve'));
+   if(tool==='paint'&&options.mirror&&this.stationLevel('paint')===3)applyBrush(this.piece.pixels,SIZE-x0,y0,SIZE-x1,y1,radius,tool,color);
+  }
   const changed=!pixelsEqual(previous,this.piece.pixels);
   if(changed){this.piece.revision=++this.revision;this.edits++;this.invalidateFiring();}return changed;
  }
@@ -160,20 +202,25 @@ export class SculptureChallenge {
  redo(){this.finishStroke();const last=this.redoStack.at(-1);if(!last||last.station!==this.activeStation)return false;this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation});this.piece.pixels=this.redoStack.pop().pixels;this.piece.revision=++this.revision;this.invalidateFiring();return true;}
  restart(){if(!this.canWork)return false;this.attempt++;this.newPiece();return true;}
  nextStation(){return null;}
- fire(){this.finishStroke();if(this.kiln||this.kilnResult||!this.hasClay||!this.canWork)return false;this.kiln={design:this.preset.id,pixels:this.piece.pixels.slice(),remaining:KILN_SECONDS};return true;}
- kilnProgress(){if(this.kilnResult)return this.kilnResult.progress;return this.kiln?Math.min(1,Math.max(0,1-this.kiln.remaining/KILN_SECONDS)):0;}
+ fire(){this.finishStroke();if(this.kiln||this.kilnResult||!this.hasClay||!this.canWork)return false;this.kiln={design:this.preset.id,revision:this.piece.revision,pixels:this.piece.pixels.slice(),remaining:KILN_SECONDS,round:0,count:kilnRoundCount(this.level),rounds:[],feedback:0,upgradeBonus:(this.stationLevel('kiln')-1)*.1};return true;}
+ kilnProgress(){if(this.kilnResult)return this.kilnResult.progress;const k=this.kiln;return k?(k.feedback?k.rounds.at(-1).progress:Math.min(1,Math.max(0,1-k.remaining/KILN_ROUNDS[k.round].seconds))):0;}
  strike(){
   const k=this.kiln;
-  if(!k||this.kilnResult)return null;
-  const progress=this.kilnProgress(),grade=kilnGradeAt(progress);
-  this.kilnResult={grade:grade.id,progress};this.kiln=null;this.fired=true;
-  return {...this.kilnResult,label:grade.label,multiplier:grade.multiplier};
+  if(!k||this.kilnResult||k.feedback)return null;
+  const progress=this.kilnProgress(),grade=kilnGradeAt(progress,k.round),result={grade:grade.id,progress};
+  k.rounds.push(result);k.feedback=.45;
+  return result;
  }
  tick(dt){
-  const k=this.kiln;
-  if(!k||!Number.isFinite(dt))return;
-  k.remaining=Math.max(0,k.remaining-Math.max(0,dt));
-  if(!k.remaining)this.strike();
+  if(!Number.isFinite(dt)||dt<=0)return;
+  let remaining=dt;
+  while(this.kiln&&remaining>0){
+   const k=this.kiln;
+   if(k.feedback){const step=Math.min(remaining,k.feedback);k.feedback=Math.max(0,k.feedback-step);remaining-=step;
+    if(k.feedback<1e-9){k.feedback=0;if(k.rounds.length===k.count){const grade=aggregateKilnGrade(k.rounds);this.kilnResult={grade,progress:k.rounds.at(-1).progress,rounds:k.rounds.map(r=>({...r})),multiplier:Number((KILN_GRADES[grade].multiplier+k.upgradeBonus).toFixed(2))};this.kiln=null;this.fired=true;}
+     else{k.round++;k.remaining=KILN_ROUNDS[k.round].seconds;}}
+   }else{const step=Math.min(remaining,k.remaining);k.remaining=Math.max(0,k.remaining-step);remaining-=step;if(k.remaining<1e-9){k.remaining=0;this.strike();}}
+  }
  }
  submit(){
   if(!this.canWork||!this.hasClay)return {valid:false,passed:false,complete:this.completed,earned:0};
@@ -181,14 +228,15 @@ export class SculptureChallenge {
   const practice=this.phase==='practice';
   const result={valid:true,...compareSculpture(this.piece.pixels,this.target),scene:this.scene,practice,level:this.level+1,attempt:this.attempt,design:this.preset.id,pixels:this.piece.pixels.slice(),target:this.target.slice()};
   const grade=KILN_GRADES[this.kilnResult.grade];
-  result.kiln={...this.kilnResult,label:grade.label,multiplier:grade.multiplier};
-  result.baseEarned=rewardForScore(result.score);result.earned=Math.round(result.baseEarned*grade.multiplier);result.kilnBonus=result.earned-result.baseEarned;
+  result.kiln={...this.kilnResult,label:grade.label,multiplier:this.kilnResult.multiplier??grade.multiplier};
+  result.baseEarned=rewardForScore(result.score);result.serveMultiplier=1+(this.stationLevel('serve')-1)*.1;
+  Object.assign(result,orderIncome(result.baseEarned,{kiln:result.kiln.multiplier,serve:result.serveMultiplier,passed:result.passed,...this.efficiency,firstPass:!practice&&result.passed}));
   this.money+=result.earned;
   this.submissions++;
   if(practice){this.phase='ready';this.level=4;this.attempt=1;this.newPiece();}
   else if(result.passed){
    this.delivered++;
-   this.results.push({scene:this.scene,level:result.level,score:result.score,earned:result.earned,baseEarned:result.baseEarned,kiln:result.kiln});
+   this.results.push({scene:this.scene,level:result.level,score:result.score,earned:result.earned,baseEarned:result.baseEarned,kiln:result.kiln,serveMultiplier:result.serveMultiplier,regularEarned:result.regularEarned,serveBonus:result.serveBonus,efficiency:result.efficiency,efficiencyBonus:result.efficiencyBonus,firstPassBonus:result.firstPassBonus});
    if(this.level===PRESETS.length-1)this.phase='ready';
    else this.level++;
    this.attempt=1;this.newPiece();
@@ -213,10 +261,10 @@ export class SculptureChallenge {
   if(this.scene===SCENES.length-1){this.phase='complete';return true;}
   this.scene++;this.phase='levels';this.level=0;this.attempt=1;this.newPiece();return true;
  }
- serialize(){return {version:5,scene:this.scene,phase:this.phase,collection:this.collection,level:this.level,attempt:this.attempt,money:this.money,delivered:this.delivered,submissions:this.submissions,results:this.results,pixels:Array.from(this.piece.pixels),hasClay:this.hasClay,fired:this.fired,kilnResult:this.kilnResult,kilnGrade:this.kilnResult?.grade||null,edits:this.edits};}
+ serialize(){return {version:6,workshopLevels:this.workshopLevels,efficiency:this.efficiency,scene:this.scene,phase:this.phase,collection:this.collection,level:this.level,attempt:this.attempt,money:this.money,delivered:this.delivered,submissions:this.submissions,results:this.results,pixels:Array.from(this.piece.pixels),hasClay:this.hasClay,fired:this.fired,kilnResult:this.kilnResult,kilnGrade:this.kilnResult?.grade||null,edits:this.edits};}
  static restore(data){
   const c=new SculptureChallenge();
-  if(!data||![4,5].includes(data.version)||!Number.isInteger(data.level)||data.level<0||data.level>=PRESETS.length||!Array.isArray(data.pixels)||data.pixels.length!==SIZE*SIZE||data.pixels.some(p=>!Number.isInteger(p)||p<0||p>=PALETTE.length))return c;
+  if(!data||![4,5,6].includes(data.version)||!Number.isInteger(data.level)||data.level<0||data.level>=PRESETS.length||!Array.isArray(data.pixels)||data.pixels.length!==SIZE*SIZE||data.pixels.some(p=>!Number.isInteger(p)||p<0||p>=PALETTE.length))return c;
   const integer=(v,fallback=0)=>Number.isSafeInteger(v)&&v>=0?v:fallback;
   const old=data.version===4;
   c.scene=old?0:integer(data.scene,0);
@@ -233,7 +281,10 @@ export class SculptureChallenge {
   if(c.phase==='levels'?(c.scenePassed!==c.level||c.sceneResults.some(r=>r.level>c.level)):!c.sceneComplete)return new SculptureChallenge();
   c.newPiece();c.piece.pixels=Uint8Array.from(data.pixels);c.hasClay=c.canWork&&!!data.hasClay;c.fired=c.hasClay&&!!data.fired;c.edits=integer(data.edits);
   const savedGrade=data.kilnResult?.grade||data.kilnGrade,grade=Object.hasOwn(KILN_GRADES,savedGrade)?savedGrade:'plain';
-  if(c.fired)c.kilnResult={grade,progress:Number.isFinite(data.kilnResult?.progress)?Math.max(0,Math.min(1,data.kilnResult.progress)):1};
+  if(c.fired){c.kilnResult={grade,progress:Number.isFinite(data.kilnResult?.progress)?Math.max(0,Math.min(1,data.kilnResult.progress)):1,multiplier:KILN_GRADES[grade].multiplier};
+   if(data.version===6){const k=data.kilnResult;if(Number.isFinite(k?.multiplier)&&k.multiplier>=1&&k.multiplier<=1.45)c.kilnResult.multiplier=k.multiplier;if(Array.isArray(k?.rounds))c.kilnResult.rounds=k.rounds.filter(r=>r&&Object.hasOwn(KILN_GRADES,r.grade)&&Number.isFinite(r.progress)).slice(0,4).map(r=>({grade:r.grade,progress:Math.max(0,Math.min(1,r.progress))}));}}
+  if(data.version===6){c.workshopLevels=restoreWorkshopLevels(data.workshopLevels);const e=data.efficiency;if(c.hasClay&&e?.eligible===true&&Number.isFinite(e.elapsedMs)&&e.elapsedMs>=0)c.efficiency={elapsedMs:e.elapsedMs,limitMs:EFFICIENCY_LIMIT_MS,eligible:true};
+   c.results=c.results.map(r=>{const source=data.results.find(v=>v.scene===r.scene&&v.level===r.level);return {...r,regularEarned:integer(source.regularEarned,r.earned),serveBonus:integer(source.serveBonus),serveMultiplier:[1,1.1,1.2].includes(source.serveMultiplier)?source.serveMultiplier:1,efficiency:source.efficiency&&Number.isFinite(source.efficiency.elapsedMs)&&source.efficiency.elapsedMs>=0?{elapsedMs:source.efficiency.elapsedMs,limitMs:EFFICIENCY_LIMIT_MS,eligible:!!source.efficiency.eligible,qualified:!!source.efficiency.qualified}:null,efficiencyBonus:integer(source.efficiencyBonus),firstPassBonus:integer(source.firstPassBonus)};});}
   return c;
  }
 }

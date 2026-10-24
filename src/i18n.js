@@ -1,9 +1,11 @@
 // Bilingual UI layer: Chinese is the source of truth, English is a lookup table.
 // Text is translated at the DOM level so every template keeps working untouched.
+import {WORKSHOP_EN} from './workshop-i18n.js';
 const STORAGE_KEY = 'terra-lang';
 const CJK = /[\u4e00-\u9fa5]/;
 
 const EN = {
+  ...WORKSHOP_EN,
   '进入地图介绍': 'Explore the map introduction',
   '跳过介绍，进入工坊 ↗': 'Skip introduction, enter workshop ↗',
   '↺ 恢复视角': '↺ Reset view',
