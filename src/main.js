@@ -16,6 +16,7 @@ import {createWorld, STATIONS} from './world.js';
 import {createHeroCarousel} from './hero-carousel.js';
 import {initI18n, setLang, toggleLang, onLangChange, langButtonLabel} from './i18n.js';
 import {icon} from './art.js';
+import {createSfx} from './sfx.js';
 import logoMark from './assets/logo-mark.png';
 const $=id=>document.getElementById(id);
 let saved=null;
@@ -26,18 +27,30 @@ const presetImages=Object.fromEntries(PRESETS.map(p=>[p.id,thumbnail(createTarge
 const decalImages=SCENES.map((_,i)=>decalImage(i));
 let started=false,helpOpen=false,activeTask=null,nearest=null,previousTime=0,toastTimeout;
 let clockAt=performance.now(),efficiencyRunning=false,kilnRunning=false,focused=document.hasFocus(),lastClockSave=0;
-const keys=new Set();let soundEnabled=false,audioCtx=null,opening=null;
+const keys=new Set();let opening=null;
+const sfx=createSfx();
+window.addEventListener('pointerdown',()=>sfx.unlock(),{capture:true});
+window.addEventListener('keydown',()=>sfx.unlock(),{capture:true});
 function save(){const value=JSON.stringify(state.serialize());try{sessionStorage.setItem(SAVE_KEY,value);}catch{}try{localStorage.setItem(SAVE_KEY,value);}catch{}}
-function sound(kind='tap'){if(!soundEnabled)return;try{audioCtx??=new(window.AudioContext||window.webkitAudioContext)();audioCtx.resume();const notes=kind==='coin'?[523,659,784,1047]:kind==='fail'?[294,247,196]:[392,523];notes.forEach((f,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=audioCtx.currentTime+i*.08;o.frequency.value=f;g.gain.setValueAtTime(.04,t);g.gain.exponentialRampToValueAtTime(.001,t+.24);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.25);});}catch{}}
+function sound(kind,detail){sfx.play(kind,detail);}
+function uiButton(target){const button=target?.closest?.('button, [role="button"]');if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return null;return button;}
+let hoveredButton=null,pressedButton=null;
+document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const button=uiButton(e.target);if(!button||button===hoveredButton||button.contains(e.relatedTarget))return;hoveredButton=button;sound('hover');},true);
+document.addEventListener('pointerout',e=>{const button=uiButton(e.target);if(button&&hoveredButton===button&&!button.contains(e.relatedTarget))hoveredButton=null;},true);
+document.addEventListener('pointerdown',e=>{if(e.button!==0)return;const button=uiButton(e.target);if(!button)return;pressedButton=button;sound('click');},true);
+document.addEventListener('click',e=>{const button=uiButton(e.target);if(!button||button===pressedButton){pressedButton=null;return;}sound('click');},true);
 function toast(message){clearTimeout(toastTimeout);$('toast').textContent=message;$('toast').classList.add('show');toastTimeout=setTimeout(()=>$('toast').classList.remove('show'),4200);}
-$('brand-mark').innerHTML=`<img src="${logoMark}" alt="terra little clay workshop"/>`;$('coin-icon').innerHTML=icon('coin');$('sound-button').innerHTML=icon('muted');
-$('sound-button').onclick=()=>{soundEnabled=!soundEnabled;$('sound-button').innerHTML=icon(soundEnabled?'sound':'muted');$('sound-button').setAttribute('aria-label',soundEnabled?'关闭声音':'开启声音');sound();};
+$('brand-mark').innerHTML=`<img src="${logoMark}" alt="terra little clay workshop"/>`;$('coin-icon').innerHTML=icon('coin');$('sound-button').innerHTML=icon('sound');$('sound-button').title='关闭声音';$('sound-button').setAttribute('aria-label','关闭声音');
+$('sound-button').onclick=()=>{const on=sfx.setEnabled(!sfx.enabled);$('sound-button').innerHTML=icon(on?'sound':'muted');$('sound-button').title=on?'关闭声音':'开启声音';$('sound-button').setAttribute('aria-label',on?'关闭声音':'开启声音');if(on)sound('tap');};
 const labels={};STATIONS.forEach((s,i)=>{const el=document.createElement('div');el.className='station-label';el.innerHTML=`<span class="station-num">${i+1}</span><span>${s.name}</span>${s.id==='kiln'?'<span class="kiln-small" id="kiln-small"></span>':''}`;$('station-labels').append(el);labels[s.id]=el;});
 const rewardTable=()=>`<div class="reward-table" aria-label="评分奖励表">${[["低于60%",0],["60–69%",60],["70–79%",70],["80–89%",80],["90–99%",90],["100%",100]].map(([score,coins])=>`<div><span>${score}</span><b>${coins}<small> 币</small></b></div>`).join('')}</div>`;
 function syncClocks(now=performance.now()){
  const stamp=Math.max(clockAt,now),elapsed=stamp-clockAt;clockAt=stamp;
+ const roundsBefore=state.kiln?.rounds.length||0;
  if(efficiencyRunning)state.advanceEfficiency(elapsed);
  const before=state.kilnResult;if(kilnRunning)state.tick(elapsed/1000);
+ const struck=state.kiln?.rounds||(state.kilnResult&&!before?state.kilnResult.rounds:null);
+ if(struck&&struck.length>roundsBefore)sound('strike',struck.at(-1)?.grade);
  const policy=clockPolicy({started,helpOpen,hidden:document.hidden,focused,hasClay:state.hasClay,canWork:state.canWork,kind:activeTask?.kind});
  efficiencyRunning=policy.efficiency;kilnRunning=policy.kiln;state.kilnPaused=!kilnRunning;
  if(!before&&state.kilnResult)announceKiln();
@@ -81,7 +94,7 @@ function openBrief(){
  const p=state.preset;taskShell('brief',`${state.sceneInfo.name} · ${state.phase==='practice'?'练习订单':`第 ${state.level+1} 关 / 5`} · 尝试 ${state.attempt}`,p.name,p.task,`<div class="brief-pair"><figure><span class="board-label">${state.hasClay?'你正在制作的瓷泥':'初始瓷泥'}</span><img src="${thumbnail(state.piece.pixels,448)}" alt="当前瓷泥"/><figcaption>${state.hasClay?'保留当前作品，继续完善。':'到取泥台领取一整块瓷泥。'}</figcaption></figure><div class="brief-arrow">→</div><figure><span class="board-label">订单参考图</span><img src="${presetImages[p.id]}" alt="${p.name}"/><figcaption>对照形状与蓝色装饰，自由制作。</figcaption></figure></div><div class="brief-rules"><span><b>达到 80% 通关</b>未通过则重试本关，已获得硬币保留。</span><span><b>累计 400 币购买贴画</b>完成五关后购买，贴到瓷碗上进入下一场景。</span></div>${rewardTable()}<div class="task-action-row"><button class="primary-button" id="brief-done">${state.hasClay?'继续制作':'去领取瓷泥'} <span>→</span></button></div>`);
  $('brief-done').onclick=closeTask;
 }
-function enterGame(){heroCarousel?.pause();started=true;sound();world.resize();routeTask();}
+function enterGame(){heroCarousel?.pause();started=true;world.resize();routeTask();}
 $('map-button').onclick=()=>openCityMap();
 $('reset-view').onclick=()=>{if(started&&!activeTask&&!helpOpen)world.resetView();};
 function showHelp(){syncClocks();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();$('help-overlay').classList.remove('hidden');$('help-done').focus();syncClocks();updateEfficiency();save();}
@@ -95,7 +108,7 @@ function openEditor(station){
  const setup={wheel:{mode:'push',name:'粗塑成形',title:'用双手推压瓷泥',description:'沿参考轮廓推压或拉伸瓷泥。默认左右对称，接近轮廓时轻微辅助；可关闭参考线或对称操作。',tool:'✋ 推压瓷泥 · 宽手掌',min:14,max:26,size:18,note:'这里只能推压塑形，现有颜色会随瓷泥一起移动。雕刻和上色请去对应工作台。'},carve:{mode:'cut',name:'细节雕刻',title:'刻去多余的瓷泥',description:'拖动刻刀去除多余瓷泥，对照右侧图片修整轮廓。刻多了可以撤销。',tool:'✂ 雕刻 · 刻刀',min:1,max:14,size:4,note:'这里只能去除瓷泥。推压造型请去塑形台，绘制颜色请去上色台。'},paint:{mode:'paint',name:'手绘上色',title:'画上你的青花',description:'选择颜色，在瓷器表面拖动画笔。上色只改变颜色，不改变轮廓。',tool:'● 上色 · 画笔',min:1,max:16,size:5,note:'这里只能绘画。切去瓷泥请去雕刻台，改变造型请去塑形台。'}}[station];
  const p=state.preset;
  taskShell('editor',`第 ${state.level+1} 关 · ${setup.name} · 尝试 ${state.attempt}`,setup.title,setup.description,`<div class="editor-layout"><section class="work-area"><div class="board-top"><span class="board-label">你的瓷泥 · 正面</span><span id="work-status">已保存</span></div><div class="sculpt-canvas-wrap"><canvas id="sculpt-canvas" width="560" height="560" tabindex="0" aria-label="${setup.name}. Drag to ${setup.mode==='push'?'push clay':setup.mode==='cut'?'cut clay':'paint clay'}. Compare with the separate reference picture."></canvas><span class="canvas-corner">亲手制作</span></div><div class="tool-row"><span class="station-tool" data-station-tool="${setup.mode}">${setup.tool}</span><button class="small-tool" id="undo-stroke" title="Undo this station's last stroke (Ctrl/Cmd Z)" aria-label="Undo stroke">↶</button><button class="small-tool" id="redo-stroke" title="Redo stroke" aria-label="Redo stroke">↷</button></div><div class="brush-row"><label for="brush-size">${setup.mode==='push'?'手掌宽度':'工具大小'}</label><input type="range" id="brush-size" min="${setup.min}" max="${setup.max}" value="${setup.size}"/><output id="brush-size-value">${setup.size}</output><span class="station-only">${setup.mode==='push'?'仅用于粗塑':'本站专用工具'}</span></div></section><aside class="editor-reference"><span class="board-label">订单参考图</span><img class="target-preview" src="${presetImages[p.id]}" alt="Target ${p.name}"/><h3>${p.name}</h3><p>${p.task}</p>${setup.mode==='paint'?`<div class="palette-label">选择颜色</div><div class="paint-colors">${PALETTE.slice(1).map((c,i)=>`<button class="paint-color ${i===1?'selected':''}" data-color="${i+1}" style="--paint:${c}" title="${COLOR_NAMES[i+1]}" aria-label="${COLOR_NAMES[i+1]} paint"><span></span></button>`).join('')}</div><span class="color-name" id="color-name">钴蓝</span>`:''}<div class="maker-tip station-note"><b>${setup.name}</b><p>${setup.note}</p></div><p class="guide-note" id="tool-hint">对照参考图，观察形状与花纹。</p></aside></div><div class="editor-bottom"><button class="primary-button" id="save-editor">保存并离开 <span>→</span></button><span>完成制作后先到窑炉烧制，再到交付台评分。</span></div>`, '<span>拖动操作</span><span><kbd>⌘ / Ctrl Z</kbd> 撤销本次操作</span><span><kbd>[</kbd><kbd>]</kbd> 工具大小</span><span><kbd>Esc</kbd> 保存并关闭</span>');
- const editor=attachEditor($('sculpt-canvas'),state,{mode:setup.mode,canInteract:()=>focused&&!document.hidden&&!helpOpen,onHint:message=>{if($('tool-hint').textContent!==message)$('tool-hint').textContent=message;},onChange:()=>{$('work-status').textContent='正在制作…';},onFinish:()=>{$('work-status').textContent='已保存';save();}});activeTask.editor=editor;activeTask.station=station;editor.setRadius(setup.size);
+ const editor=attachEditor($('sculpt-canvas'),state,{mode:setup.mode,canInteract:()=>focused&&!document.hidden&&!helpOpen,onHint:message=>{if($('tool-hint').textContent!==message)$('tool-hint').textContent=message;},onChange:()=>{$('work-status').textContent='正在制作…';sfx.shape(setup.mode);},onFinish:()=>{$('work-status').textContent='已保存';sfx.shape(null);save();}});activeTask.editor=editor;activeTask.station=station;editor.setRadius(setup.size);
  document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{editor.setColor(b.dataset.color);document.querySelectorAll('[data-color]').forEach(c=>c.classList.toggle('selected',c===b));$('color-name').textContent=COLOR_NAMES[b.dataset.color];});
  $('brush-size').oninput=e=>{editor.setRadius(e.target.value);$('brush-size-value').textContent=e.target.value;};$('undo-stroke').onclick=()=>editor.undo();$('redo-stroke').onclick=()=>editor.redo();$('save-editor').onclick=closeTask;
  const toggles=document.createElement('div');toggles.className='editor-assists';const settings=[['guides','参考线',setup.mode!=='paint',true],...(station==='wheel'?[['symmetric','左右对称',true,true]]:[]),...(station==='carve'?[['protect','轮廓保护',true,state.stationLevel('carve')>=2]]:[]),...(station==='paint'?[['line','直线笔',false,state.stationLevel('paint')>=2],['mirror','镜像绘制',false,state.stationLevel('paint')>=3]]:[])];
@@ -109,11 +122,11 @@ function openKiln(){
  if(!state.hasClay){toast('请先到取泥台领取瓷泥。');return;}
  taskShell('kiln','提交前必经 · 瓷器窑炉','让窑火温暖你的作品',`本关需要 ${kilnRoundCount(state.level)} 次火候判定。指针进入目标区间时按空格或点击锁定，综合各轮表现获得金币加成。`, `<div class="kiln-layout"><div class="kiln-stage"><canvas id="kiln-canvas" aria-label="窑炉与实际作品的烧制特写"></canvas><span class="kiln-stage-caption">窑火 · 亲手烧制</span></div><section class="kiln-control"><div class="kiln-rounds" id="kiln-rounds"></div><div class="kiln-gauge-wrap"><svg class="kiln-gauge" viewBox="0 0 220 214" role="img" aria-label="火候判定扇环"><path class="kiln-track" d="${kilnArc(-120,120,93,65)}"/><path id="kiln-good-zone" class="kiln-good"/><path id="kiln-perfect-zone" class="kiln-perfect"/><g id="kiln-needle"><line x1="110" y1="30" x2="110" y2="62"/><circle cx="110" cy="26" r="4"/></g></svg><div class="kiln-readout"><strong id="kiln-percent">0<small>%</small></strong><span id="kiln-grade" role="status" aria-live="polite">等待烧制</span></div></div><div class="kiln-legend" id="kiln-legend"></div><p class="kiln-caption" id="kiln-caption"></p><div class="task-action-row"><button class="primary-button" id="fire-button">开始烧制</button><button class="secondary-button" id="strike-button">锁定火候 · 空格</button></div></section></div>`);
  activeTask.preview=createKilnPreview($('kiln-canvas'),state);
- $('fire-button').onclick=()=>{syncClocks();if(state.kilnResult){closeTask();return;}if(state.fire()){sound();save();updateKiln();$('strike-button').focus({preventScroll:true});}};
+ $('fire-button').onclick=()=>{syncClocks();if(state.kilnResult){closeTask();return;}if(state.fire()){sound('fire');save();updateKiln();$('strike-button').focus({preventScroll:true});}};
  $('strike-button').onclick=strikeKiln;mountStationInfo('kiln');updateKiln();
 }
 function announceKiln(){if(!state.kilnResult)return;save();sound('coin');}
-function strikeKiln(){if(helpOpen||activeTask?.kind!=='kiln'||document.hidden||!focused)return;syncClocks();if(state.strike()){sound();updateKiln();}}
+function strikeKiln(){if(helpOpen||activeTask?.kind!=='kiln'||document.hidden||!focused)return;syncClocks();const hit=state.strike();if(hit){sound('strike',hit.grade);updateKiln();}}
 function updateKiln(){
  if(activeTask?.kind!=='kiln')return;
  const k=state.kiln,result=state.kilnResult,p=state.kilnProgress(),round=k?.round??Math.max(0,(result?.rounds?.length||1)-1),pct=Math.round(p*100);
@@ -146,14 +159,14 @@ function submit(){
 function openSupply(){
  if(!state.canWork){openJourney();return;}
  taskShell('supply',`${state.sceneInfo.name} · 第 ${state.level+1} 关`,'从一块瓷泥开始','领取瓷泥后，自由选择塑形、雕刻、上色的顺序。五分钟内通过，订单收益 +20%。',`<div class="preset-gallery">${PRESETS.map((p,i)=>`<article class="preset-gallery-card ${i===state.level?'current':''}"><img src="${presetImages[p.id]}" alt="${p.name}"/><span>第 ${i+1} 关</span><b>${p.name}</b><small>${state.sceneResults.some(r=>r.level===i+1)?'✓ 已通过':i===state.level?'当前订单':'80% 解锁下一关'}</small></article>`).join('')}</div><div class="task-action-row"><button class="secondary-button" id="supply-brief">查看订单</button><button class="primary-button" id="fresh-clay">领取完整瓷泥 <span>→</span></button></div>`);
- $('supply-brief').onclick=openBrief;$('fresh-clay').onclick=()=>{syncClocks();if(state.hasClay)openRestart();else{state.collectClay();closeTask();toast('瓷泥已领取，去工作台开始制作吧。');}};
+ $('supply-brief').onclick=openBrief;$('fresh-clay').onclick=()=>{syncClocks();if(state.hasClay)openRestart();else if(state.collectClay()){sound('clay');closeTask();toast('瓷泥已领取，去工作台开始制作吧。');}};
  mountStationInfo('clay');
 }
 function openRestart(){
  if(nearest?.id!=='clay'){toast('请到取泥台领取新瓷泥。');return;}
  if(!state.canWork){openJourney();return;}
  taskShell('restart','重新制作','换一块新瓷泥？','当前作品会重置，已通过的关卡、藏品与硬币会保留。',`<div class="task-action-row"><button class="secondary-button" id="cancel-restart">保留作品</button><button class="primary-button" id="confirm-restart">领取新瓷泥 <span>↺</span></button></div>`);
- $('cancel-restart').onclick=closeTask;$('confirm-restart').onclick=()=>{syncClocks();state.restart();state.collectClay();closeTask();};
+ $('cancel-restart').onclick=closeTask;$('confirm-restart').onclick=()=>{syncClocks();state.restart();if(state.collectClay())sound('clay');closeTask();};
 }
 $('discard-button').onclick=()=>toast('走到取泥台，可以换一块新瓷泥。');$('discard-button').title='到取泥台更换瓷泥';
 function openJourney(){
@@ -200,7 +213,7 @@ function requestNewGame(){
 }
 function confetti(){for(let i=0;i<25;i++){const e=document.createElement('div');e.className='confetti';e.style.cssText=`left:60%;top:40%;background:${['#315fa9','#e1bc76','#d5a0ba'][i%3]};--dx:${Math.cos(i*2.4)*(100+i*7)}px;--dy:${140+Math.sin(i*7)*140}px;animation-delay:${i*.02}s`;$('app').append(e);setTimeout(()=>e.remove(),3000);}}
 function stationMessage(id){return {clay:'领取完整瓷泥',wheel:'推压瓷泥，调整形状',carve:'用刻刀去除多余瓷泥',paint:'选择颜色，亲手绘制',kiln:state.canSubmit?'查看火候结果':state.kiln?'继续烧制瓷器':'烧制瓷器 · 必经环节',serve:state.canWork?'提交作品并评分':'购买贴画与制作成品'}[id];}
-function openStation(id){if(activeTask||helpOpen||!started)return;sound();if(!state.canWork){openJourney();return;}({clay:openSupply,wheel:()=>openEditor('wheel'),carve:()=>openEditor('carve'),paint:()=>openEditor('paint'),kiln:openKiln,serve:openReview})[id]();}
+function openStation(id){if(activeTask||helpOpen||!started)return;if(!state.canWork){openJourney();return;}({clay:openSupply,wheel:()=>openEditor('wheel'),carve:()=>openEditor('carve'),paint:()=>openEditor('paint'),kiln:openKiln,serve:openReview})[id]();}
 window.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
  if(!started){if(key==='escape'){e.preventDefault();opening?.skip();}else if(key==='enter'&&$('welcome').dataset.openingStage==='map'&&e.target.tagName!=='BUTTON'){e.preventDefault();$('start-button').click();}return;}
@@ -210,7 +223,7 @@ window.addEventListener('keydown',e=>{
  if(activeTask?.editor){if((e.metaKey||e.ctrlKey)&&key==='z'){e.preventDefault();e.shiftKey?activeTask.editor.redo():activeTask.editor.undo();return;}if(key==='['||key===']'){e.preventDefault();const slider=$('brush-size');slider.value=Math.max(Number(slider.min),Math.min(Number(slider.max),Number(slider.value)+(key===']'?1:-1)));activeTask.editor.setRadius(slider.value);$('brush-size-value').textContent=slider.value;return;}return;}
  if(activeTask||helpOpen)return;
  if(e.target.matches('input,textarea,[contenteditable=true]'))return;
- if(key==='f'){e.preventDefault();if(e.repeat)return;nearest=world.nearest();if(nearest)openStation(nearest.id);return;}
+ if(key==='f'){e.preventDefault();if(e.repeat)return;nearest=world.nearest();if(nearest){sound('click');openStation(nearest.id);}return;}
  if([' ','arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)){e.preventDefault();keys.add(key);}
 });
 window.addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());});
@@ -225,7 +238,7 @@ function frame(ms){
  syncClocks();if(ms-lastClockSave>=1000){lastClockSave=ms;if(state.hasClay)save();updateEfficiency();}
  activeTask?.preview?.update?.(elapsed,state,!kilnRunning);
  const playing=started&&!activeTask&&!helpOpen&&!document.hidden&&focused;world.setInteractionEnabled(playing);$('reset-view').disabled=!playing;const dx=playing?Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')):0,dz=playing?Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')):0;
- world.move(dx,dz,dt);nearest=world.nearest();$('world').dataset.player=JSON.stringify({x:world.player.group.position.x,z:world.player.group.position.z});$('app').dataset.task=activeTask?.kind||'';$('app').dataset.level=state.level+1;$('app').dataset.attempt=state.attempt;
+ const strideBefore=world.stride;world.move(dx,dz,dt);sfx.walk(world.stride,world.stride>strideBefore,state.hasClay);sfx.firing(!!state.kiln&&kilnRunning);sfx.tick();nearest=world.nearest();$('world').dataset.player=JSON.stringify({x:world.player.group.position.x,z:world.player.group.position.z});$('app').dataset.task=activeTask?.kind||'';$('app').dataset.level=state.level+1;$('app').dataset.attempt=state.attempt;
  for(const s of STATIONS){const p=world.project(s.x,s.labelY,s.z);labels[s.id].style.left=`${p.x}px`;labels[s.id].style.top=`${p.y}px`;labels[s.id].classList.toggle('near',playing&&nearest?.id===s.id);}
  $('kiln-small').textContent=state.kiln?`${Math.ceil(state.kiln.remaining)}s`:state.kilnResult?'✓':'';
  const interact=playing&&nearest;$('interaction').classList.toggle('hidden',!interact);
@@ -238,5 +251,5 @@ opening=createOpening($('welcome'),{getState:()=>state,onStart:enterGame,onNewGa
 document.addEventListener('click',e=>{if(e.target.closest('[data-lang-toggle]'))toggleLang();});
 const refreshLang=()=>document.querySelectorAll('[data-lang-toggle]').forEach(b=>{b.textContent=langButtonLabel();b.setAttribute('aria-label',document.documentElement.lang==='en'?'切换到中文':'Switch to English');});
 onLangChange(refreshLang);initI18n();refreshLang();
-if(import.meta.env.DEV)window.__terra={get state(){return state;},world,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame};
+if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame};
 updateUI();requestAnimationFrame(frame);
