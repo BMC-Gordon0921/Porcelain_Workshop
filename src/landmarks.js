@@ -16,7 +16,7 @@ export function createLandmark(index){
  }
  function facade(x,y,z,w,h,d,color,roofColor){box(x,y+h/2,z,w,h,d,color);roof(x,y+h+.15,z,w,d,roofColor);}
  function window(x,y,z,w=.46,h=.65){box(x,y,z,w+.1,h+.1,.08,0xe8d5ad);box(x,y,z+.05,w,h,.04,0x50717a);box(x,y,z+.08,.035,h,.025,0xc3a27c);}
- function chimney(x,z,h,color){cylinder(x,h/2,z,.29,.44,h,color);cylinder(x,h-.03,z,.34,.34,.16,0x73523f);for(let i=1;i<h/.35;i++)cylinder(x,i*.35,z,.44-i*.35/h*.15,.445-i*.35/h*.15,.035,0xaa7960);}
+ function chimney(x,z,h,color){root.userData.chimney={x,z,y:h};cylinder(x,h/2,z,.29,.44,h,color);cylinder(x,h-.03,z,.34,.34,.16,0x73523f);for(let i=1;i<h/.35;i++)cylinder(x,i*.35,z,.44-i*.35/h*.15,.445-i*.35/h*.15,.035,0xaa7960);}
  function label(text,x,y,z,w=3.4){const c=document.createElement('canvas');c.width=1024;c.height=180;const ctx=c.getContext('2d');ctx.fillStyle='#f3e5c7';ctx.fillRect(0,0,1024,180);ctx.strokeStyle='#8c6e45';ctx.lineWidth=10;ctx.strokeRect(8,8,1008,164);ctx.fillStyle='#3b4a50';ctx.font='600 63px "Songti SC", serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,512,94,940);const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;return mesh(new THREE.PlaneGeometry(w,w*180/1024),new THREE.MeshStandardMaterial({map:texture,roughness:1}),x,y,z);}
  function tree(x,z,scale=1){cylinder(x,.55*scale,z,.08*scale,.13*scale,1.1*scale,0x8f7350,8);for(let i=0;i<3;i++){const m=mesh(new THREE.IcosahedronGeometry(.65*scale,1),[0x809366,0x91a578,0xa8b185][i],x+(i-1)*.27*scale,1.15*scale+i*.22*scale,z);m.scale.y=.82;}}
  function vase(x,y,z,scale=1){const points=[[0,0],[.32,0],[.45,.25],[.47,.58],[.27,.92],[.19,1.2],[.27,1.35],[.22,1.38],[.14,1.19],[.22,.93],[.39,.58],[.3,.13],[0,.13]].map(p=>new THREE.Vector2(...p));const texture=new THREE.CanvasTexture(decalCanvas(0));texture.colorSpace=THREE.SRGBColorSpace;const m=mesh(new THREE.LatheGeometry(points,32),new THREE.MeshStandardMaterial({map:texture,roughness:.22}),x,y,z);m.scale.setScalar(scale);return m;}
@@ -27,7 +27,7 @@ export function createLandmark(index){
   for(const x of [-4.5,-3.3,-2.1,-.9])window(x,1.43,-6.015,.56,.75);
   cylinder(5.9,.9,-6.7,.35,1.08,1.8,0x9b7451);box(5.9,.47,-5.82,.47,.76,.08,0x453b32);
   label('古窑民俗',-2.6,2.23,-5.93,2.2);tree(-6.5,-7,1.25);tree(7.3,-8.4,1.2);
-  for(let tier=0;tier<3;tier++){box(1.3,.35+tier*.6,-6,1.7,.08,.5,0x977446);for(let j=0;j<4;j++)vase(.7+j*.4,.41+tier*.6,-5.95,.25);}for(const x of [.36,2.26])box(x,.97,-6,.09,2,.56,0x74543a);
+  // Keep the wall behind the workshop sign clear; the old keepsake rack was removed.
  }else if(index===1){
   box(-1,1.4,-7.45,11.2,2.8,2.65,0xe4e3d2);box(-1,2.9,-7.45,11.65,.23,3,0x426a7d);box(-1,3.1,-7.45,10.5,.13,2.7,0x839aa1);
   for(let i=0;i<12;i++)window(-5.8+i*.83,1.51,-6.07,.65,1.55);

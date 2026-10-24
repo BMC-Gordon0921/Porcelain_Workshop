@@ -11,7 +11,7 @@ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console'
 const url=process.env.GAME_URL||'http://127.0.0.1:5174/';
 await page.route('**/__smoke-fixture',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><title>Test fixture</title>'}));
 const read=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),SAVE_KEY);
-const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(60);c.submit();};
+const pass=c=>{c.collectClay();c.shapeEdits=1;c.piece.pixels=c.target.slice();c.fire();c.tick(60);c.submit();};
 async function seed(c){await page.goto(url+'__smoke-fixture');await page.evaluate(({key,data})=>{localStorage.setItem(key,JSON.stringify(data));sessionStorage.setItem(key,JSON.stringify(data));},{key:SAVE_KEY,data:c.serialize()});await page.goto(url);await page.locator('#unfold-map').click();await page.locator('#start-button').click();}
 async function moveTo(x,z){
  for(let n=0;n<100;n++){
@@ -29,7 +29,7 @@ try{
  await moveTo(.4,-2.05);await interact();await page.locator('#sculpt-canvas').waitFor();
  const board=await page.locator('#sculpt-canvas').boundingBox();await page.mouse.move(board.x+board.width*.2,board.y+board.height*.35);await page.mouse.down();await page.mouse.move(board.x+board.width*.3,board.y+board.height*.35,{steps:6});await page.mouse.up();await page.locator('#save-editor').click();assert.ok((await read()).edits>0);
  console.log('PASS: starting a game, collecting clay, walking and carving');
- const work=new SculptureChallenge();work.collectClay();work.piece.pixels=work.target.slice();work.fire();work.tick(60);await seed(work);await page.locator('#brief-done').click();await moveTo(1.7,-2.05);await moveTo(1.7,0);await interact();await page.locator('#confirm-review').click();await page.locator('#result-next').waitFor();assert.equal((await read()).money,180);assert.equal((await read()).level,1);await page.screenshot({path:fileURLToPath(new URL('02-scoring.png',out))});
+ const work=new SculptureChallenge();work.collectClay();work.shapeEdits=1;work.piece.pixels=work.target.slice();work.fire();work.tick(60);await seed(work);await page.locator('#brief-done').click();await moveTo(1.7,-2.05);await moveTo(1.7,0);await interact();await page.locator('#confirm-review').click();await page.locator('#result-next').waitFor();assert.equal((await read()).money,180);assert.equal((await read()).level,1);assert.deepEqual(await page.evaluate(()=>{let n=0;window.__terra.world.scene.traverse(o=>{if(o.name==='display-shelf-piece')n++;});return {pieces:n,shelf:window.__terra.state.shelf[0]};}),{pieces:0,shelf:1});await page.screenshot({path:fileURLToPath(new URL('02-scoring.png',out))});
  console.log('PASS: submitting through the real counter awards 180 coins and advances');
  let c=new SculptureChallenge();
  for(let scene=0;scene<4;scene++){

@@ -15,7 +15,7 @@ await page.route('**/__map-test-fixture',route=>route.fulfill({contentType:'text
 async function enter(){await page.locator('#unfold-map').click();await page.locator('#start-button').click();}
 async function seed(c){await page.goto(url+'__map-test-fixture');await page.evaluate(({key,data})=>{localStorage.setItem(key,JSON.stringify(data));sessionStorage.setItem(key,JSON.stringify(data));},{key:SAVE_KEY,data:c.serialize()});await page.goto(url);await enter();}
 const read=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),SAVE_KEY);
-const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(60);c.submit();};
+const pass=c=>{c.collectClay();c.shapeEdits=1;c.piece.pixels=c.target.slice();c.fire();c.tick(60);c.submit();};
 try{
  await page.goto(url);await page.locator('#unfold-map').waitFor();
  assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');assert.equal(await page.locator('.opening-map-phase').isVisible(),false);
