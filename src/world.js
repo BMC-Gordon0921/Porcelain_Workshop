@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import {PLACES} from './places.js';
+import {createLandmark} from './landmarks.js';
+import {SCENES} from './campaign.js';
+import {decalCanvas} from './decals.js';
 import { SIZE, PALETTE, DESIGNS } from './sculpture.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 const PI = Math.PI;
@@ -14,12 +18,12 @@ function torus(parent,x,y,z,r,t,color) {const m=mesh(new THREE.TorusGeometry(r,t
 function group(parent,x=0,y=0,z=0) {let g=new THREE.Group();g.position.set(x,y,z);parent.add(g);return g;}
 function shadow(parent,x,z,rx,rz,opacity=.14) {const m=mesh(new THREE.CircleGeometry(1,24),new THREE.MeshBasicMaterial({color:0x3d3926,transparent:true,opacity,depthWrite:false}),parent,x,.025,z);m.rotation.x=-PI/2;m.scale.set(rx,rz,1);m.castShadow=false;return m;}
 export const STATIONS = [
- {id:'clay',name:'Clay & presets',x:-5.65,z:-3.65,w:2.1,d:1.45,approach:[-5.65,-2.05],labelY:2.0},
- {id:'wheel',name:'Rough shaping',x:-2.7,z:-3.65,w:1.8,d:1.6,approach:[-2.7,-1.95],labelY:2.05},
- {id:'carve',name:'Detail carving',x:.4,z:-3.65,w:2.35,d:1.45,approach:[.4,-2.05],labelY:2.0},
- {id:'kiln',name:'Porcelain kiln',x:-5.65,z:.3,w:2.2,d:2.1,approach:[-3.95,.3],labelY:2.7},
- {id:'paint',name:'Free painting',x:-1.25,z:1.35,w:2.4,d:1.45,approach:[-1.25,2.95],labelY:1.9},
- {id:'serve',name:'Check & deliver',x:3.2,z:.0,w:1.25,d:3.1,approach:[1.7,0],labelY:2.05}
+ {id:'clay',name:'取泥与订单',x:-5.65,z:-3.65,w:2.1,d:1.45,approach:[-5.65,-2.05],labelY:2.0},
+ {id:'wheel',name:'粗塑成形',x:-2.7,z:-3.65,w:1.8,d:1.6,approach:[-2.7,-1.95],labelY:2.05},
+ {id:'carve',name:'细节雕刻',x:.4,z:-3.65,w:2.35,d:1.45,approach:[.4,-2.05],labelY:2.0},
+ {id:'kiln',name:'瓷器窑炉',x:-5.65,z:.3,w:2.2,d:2.1,approach:[-3.95,.3],labelY:2.7},
+ {id:'paint',name:'手绘上色',x:-1.25,z:1.35,w:2.4,d:1.45,approach:[-1.25,2.95],labelY:1.9},
+ {id:'serve',name:'评分与交付',x:3.2,z:.0,w:1.25,d:3.1,approach:[1.7,0],labelY:2.05}
 ];
 export function sculpture(type,stage='finished') {
  const g=new THREE.Group(), clay=0xf2efe5, cream=stage==='finished'?0x315fa9:0xe1ded2;
@@ -114,7 +118,7 @@ function textSign(parent,text,x,y,z,w=2.5,h=.6,color='#f6e8c7',bg='#556d56') {
 }
 export function createWorld(canvas) {
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
- const scene=new THREE.Scene();const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,100);camera.position.set(10,17,20);camera.lookAt(-.2,.4,0);
+ const scene=new THREE.Scene();const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,100);camera.position.set(10,17,20);camera.lookAt(-.2,.7,-.7);
  scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
  const root=group(scene);
  box(root,0,-.43,0,16.8,.65,11.65,0xa39169);box(root,0,-.11,0,16.6,.18,11.45,0xc5bb99);
@@ -153,8 +157,32 @@ export function createWorld(canvas) {
  const playerRing=mesh(new THREE.RingGeometry(.5,.54,36),new THREE.MeshBasicMaterial({color:0xffffdf,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false}),root,0,.09,0);playerRing.rotation.x=-PI/2;
  const dust=[];for(let i=0;i<24;i++){const m=mesh(new THREE.SphereGeometry(.018,5,5),new THREE.MeshBasicMaterial({color:0xffefb6,transparent:true,opacity:.36}),root,(Math.sin(i*53)*.5+.5)*14-7,1+(i%6)*.45,Math.cos(i*7)*4);m.castShadow=false;dust.push(m);}
  const smoke=[];for(let i=0;i<5;i++){const m=ball(root,-5.8,3+i*.22,-.15,.15,.12,.15,new THREE.MeshStandardMaterial({color:0xd5d3bd,transparent:true,opacity:.15,depthWrite:false}));m.castShadow=false;smoke.push(m);}
+ let activeScene=-1;
+ const themeWalls=root.children.filter(m=>m.isMesh&&[0xd8b780,0xd3b078].includes(m.material?.color?.getHex()));
+ const themeFloor=root.children.filter(m=>m.isMesh&&m.position.y===.01);
+ [...themeWalls,...themeFloor].forEach(m=>m.material=m.material.clone());
+ // Open the rear of the workshop onto each destination; tall generic walls would hide the landmarks.
+ for(const item of root.children){
+  if(item.position.z===-5.58||(item.position.z<=-5.0&&item.position.y>1.1)||item.isLine)item.visible=false;
+ }
+ const gallery=group(root);let landmark=null;
+ function setScene(index){
+  if(index===activeScene)return;activeScene=index;const theme=SCENES[index];
+  if(landmark){root.remove(landmark);landmark.userData.dispose();}landmark=createLandmark(index);root.add(landmark);canvas.dataset.landmark=PLACES[index].id;
+  themeWalls.forEach(m=>m.material.color.setHex(theme.wall));themeFloor.forEach((m,i)=>m.material.color.setHex(theme.floor).offsetHSL(0,0,(i%5-2)*.013));sun.color.setHex(theme.sun);
+  gallery.traverse(m=>{if(m.isMesh){m.geometry.dispose();m.material.map?.dispose();m.material.dispose();}});gallery.clear();
+  box(gallery,4.7,1.53,-5.06,3.4,.13,.61,0x987343,false);
+  for(const x of [3.15,6.25])box(gallery,x,.77,-5.06,.09,1.48,.45,0x957751,false);
+  const texture=new THREE.CanvasTexture(decalCanvas(index));texture.colorSpace=THREE.SRGBColorSpace;
+  for(let i=0;i<3;i++){
+   const display=mesh(new THREE.CircleGeometry(.32,48),new THREE.MeshStandardMaterial({map:texture.clone(),roughness:.23}),gallery,3.8+i*.92,1.98,-5.05);display.material.map.needsUpdate=true;
+   const edge=mesh(new THREE.TorusGeometry(.34,.025,8,48),new THREE.MeshStandardMaterial({color:theme.accent,roughness:.3}),gallery,3.8+i*.92,1.98,-5.03);
+  }
+  texture.dispose();textSign(gallery,PLACES[index].workshop,.25,1.05,-5.36,3.4,.5,'#fff9eb',theme.accent);
+  player.group.position.set(-4.55,0,-2.15);
+ }
  let width=1,height=1,carry=null,carryKey='',moving=false,walking=0;
- function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;renderer.setSize(width,height,false);let aspect=width/height;let vh=Math.max(14.4,21.2/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
+ function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;renderer.setSize(width,height,false);let aspect=width/height;let vh=Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
  function canMove(x,z){const r=.37;if(x<-7.76||x>2.45||z<-4.9||z>5.13)return false;for(const s of STATIONS){if(x>s.x-s.w/2-r&&x<s.x+s.w/2+r&&z>s.z-s.d/2-r&&z<s.z+s.d/2+r)return false;}return true;}
  function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);walking+=dt*11;}
  function project(x,y,z){const p=new THREE.Vector3(x,y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
@@ -176,5 +204,5 @@ export function createWorld(canvas) {
   dust.forEach((m,i)=>{m.position.y+=dt*.018;if(m.position.y>3.8)m.position.y=.7;m.position.x+=Math.sin(time*.3+i)*dt*.012;});renderer.render(scene,camera);
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
- resize();return {scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove};
+ resize();return {scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove,setScene};
 }

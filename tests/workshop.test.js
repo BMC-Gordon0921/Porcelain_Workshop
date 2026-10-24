@@ -24,14 +24,20 @@ test('cut strokes are continuous and paint cannot create missing clay',()=>{
 test('undo and redo cannot perform another station’s task',()=>{
  const c=new SculptureChallenge();c.collectClay();c.startStation('paint');const original=c.piece.pixels.slice();c.beginStroke();c.stroke(45,50,60,50,4,'paint',2);const painted=c.piece.pixels.slice();c.startStation('carve');assert.equal(c.undo(),false);c.startStation('paint');assert.equal(c.undo(),true);assert.deepEqual(c.piece.pixels,original);assert.equal(c.redo(),true);assert.deepEqual(c.piece.pixels,painted);
 });
-test('90% passes, below 90% fails, and the displayed score cannot round a failure up',()=>{
- const target=Uint8Array.from([1,1,1,1,1,1,1,2,2,2,2,2,2,2]),boundary=target.slice();for(const i of [0,1,7,8])boundary[i]=3-boundary[i];assert.equal(compareSculpture(boundary,target).score,90);assert.equal(compareSculpture(boundary,target).passed,true);boundary[2]=2;assert.equal(compareSculpture(boundary,target).passed,false);
+test('80% passes, just below 80% fails without rounding up',()=>{
+ const target=Uint8Array.from([1,1,1,1,1,1,1,2,2,2,2,2,2,2]),boundary=target.slice();
+ for(const i of [0,1,2,3,7,8,9,10])boundary[i]=3-boundary[i];
+ assert.equal(compareSculpture(boundary,target).score,80);assert.equal(compareSculpture(boundary,target).passed,true);
+ boundary[4]=2;assert.equal(compareSculpture(boundary,target).passed,false);assert.ok(compareSculpture(boundary,target).score<80);
+ const precise=new Uint8Array(14000);precise.fill(1,0,7000);precise.fill(2,7000);const actual=precise.slice();actual.fill(2,0,4000);actual.fill(1,7000,11000);
+ assert.equal(compareSculpture(actual,precise).passed,true);actual[4000]=2;assert.equal(compareSculpture(actual,precise).passed,false);assert.equal(compareSculpture(actual,precise).score,79.9);
 });
 test('a failed submission restarts the same level and requires a new clump',()=>{
  const c=new SculptureChallenge();c.collectClay();const submitted=c.piece.pixels.slice(),r=c.submit();assert.equal(r.passed,false);assert.deepEqual(r.pixels,submitted);assert.equal(c.level,0);assert.equal(c.attempt,2);assert.equal(c.hasClay,false);assert.equal(c.money,0);assert.deepEqual(c.piece.pixels,makeBlank());c.collectClay();assert.equal(c.hasClay,true);
 });
-test('only passing sculptures pay and unlock all five levels',()=>{
- const c=new SculptureChallenge();for(let i=0;i<5;i++){assert.equal(c.level,i);c.collectClay();c.piece.pixels=c.target.slice();const r=c.submit();assert.equal(r.passed,true);assert.equal(r.score,100);assert.equal(c.delivered,i+1);}assert.equal(c.completed,true);assert.equal(c.money,350);assert.equal(c.submit().earned,0);
+test('five passes unlock the decal shop, not the end of the journey',()=>{
+ const c=new SculptureChallenge();for(let i=0;i<5;i++){assert.equal(c.level,i);c.collectClay();c.piece.pixels=c.target.slice();const r=c.submit();assert.equal(r.passed,true);assert.equal(r.score,100);assert.equal(r.earned,100);assert.equal(c.delivered,i+1);}
+ assert.equal(c.completed,false);assert.equal(c.phase,'ready');assert.equal(c.money,500);assert.equal(c.submit().earned,0);assert.equal(c.hasClay,false);assert.equal(c.collectClay(),false);
 });
 test('firing adds no similarity and saved work retains the actual cuts and colors',()=>{
  const c=new SculptureChallenge();c.collectClay();c.startStation('paint');c.beginStroke();c.stroke(40,40,60,60,4,'paint',2);const before=compareSculpture(c.piece.pixels,c.target);c.fire();c.tick(9);assert.equal(c.fired,true);assert.deepEqual(compareSculpture(c.piece.pixels,c.target),before);const saved=SculptureChallenge.restore(JSON.parse(JSON.stringify(c.serialize())));assert.equal(saved.hasClay,true);assert.deepEqual(saved.piece.pixels,c.piece.pixels);assert.equal(saved.activeStation,null);assert.equal(SculptureChallenge.restore({version:2}).hasClay,false);

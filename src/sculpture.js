@@ -1,14 +1,15 @@
 // A small, deterministic relief canvas: 0 is empty, 1–5 are actual clay/paint colors.
 export const SIZE = 112;
-export const PASS_SCORE = 90;
+import {SCENES, DECAL_PRICE, rewardForScore} from './campaign.js';
+export const PASS_SCORE = 80;
 export const PALETTE = [null, '#f2efe5', '#315fa9'];
-export const COLOR_NAMES = ['', 'Porcelain white', 'Cobalt blue'];
+export const COLOR_NAMES = ['', '瓷白', '钴蓝'];
 export const PRESETS = [
- {id:'band-pot',name:'Blue-band pot',customer:'Mabel',species:'rabbit',price:40,task:'Shape a simple rounded porcelain pot. Paint one broad blue band across the middle and leave the rest white.',hint:'One wide stripe is enough. Keep it level and leave plenty of white above and below.'},
- {id:'tall-pot',name:'Twin-band vase',customer:'Bramble',species:'bear',price:50,task:'Make a tall white pot with a short narrow neck. Paint two broad, straight blue bands around the body.',hint:'Make two easy stripes, with a clear white gap between them.'},
- {id:'dot-jar',name:'Three-dot jar',customer:'Clover',species:'cat',price:60,task:'Make a wide porcelain jar. Paint three large blue dots across its white middle.',hint:'Use a medium blue brush and one careful dab for each dot.'},
- {id:'rim-pot',name:'Blue-rim pot',customer:'Juniper',species:'bear',price:70,task:'Make a simple pot with a wide top and a narrower base. Paint a broad blue rim at the top.',hint:'This decoration is just one thick blue band along the wide rim.'},
- {id:'moon-jar',name:'Ribbon moon jar',customer:'Hazel',species:'rabbit',price:80,task:'Shape a round white moon jar with a small neck. Paint two wide vertical blue ribbons down its body.',hint:'Two straight blue strokes make the decoration. Leave a white strip between them.'}
+ {id:'band-pot',name:'一抹青花罐',customer:'Mabel',species:'rabbit',task:'把瓷泥做成圆润的罐子，在中间画一条宽宽的蓝色横带，其余保持白色。',hint:'横带保持平整，上下留出白色。'},
+ {id:'tall-pot',name:'双环青花瓶',customer:'Bramble',species:'bear',task:'做一个细高、短颈的白瓷瓶，在瓶身画两条宽蓝色横带。',hint:'两条横带中间留出清楚的白色间隔。'},
+ {id:'dot-jar',name:'三点青花坛',customer:'Clover',species:'cat',task:'做一个宽肚瓷坛，在白色瓶身的中间画三个大蓝点。',hint:'用中等画笔，分别画出三个圆点。'},
+ {id:'rim-pot',name:'蓝沿瓷罐',customer:'Juniper',species:'bear',task:'把罐口做宽、底部收窄，再沿顶部画一圈宽蓝边。',hint:'只需要在宽罐口上画一条厚实的蓝边。'},
+ {id:'moon-jar',name:'青带月光罐',customer:'Hazel',species:'rabbit',task:'做一个短颈的圆形月光罐，在瓶身画两条宽的竖向蓝带。',hint:'两条蓝带中间留出一条白色区域。'}
 ];
 export const DESIGNS = Object.fromEntries(PRESETS.map(p=>[p.id,p]));
 const ellipse=(x,y,cx,cy,rx,ry)=>((x-cx)/rx)**2+((y-cy)/ry)**2<=1;
@@ -84,16 +85,23 @@ export function compareSculpture(actual,target){
  let paint=0,classes=0;for(let c=1;c<PALETTE.length;c++)if(expected[c]||predicted[c]){paint+=(2*correct[c]/(expected[c]+predicted[c]))*100;classes++;}
  paint=classes?paint/classes:0;
  const raw=shape*.65+paint*.35;
- // Floor the displayed tenth so a failing 89.99 cannot look like a passing 90.
+ // Floor the displayed tenth so a failing 79.99 cannot look like a passing 80.
  return {score:Math.floor(raw*10+1e-8)/10,shape:Math.floor(shape*10+1e-8)/10,paint:Math.floor(paint*10+1e-8)/10,passed:raw+1e-9>=PASS_SCORE,missing,excess};
 }
 export class SculptureChallenge {
- constructor(){this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.completed=false;this.results=[];this.kiln=null;this.revision=0;this.newPiece();}
+ constructor(){this.scene=0;this.phase='levels';this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.submissions=0;this.results=[];this.collection=[];this.kiln=null;this.revision=0;this.newPiece();}
+ get completed(){return this.phase==='complete';}
+ get sceneInfo(){return SCENES[this.scene];}
+ get sceneResults(){return this.results.filter(r=>r.scene===this.scene);}
+ get scenePassed(){return this.sceneResults.length;}
+ get sceneComplete(){return this.scenePassed===PRESETS.length;}
+ get canWork(){return this.phase==='levels'||this.phase==='practice';}
+ get canPurchase(){return this.phase==='ready'&&this.sceneComplete&&this.money>=DECAL_PRICE;}
  get preset(){return PRESETS[this.level];}
- get orders(){return Array.from({length:3},(_,i)=>({id:this.delivered+i+1,design:PRESETS[(this.level+i)%PRESETS.length].id}));}
+ get orders(){return Array.from({length:3},(_,i)=>({id:this.submissions+i+1,design:PRESETS[(this.level+i)%PRESETS.length].id}));}
  newPiece(){this.target=createTarget(this.preset.id);this.piece={design:this.preset.id,stage:'sculpting',pixels:makeBlank(),revision:++this.revision};this.undoStack=[];this.redoStack=[];this.edits=0;this.hasClay=false;this.activeStation=null;this.fired=false;this.kiln=null;}
- collectClay(){this.newPiece();this.hasClay=true;return true;}
- startStation(station){if(!this.hasClay||!STATION_TOOLS[station]||this.completed)return false;this.activeStation=station;return true;}
+ collectClay(){if(!this.canWork)return false;this.newPiece();this.hasClay=true;return true;}
+ startStation(station){if(!this.hasClay||!STATION_TOOLS[station]||!this.canWork)return false;this.activeStation=station;return true;}
  endStation(){this.activeStation=null;}
  beginStroke(){if(!this.hasClay||!this.activeStation)return false;this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation});if(this.undoStack.length>50)this.undoStack.shift();this.redoStack=[];return true;}
  stroke(x0,y0,x1,y1,radius,tool,color,base=null){
@@ -104,17 +112,63 @@ export class SculptureChallenge {
  }
  undo(){const last=this.undoStack.at(-1);if(!last||last.station!==this.activeStation)return false;this.redoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation});this.piece.pixels=this.undoStack.pop().pixels;this.piece.revision=++this.revision;return true;}
  redo(){const last=this.redoStack.at(-1);if(!last||last.station!==this.activeStation)return false;this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation});this.piece.pixels=this.redoStack.pop().pixels;this.piece.revision=++this.revision;return true;}
- restart(){this.attempt++;this.newPiece();}
+ restart(){if(!this.canWork)return false;this.attempt++;this.newPiece();return true;}
  nextStation(){return null;}
- fire(){if(this.kiln||!this.hasClay)return false;this.kiln={design:this.preset.id,pixels:this.piece.pixels.slice(),remaining:9};return true;}
+ fire(){if(this.kiln||!this.hasClay||!this.canWork)return false;this.kiln={design:this.preset.id,pixels:this.piece.pixels.slice(),remaining:9};return true;}
  tick(dt){if(this.kiln){this.kiln.remaining=Math.max(0,this.kiln.remaining-Math.max(0,dt));if(!this.kiln.remaining)this.fired=true;}}
  submit(){
-  if(this.completed||!this.hasClay)return {passed:false,complete:this.completed,earned:0};
-  const result={...compareSculpture(this.piece.pixels,this.target),level:this.level+1,attempt:this.attempt,design:this.preset.id,pixels:this.piece.pixels.slice(),target:this.target.slice(),earned:0};
-  if(result.passed){result.earned=this.preset.price+Math.floor(result.score-90);this.money+=result.earned;this.delivered++;this.results.push({level:result.level,score:result.score});if(this.level===PRESETS.length-1){this.completed=true;}else{this.level++;this.attempt=1;this.newPiece();}}
-  else this.restart();
+  if(!this.canWork||!this.hasClay)return {valid:false,passed:false,complete:this.completed,earned:0};
+  const practice=this.phase==='practice';
+  const result={valid:true,...compareSculpture(this.piece.pixels,this.target),scene:this.scene,practice,level:this.level+1,attempt:this.attempt,design:this.preset.id,pixels:this.piece.pixels.slice(),target:this.target.slice()};
+  result.earned=rewardForScore(result.score);
+  this.money+=result.earned;
+  this.submissions++;
+  if(practice){this.phase='ready';this.level=4;this.attempt=1;this.newPiece();}
+  else if(result.passed){
+   this.delivered++;
+   this.results.push({scene:this.scene,level:result.level,score:result.score,earned:result.earned});
+   if(this.level===PRESETS.length-1)this.phase='ready';
+   else this.level++;
+   this.attempt=1;this.newPiece();
+  }else this.restart();
   return result;
  }
- serialize(){return {version:4,level:this.level,attempt:this.attempt,money:this.money,delivered:this.delivered,completed:this.completed,results:this.results,pixels:Array.from(this.piece.pixels),hasClay:this.hasClay,fired:this.fired,edits:this.edits};}
- static restore(data){const c=new SculptureChallenge();if(!data||data.version!==4||!Number.isInteger(data.level)||data.level<0||data.level>=5||!Array.isArray(data.pixels)||data.pixels.length!==SIZE*SIZE||data.pixels.some(p=>!Number.isInteger(p)||p<0||p>=PALETTE.length))return c;c.level=data.level;c.attempt=Math.max(1,data.attempt||1);c.money=Math.max(0,data.money||0);c.delivered=Math.max(0,data.delivered||0);c.completed=!!data.completed;c.results=Array.isArray(data.results)?data.results:[];c.newPiece();c.piece.pixels=Uint8Array.from(data.pixels);c.hasClay=!!data.hasClay;c.fired=!!data.fired;c.edits=data.edits||0;return c;}
+ beginPractice(level=0){
+  if(this.phase!=='ready'||!this.sceneComplete||!Number.isInteger(level)||level<0||level>=PRESETS.length)return false;
+  this.phase='practice';this.level=level;this.attempt=1;this.newPiece();return true;
+ }
+ buyDecal(){
+  if(!this.canPurchase)return false;
+  this.money-=DECAL_PRICE;this.phase='decal';this.newPiece();return true;
+ }
+ applyDecal(){
+  if(this.phase!=='decal')return false;
+  this.collection.push({scene:this.scene,id:this.sceneInfo.id,product:this.sceneInfo.product});
+  this.phase='crafted';return true;
+ }
+ nextScene(){
+  if(this.phase!=='crafted')return false;
+  if(this.scene===SCENES.length-1){this.phase='complete';return true;}
+  this.scene++;this.phase='levels';this.level=0;this.attempt=1;this.newPiece();return true;
+ }
+ serialize(){return {version:5,scene:this.scene,phase:this.phase,collection:this.collection,level:this.level,attempt:this.attempt,money:this.money,delivered:this.delivered,submissions:this.submissions,results:this.results,pixels:Array.from(this.piece.pixels),hasClay:this.hasClay,fired:this.fired,edits:this.edits};}
+ static restore(data){
+  const c=new SculptureChallenge();
+  if(!data||![4,5].includes(data.version)||!Number.isInteger(data.level)||data.level<0||data.level>=PRESETS.length||!Array.isArray(data.pixels)||data.pixels.length!==SIZE*SIZE||data.pixels.some(p=>!Number.isInteger(p)||p<0||p>=PALETTE.length))return c;
+  const integer=(v,fallback=0)=>Number.isSafeInteger(v)&&v>=0?v:fallback;
+  const old=data.version===4;
+  c.scene=old?0:integer(data.scene,0);
+  c.phase=old?(data.completed?'ready':'levels'):data.phase;
+  if(c.scene>=SCENES.length||!['levels','ready','practice','decal','crafted','complete'].includes(c.phase))return new SculptureChallenge();
+  c.level=data.level;c.attempt=Math.max(1,integer(data.attempt,1));c.money=integer(data.money);c.submissions=integer(data.submissions,data.delivered||0);
+  c.results=(Array.isArray(data.results)?data.results:[]).filter(r=>r&&Number.isInteger(r.level)&&r.level>=1&&r.level<=5&&Number.isFinite(r.score)&&r.score>=PASS_SCORE&&r.score<=100&&(old||(Number.isInteger(r.scene)&&r.scene>=0&&r.scene<=c.scene))).map(r=>({scene:old?0:r.scene,level:r.level,score:r.score,earned:rewardForScore(r.score)}));
+  c.delivered=c.results.length;
+  c.collection=old?[]:(Array.isArray(data.collection)?data.collection:[]).filter((item,i)=>item&&item.scene===i&&SCENES[i]?.id===item.id).map(item=>({scene:item.scene,id:SCENES[item.scene].id,product:SCENES[item.scene].product}));
+  const expectedCollection=c.scene+(['crafted','complete'].includes(c.phase)?1:0);
+  const unique=new Set(c.results.map(r=>`${r.scene}:${r.level}`));
+  if(unique.size!==c.results.length||c.collection.length!==expectedCollection||(c.phase==='complete'&&c.scene!==3))return new SculptureChallenge();
+  for(let scene=0;scene<c.scene;scene++)if(c.results.filter(r=>r.scene===scene).length!==5)return new SculptureChallenge();
+  if(c.phase==='levels'?(c.scenePassed!==c.level||c.sceneResults.some(r=>r.level>c.level)):!c.sceneComplete)return new SculptureChallenge();
+  c.newPiece();c.piece.pixels=Uint8Array.from(data.pixels);c.hasClay=c.canWork&&!!data.hasClay;c.fired=c.hasClay&&!!data.fired;c.edits=integer(data.edits);return c;
+ }
 }

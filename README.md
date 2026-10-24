@@ -1,49 +1,92 @@
-# Terra — Blue & White Porcelain Workshop
+# Terra · 景德镇瓷器之旅
 
-Playable prototype 04: a human sculptor making five simple blue-and-white porcelain pots in a cartoon 3D workshop.
+一个沿景德镇手绘地图展开的 Three.js 陶瓷工坊游戏。先观看景德镇介绍，再展开地图，沿四处地点各完成五关，购买贴画并贴到瓷碗上，最后收藏四件作品。
 
-## Run
+## 运行
+
+需要 Node.js 20.19+ 或 22.12+。
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
-Open http://localhost:5174. `npm run build` creates a production bundle; `npm run preview` serves it. `npm test` checks the station restrictions, clay deformation, painting, scoring, progression, resets, undo, and saved attempts.
+打开 http://127.0.0.1:5174/。`npm run build` 生成生产版本；`npm run preview` 预览生产版本；`npm test` 运行游戏逻辑测试。
 
-## Controls and stations
+## 开场与地图
 
-Move with **WASD / arrow keys**. Stand near a station and **hold E for 0.65 seconds** to open its task. **Esc** saves your marks and returns to the room.
+开场先介绍景德镇，再展开地图，不会在城市介绍前展示路线。
 
-- **Clay & presets:** collect a full clump of white porcelain clay. Every design starts from the same unshaped clump. Fresh clay can only be collected here.
-- **Rough shaping:** drag an outer edge inward to compress the clay, or outward to stretch it. The broad hand tool moves existing clay and its paint into a rough form; it cannot cut or paint.
-- **Detail carving:** drag the chisel to remove clay. Only this station cuts.
-- **Free painting:** choose porcelain white or cobalt blue and brush directly onto the surface. Only this station paints.
-- **Porcelain kiln:** optional firing. It adds no similarity points.
-- **Check & deliver:** submit your sculpture for its score and payment. Reviews only happen at this counter.
+1. **景德镇介绍（约 8.4 秒）**：以瓷碗、水墨山形和三段文字，介绍因瓷而兴的城市、代代相传的窑火与手作旅程。
+2. **地图展开（约 11.2 秒）**：使用用户提供的 `map.png`，按地图编号 1—4 点亮地标和游戏路线。
+3. **进入工坊**：点击“从古窑出发”或“继续旅程”进入当前站。
 
-Visit the stations in any order and return as often as you like. Each station keeps its own tool. The work surface has no target outline or translucent guide: compare it by eye with the separate reference picture. Use the size slider or **[ / ]** to resize the tool; shaping always uses a broad hand. **Ctrl/Cmd Z** undoes this station's most recent stroke; **Ctrl/Cmd Shift Z** redoes it.
+介绍阶段可点击“展开游历地图”或“跳过介绍”提前展开；地图阶段可暂停、跳过路线动画、点击站点或重播。按 Esc 可先跳过介绍，再跳过路线动画。系统启用减少动态效果时，保留静态景德镇介绍，点击后直接显示完整地图。
 
-## Five easy decorations
+游戏顶部的“地图”按钮可以查看当前位置、四站景致和纪念贴画。点击未解锁地点只查看介绍，不会跳过关卡。地图里的“重播地图开场”保留全部当前进度。每次贴花完成后，先保存下一站进度，再展示地图转场；中途关闭或刷新不会重复收费、发奖或卡住场景。
 
-1. **Blue-band pot:** a rounded white pot with one broad blue stripe.
-2. **Twin-band vase:** a tall pot with two broad horizontal blue stripes.
-3. **Three-dot jar:** a wide jar with three large blue dots.
-4. **Blue-rim pot:** a tapered pot with a thick blue rim.
-5. **Ribbon moon jar:** a round pot with two wide vertical blue ribbons.
+地图坐标以附件的 1024 × 1024 图像为基准，始终按原比例显示。连线是游戏探索路线，不是现实驾车或步行导航。
 
-There are no intricate floral patterns or tiny painted details.
+## 评分与奖励
 
-## Passing and restarting
+相似度 = 形状轮廓 IoU × 65% + 上色的平均颜色 F1 × 35%。每次有效提交按评分发奖，是否通过关卡单独判断。
 
-The review compares your actual shape and paint with the preset. Shape contributes 65% using silhouette intersection-over-union; paint contributes 35% using the average color F1 score. Missing clay, excess clay, and misplaced blue paint reduce the score.
+| 相似度 | 硬币 | 本关结果 |
+| --- | ---: | --- |
+| 低于 60% | 0 | 重试 |
+| 60% 至不足 70% | 60 | 重试 |
+| 70% 至不足 80% | 70 | 重试 |
+| 80% 至不足 90% | 80 | 通过 |
+| 90% 至不足 100% | 90 | 通过 |
+| 100% | 100 | 通过 |
 
-**At least 90% passes**, earns coins, and unlocks the next pot. **Below 90% fails** and restarts that level; collect a new clump at the clay station to try again. The result panel keeps a picture of the failed submission and shows separate shape and paint percentages. Completing all five pots opens the collection screen.
+分数向下显示到小数点后一位，不会将 79.99% 显示为通过。未通过时重新领取瓷泥，已有硬币保留；同一件提交不能重复领奖。
 
-Your current clay, level, attempt, and coins are saved in this browser tab. Undo history and an active kiln timer reset after a reload.
+## 四个场景与贴花
 
-## Prototype scope
+1. **古窑民俗博览区 → 青花缠枝纹 → 青花瓷碗**：第一张青花瓶的钴蓝花朵、藤蔓、双线边饰。
+2. **中国陶瓷博物馆 → 玲珑白瓷纹 → 玲珑白瓷碗**：第二张白瓷杯的米粒状透光花瓣。
+3. **御窑厂国家考古遗址公园 → 红金窑变纹 → 红金窑变碗**：第三张窑变瓶的金黄、朱红、深紫流釉。
+4. **陶溪川文创街区 → 粉彩花瓣纹 → 粉彩花瓣碗**：第四张花形瓷器的粉色花瓣、细脉和绿萼。
 
-The room, human sculptor, customers, and carried pottery are real Three.js geometry. Editing operates on a 112 × 112 front surface which becomes the exact colored silhouette of the carried 3D relief. Shaping compresses or stretches broad bands of this surface; it is an approximate sculpting mechanic, not a volumetric clay simulation. The score evaluates the front shape and paint.
+每个场景沿用五个手作订单：一抹青花罐、双环青花瓶、三点青花坛、蓝沿瓷罐、青带月光罐。场景切换会改变工坊墙面、地面、光线、装饰盘和 UI 主题，并更换工坊后的立体地标：古窑砖窑与烟囱、博物馆现代展馆与青花大瓶、御窑红砖拱券与探方、陶溪川老厂房与文创摊位。建筑是依据地图意象制作的游戏化模型。六个工作台及行走通道保持可用。
 
-Original procedural models and art. Optional synthesized sound starts muted. Keyboard/mouse and touch input are supported.
+- 完成本场景五关，**当前余额达到 400 币（含正好 400）**，即可购买该场景贴画。
+- 每个场景购买一次，立即扣除 400 币；剩余余额带入下一场景。
+- 在贴花台先选择贴画，再点击白瓷碗或“贴到碗上”。拖动模型可旋转查看。
+- 贴花完成才可进入下一场景；第四件瓷碗完成后点击完成旅程，进入四件藏品总览。
+- 新规则下五关最低奖励即为 400 币。旧版通关存档可能不足 400，贴画台会提供一个练习订单入口，补足余额。
+- 藏品页可以再次打开每件作品的 3D 预览。
+
+## 操作
+
+WASD / 方向键移动；走近工作台长按 E 约 0.65 秒操作；Esc 保存并退出面板。支持触摸控制。
+
+- **取泥与订单**：领取完整白色瓷泥；更换瓷泥只在这里进行。
+- **粗塑成形**：从边缘向内推压或向外拉伸，宽手掌调整已有瓷泥和颜色。
+- **细节雕刻**：刻刀去除多余瓷泥。
+- **手绘上色**：瓷白与钴蓝两种颜色，只改变已有表面的颜色。
+- **瓷器窑炉**：可选烧制，不增加相似度分数。
+- **评分与交付**：提交作品；完成五关后也可由这里进入贴花流程。
+
+Ctrl/Cmd + Z 撤销本站最近一笔；Ctrl/Cmd + Shift + Z 重做；[ / ] 或滑块调整工具大小。
+
+## 存档与资源
+
+新版使用 `terra-porcelain-journey-v5` 存档，保存在当前浏览器的 localStorage，并同步一份到 sessionStorage。刷新或重新打开相同地址后可继续；地址、端口或浏览器不同，存档独立。关卡、硬币、当前瓷泥、购买后未贴的贴画、已贴好的成品与场景都会保存。撤销历史、未完成窑炉计时不保存。
+
+同一个浏览器标签页中的旧版 v4 存档会迁移到第一场景，保留关卡、硬币与瓷泥；旧版五关完成会进入贴画购买阶段。原 v4 存档键保留。
+
+`public/maps/jingdezhen.png` 保存原始地图。`src/places.js` 维护四站地点、介绍及地图位置；`src/city-map.js` 负责分阶段开场和路线界面；`src/landmarks.js` 构建各站立体地标。
+
+`public/references/` 按顺序保存四张用户参考图。`src/decals.js` 以确定性的 Canvas 绘图重新设计四种环绕纹样，并生成 Three.js 贴图；不把照片背景或文字贴到瓷器上。`public/decals/` 提供四张 1024 × 512 PNG 导出版。这些纹样是依据参考图的风格重绘，玲珑效果通过釉色和高光表现，并非真实镂空。成品使用有内壁、口沿和圈足的 3D 碗模型。
+
+原手作编辑仍是 112 × 112 的正面瓷泥表面，角色携带的模型对应实际编辑轮廓；不是体积陶泥模拟。游戏运行无需外部字体或图片服务。
+
+## 验证
+
+`npm test` 覆盖评分档位、80% 边界、失败发奖、400 币购买、重复操作、四场景顺序、贴花、成品收藏、新旧存档恢复及原有手作工具行为。
+
+`tests/browser-smoke.mjs` 是可选浏览器检查，需要 Playwright 和 Chrome。它使用独立浏览器上下文，在本地预览中检查领取瓷泥、移动、雕刻、真实柜台提交、四个场景购买与贴花、刷新恢复和窄屏布局，并将截图写入 `qa/`。不会写入日常浏览器的游戏存档。
+
+`tests/map-browser.mjs` 检查介绍先于地图、自动展开、跳过与暂停、重播后保留作品、未解锁地图点不跳关、三次地图转场、四个地标、窄屏界面及减少动态效果模式。可用 `GAME_URL` 指定本地地址，`PLAYWRIGHT_MODULE` 指定已安装的 Playwright 模块；默认使用 Chrome。
