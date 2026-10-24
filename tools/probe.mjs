@@ -1,0 +1,10 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ channel: 'msedge' });
+const page = await browser.newPage();
+page.on('pageerror', (e) => console.log('PAGEERROR:', e.message));
+page.on('console', (m) => console.log('CONSOLE:', m.type(), m.text()));
+await page.goto(process.env.APP_URL || 'http://127.0.0.1:5175/', { waitUntil: 'load' });
+await page.waitForTimeout(2500);
+console.log('terra?', await page.evaluate(() => typeof window.__terra));
+console.log('lang?', await page.evaluate(() => document.documentElement.lang));
+await browser.close();

@@ -118,7 +118,25 @@ function textSign(parent,text,x,y,z,w=2.5,h=.6,color='#f6e8c7',bg='#556d56') {
 }
 export function createWorld(canvas) {
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
- const scene=new THREE.Scene();const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,100);camera.position.set(10,17,20);camera.lookAt(-.2,.7,-.7);
+ const scene=new THREE.Scene();
+ /* Orbit camera. Dragging with the left button turns the workshop; the polar
+    angle is clamped so the eye can rise overhead but never sink below the floor. */
+ const TARGET=new THREE.Vector3(-.2,.7,-.7);
+ const HOME_OFFSET=new THREE.Vector3(10,17,20).sub(TARGET);
+ const orbit={azimuth:Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),polar:Math.acos(HOME_OFFSET.y/HOME_OFFSET.length()),radius:HOME_OFFSET.length(),zoom:1};
+ const POLAR_MIN=THREE.MathUtils.degToRad(24),POLAR_MAX=Math.PI/2,ZOOM_MIN=.62,ZOOM_MAX=2.6;
+ const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,140);
+ function placeCamera(){const s=Math.sin(orbit.polar),c=Math.cos(orbit.polar);camera.position.set(TARGET.x+orbit.radius*s*Math.sin(orbit.azimuth),TARGET.y+orbit.radius*c,TARGET.z+orbit.radius*s*Math.cos(orbit.azimuth));camera.lookAt(TARGET);camera.zoom=orbit.zoom;camera.updateProjectionMatrix();camera.updateMatrixWorld();}
+ placeCamera();
+ let orbitDrag=null,interactionEnabled=false;
+ const onOrbitDown=e=>{if(!interactionEnabled||e.button!==0||!e.isPrimary)return;e.preventDefault();orbitDrag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.classList.add('is-orbiting');canvas.setPointerCapture?.(e.pointerId);};
+ const onOrbitMove=e=>{if(!interactionEnabled||!orbitDrag||e.pointerId!==orbitDrag.id)return;if(!(e.buttons&1)){onOrbitUp(e);return;}const dx=e.clientX-orbitDrag.x,dy=e.clientY-orbitDrag.y;orbitDrag.x=e.clientX;orbitDrag.y=e.clientY;orbit.azimuth-=dx*.0062;orbit.polar=THREE.MathUtils.clamp(orbit.polar+dy*.005,POLAR_MIN,POLAR_MAX);placeCamera();};
+ const onOrbitUp=()=>{if(!orbitDrag)return;const id=orbitDrag.id;orbitDrag=null;canvas.classList.remove('is-orbiting');if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);};
+ const onOrbitWheel=e=>{if(!interactionEnabled)return;e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*Math.exp(-delta*.0012),ZOOM_MIN,ZOOM_MAX);placeCamera();};
+ canvas.addEventListener('pointerdown',onOrbitDown);window.addEventListener('pointermove',onOrbitMove);window.addEventListener('pointerup',onOrbitUp);window.addEventListener('pointercancel',onOrbitUp);
+ canvas.addEventListener('wheel',onOrbitWheel,{passive:false});canvas.addEventListener('lostpointercapture',onOrbitUp);window.addEventListener('blur',onOrbitUp);document.addEventListener('visibilitychange',()=>{if(document.hidden)onOrbitUp();});
+ function setInteractionEnabled(value){interactionEnabled=!!value;if(!interactionEnabled)onOrbitUp();}
+ function resetView(){orbit.azimuth=Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z);orbit.polar=Math.acos(HOME_OFFSET.y/HOME_OFFSET.length());orbit.zoom=1;placeCamera();}
  scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
  const root=group(scene);
  box(root,0,-.43,0,16.8,.65,11.65,0xa39169);box(root,0,-.11,0,16.6,.18,11.45,0xc5bb99);
@@ -204,5 +222,5 @@ export function createWorld(canvas) {
   dust.forEach((m,i)=>{m.position.y+=dt*.018;if(m.position.y>3.8)m.position.y=.7;m.position.x+=Math.sin(time*.3+i)*dt*.012;});renderer.render(scene,camera);
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
- resize();return {scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove,setScene};
+ resize();return {scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled};
 }

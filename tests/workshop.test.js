@@ -33,10 +33,10 @@ test('80% passes, just below 80% fails without rounding up',()=>{
  assert.equal(compareSculpture(actual,precise).passed,true);actual[4000]=2;assert.equal(compareSculpture(actual,precise).passed,false);assert.equal(compareSculpture(actual,precise).score,79.9);
 });
 test('a failed submission restarts the same level and requires a new clump',()=>{
- const c=new SculptureChallenge();c.collectClay();const submitted=c.piece.pixels.slice(),r=c.submit();assert.equal(r.passed,false);assert.deepEqual(r.pixels,submitted);assert.equal(c.level,0);assert.equal(c.attempt,2);assert.equal(c.hasClay,false);assert.equal(c.money,0);assert.deepEqual(c.piece.pixels,makeBlank());c.collectClay();assert.equal(c.hasClay,true);
+ const c=new SculptureChallenge();c.collectClay();const submitted=c.piece.pixels.slice();c.fire();c.tick(9);const r=c.submit();assert.equal(r.passed,false);assert.deepEqual(r.pixels,submitted);assert.equal(c.level,0);assert.equal(c.attempt,2);assert.equal(c.hasClay,false);assert.equal(c.money,0);assert.deepEqual(c.piece.pixels,makeBlank());c.collectClay();assert.equal(c.hasClay,true);
 });
 test('five passes unlock the decal shop, not the end of the journey',()=>{
- const c=new SculptureChallenge();for(let i=0;i<5;i++){assert.equal(c.level,i);c.collectClay();c.piece.pixels=c.target.slice();const r=c.submit();assert.equal(r.passed,true);assert.equal(r.score,100);assert.equal(r.earned,100);assert.equal(c.delivered,i+1);}
+ const c=new SculptureChallenge();for(let i=0;i<5;i++){assert.equal(c.level,i);c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(9);const r=c.submit();assert.equal(r.passed,true);assert.equal(r.score,100);assert.equal(r.earned,100);assert.equal(c.delivered,i+1);}
  assert.equal(c.completed,false);assert.equal(c.phase,'ready');assert.equal(c.money,500);assert.equal(c.submit().earned,0);assert.equal(c.hasClay,false);assert.equal(c.collectClay(),false);
 });
 test('firing adds no similarity and saved work retains the actual cuts and colors',()=>{

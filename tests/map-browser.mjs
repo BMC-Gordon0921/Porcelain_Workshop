@@ -1,12 +1,13 @@
-const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright-core');
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 import {SculptureChallenge} from '../src/sculpture.js';
 import {SAVE_KEY} from '../src/campaign.js';
 import {PLACES} from '../src/places.js';
 const url=process.env.GAME_URL||'http://127.0.0.1:5174/';
-const out=new URL('../qa/',import.meta.url).pathname;await fs.mkdir(out,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-angle=metal']});
+const out=fileURLToPath(new URL('../qa/',import.meta.url));await fs.mkdir(out,{recursive:true});
+const browser=await chromium.launch({channel:process.env.CHROME_CHANNEL||'msedge',headless:true,args:[]});
 const errors=[];
 function listen(page){page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});}
 const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();listen(page);
@@ -14,12 +15,12 @@ await page.route('**/__map-test-fixture',route=>route.fulfill({contentType:'text
 async function enter(){await page.locator('#unfold-map').click();await page.locator('#start-button').click();}
 async function seed(c){await page.goto(url+'__map-test-fixture');await page.evaluate(({key,data})=>{localStorage.setItem(key,JSON.stringify(data));sessionStorage.setItem(key,JSON.stringify(data));},{key:SAVE_KEY,data:c.serialize()});await page.goto(url);await enter();}
 const read=()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),SAVE_KEY);
-const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.submit();};
+const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(9);c.submit();};
 try{
  await page.goto(url);await page.locator('#unfold-map').waitFor();
  assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');assert.equal(await page.locator('.opening-map-phase').isVisible(),false);
  await page.waitForTimeout(1800);await page.screenshot({path:out+'map-introduction.png'});
- await page.waitForFunction(()=>document.getElementById('welcome').dataset.openingStage==='map',{},{timeout:20000});assert.equal(await page.locator('.city-prologue').isVisible(),false);
+ assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');await page.locator('#unfold-map').click();assert.equal(await page.locator('.city-prologue').isVisible(),false);
  assert.equal(await page.locator('.city-map-image').evaluate(img=>img.complete&&img.naturalWidth>0),true);await page.locator('#pause-opening').click();
  const chapter=await page.locator('#welcome').getAttribute('data-chapter');await page.waitForTimeout(500);assert.equal(await page.locator('#welcome').getAttribute('data-chapter'),chapter);
  await page.locator('#skip-opening').click();assert.equal(await page.locator('#welcome').getAttribute('data-intro-state'),'complete');await page.screenshot({path:out+'map-opening.png'});
@@ -28,7 +29,7 @@ try{
  await page.locator('#start-button').click();await page.locator('#brief-done').click();assert.equal(await page.locator('#world').getAttribute('data-landmark'),'guyao');
  const initial=await read();await page.locator('#map-button').click();await page.locator('#city-map-content [data-place="3"]').click();assert.ok((await page.locator('.atlas-place-details').innerText()).includes('尚未抵达'));assert.deepEqual(await read(),initial);
  await page.locator('#map-continue').click();await page.locator('#brief-done').click();await page.screenshot({path:out+'map-location-1.png'});
- console.log('PASS: introduction precedes map; auto-unfold, pause, skip, rewind/resume; future pins cannot skip progression');
+ console.log('PASS: introduction precedes map; explicit map entry, pause, skip, rewind/resume; future pins cannot skip progression');
  // Replaying the opening never resets a sculpture or wallet.
  const edited=new SculptureChallenge();edited.collectClay();edited.piece.pixels[5000]=2;edited.money=70;await seed(edited);await page.locator('#brief-done').click();const beforeReplay=await read();await page.locator('#map-button').click();await page.locator('#map-replay-opening').click();assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'intro');await enter();assert.deepEqual(await read(),beforeReplay);
  console.log('PASS: replay preserves live clay, money and scene');

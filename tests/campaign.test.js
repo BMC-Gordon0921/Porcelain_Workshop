@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {SculptureChallenge, compareSculpture} from '../src/sculpture.js';
 import {rewardForScore, SCENES} from '../src/campaign.js';
-const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();return c.submit();};
+const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(9);return c.submit();};
 const passFive=c=>{for(let i=0;i<5;i++)pass(c);};
 const restore=c=>SculptureChallenge.restore(JSON.parse(JSON.stringify(c.serialize())));
 
@@ -14,7 +14,7 @@ test('60–79% submissions pay without unlocking the next level or paying twice'
  const counts=[0,0,0];const total=[0,0,0];for(const value of c.target)total[value]++;
  c.piece.pixels=c.target.map(v=>v&&++counts[v]<=total[v]*.8?3-v:v);
  const score=compareSculpture(c.piece.pixels,c.target).score;assert.ok(score>=60&&score<80,score);
- const r=c.submit();assert.equal(r.passed,false);assert.equal(r.earned,rewardForScore(score));assert.equal(c.money,r.earned);assert.equal(c.level,0);assert.equal(c.attempt,2);assert.equal(c.hasClay,false);assert.equal(c.submit().earned,0);assert.equal(c.money,r.earned);
+ c.fire();c.tick(9);const r=c.submit();assert.equal(r.passed,false);assert.equal(r.earned,rewardForScore(score));assert.equal(c.money,r.earned);assert.equal(c.level,0);assert.equal(c.attempt,2);assert.equal(c.hasClay,false);assert.equal(c.submit().earned,0);assert.equal(c.money,r.earned);
 });
 test('the shop requires five passes and exactly 400 coins suffices',()=>{
  const c=new SculptureChallenge();c.money=400;assert.equal(c.buyDecal(),false);assert.equal(c.money,400);

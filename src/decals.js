@@ -2,9 +2,70 @@ import * as THREE from 'three';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {SCENES} from './campaign.js';
 
-const canvases=new Map(), textures=new Map(), images=new Map();
+const canvases=new Map(), textures=new Map(), images=new Map(), glowCanvases=new Map(), glowTextures=new Map();
 const TAU=Math.PI*2;
 const noise=n=>{const v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v);};
+// Linglong porcelain: a pale glaze with petals that hold the light inside them.
+function linglongMotifs(ctx,mode){
+ const glow=mode==='glow';
+ if(glow){ctx.fillStyle='#000';ctx.fillRect(0,0,1024,512);}
+ else{
+  const base=ctx.createLinearGradient(0,0,0,512);
+  base.addColorStop(0,'#f8fbf5');base.addColorStop(.45,'#eaf1ea');base.addColorStop(1,'#dfe8e2');
+  ctx.fillStyle=base;ctx.fillRect(0,0,1024,512);
+  const sheen=ctx.createLinearGradient(0,0,1024,0);
+  sheen.addColorStop(0,'#ffffff00');sheen.addColorStop(.32,'#ffffff36');sheen.addColorStop(.5,'#ffffff05');sheen.addColorStop(.7,'#ffffff2e');sheen.addColorStop(1,'#ffffff00');
+  ctx.fillStyle=sheen;ctx.fillRect(0,0,1024,512);
+ }
+ const leaf=(x,y,angle,length,width,alpha)=>{
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+  const g=ctx.createLinearGradient(0,-length,0,length*.2);
+  if(glow){g.addColorStop(0,'#fff7dd');g.addColorStop(.45,'#ffe6ab');g.addColorStop(1,'#7a5a1e');}
+  else{g.addColorStop(0,'#fffefa');g.addColorStop(.5,'#fdf7e4');g.addColorStop(1,'#e4ece6');}
+  ctx.globalAlpha=alpha;ctx.fillStyle=g;
+  ctx.beginPath();ctx.moveTo(0,-length);ctx.bezierCurveTo(width,-length*.55,width*.72,length*.1,0,length*.34);ctx.bezierCurveTo(-width*.72,length*.1,-width,-length*.55,0,-length);ctx.fill();
+  if(!glow){ctx.globalAlpha=alpha*.55;ctx.strokeStyle='#cfe0d9';ctx.lineWidth=1;ctx.stroke();}
+  ctx.restore();
+ };
+ // Repeating sprays of rice-grain petals, the signature "rice pattern" of linglong ware.
+ for(let row=0;row<3;row++)for(let col=-1;col<6;col++){
+  const cx=col*218+(row%2)*109, cy=104+row*156;
+  ctx.save();ctx.translate(cx,cy);
+  for(let j=0;j<11;j++){
+   const a=j/11*TAU+row*.42, r=30+((j*37)%13);
+   leaf(Math.cos(a)*r,Math.sin(a)*r*.82,a+Math.PI/2,20+((j*17)%9),7.5,.92);
+  }
+  for(let j=0;j<4;j++){
+   const a=j/4*TAU+.6;
+   leaf(Math.cos(a)*13,Math.sin(a)*11,a+Math.PI/2,15,6,.85);
+  }
+  ctx.beginPath();ctx.arc(0,0,3.4,0,TAU);
+  ctx.fillStyle=glow?'#fffbe8':'#fffdf6';ctx.globalAlpha=.95;ctx.fill();ctx.restore();
+  // Drifting crescent petals between the sprays.
+  for(let k=0;k<3;k++){
+   const px=cx+70+noise(cx+row*31+k)*120, py=cy-58+noise(cy+k*17)*116;
+   leaf(px,py,noise(px+py)*TAU,14+noise(k+cx)*10,6,.55);
+  }
+ }
+ // Soft glowing horizon where the light pools at the foot of the bowl.
+ const foot=ctx.createLinearGradient(0,392,0,512);
+ if(glow){foot.addColorStop(0,'#000');foot.addColorStop(1,'#43310e');}
+ else{foot.addColorStop(0,'#e6eee8');foot.addColorStop(1,'#c9d9d1');}
+ ctx.fillStyle=foot;ctx.fillRect(0,392,1024,120);
+ for(const y of [16,23,488,495]){ctx.fillStyle=glow?'#2b2109':'#c3d5cd';ctx.fillRect(0,y,1024,2);}
+}
+function glowCanvas(index){
+ if(glowCanvases.has(index))return glowCanvases.get(index);
+ const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=512;
+ const ctx=canvas.getContext('2d');
+ if(index===1)linglongMotifs(ctx,'glow');
+ else{ctx.fillStyle='#000';ctx.fillRect(0,0,1024,512);}
+ glowCanvases.set(index,canvas);return canvas;
+}
+function glowTexture(index){
+ if(!glowTextures.has(index)){const t=new THREE.CanvasTexture(glowCanvas(index));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;t.anisotropy=4;glowTextures.set(index,t);}
+ return glowTextures.get(index);
+}
 function petal(ctx,x,y,angle,length,width,fill,stroke){
  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(-width,-length*.4,-width*.8,-length*.9,0,-length);ctx.bezierCurveTo(width*.8,-length*.9,width,-length*.4,0,0);if(Array.isArray(fill)){const gradient=ctx.createLinearGradient(0,-length,0,0);fill.forEach((color,i)=>gradient.addColorStop(i/(fill.length-1),color));ctx.fillStyle=gradient;}else ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.3;ctx.stroke();}ctx.restore();
 }
@@ -36,17 +97,7 @@ export function decalCanvas(index){
   ctx.strokeStyle='#294b7c';ctx.lineWidth=2;
   for(let x=0;x<1024;x+=32)for(const y of [32,465]){ctx.strokeRect(x+3,y,26,14);ctx.strokeRect(x+9,y+4,14,6);}
  }else if(index===1){
-  ctx.fillStyle='#e7eeea';ctx.fillRect(0,0,1024,512);
-  for(let row=0;row<3;row++)for(let col=-1;col<6;col++){
-   const x=col*220+(row%2)*110,y=100+row*158;
-   // Separate rice-shaped translucent petals, with soft glazed edges.
-   for(let ring=1;ring<=3;ring++)for(let j=0;j<ring*8;j++){
-    const a=j/(ring*8)*TAU+ring*.19,rr=ring*19;
-    ctx.save();ctx.translate(x+Math.sin(a)*rr,y+Math.cos(a)*rr);ctx.rotate(-a);ctx.shadowColor='#b4cdca';ctx.shadowBlur=4;ctx.beginPath();ctx.ellipse(0,0,3.3,8+ring,0,0,TAU);ctx.fillStyle='#fffef5';ctx.fill();ctx.restore();
-   }
-   ctx.fillStyle='#fffef8';ctx.beginPath();ctx.arc(x+94,y+58,4,0,TAU);ctx.fill();
-  }
-  for(const y of [16,23,488,495]){ctx.fillStyle='#bacfcd';ctx.fillRect(0,y,1024,2);}
+  linglongMotifs(ctx,'glaze');
  }else if(index===2){
   const glaze=ctx.createLinearGradient(0,0,0,512);for(const [p,c] of [[0,'#fce083'],[.19,'#efaa21'],[.46,'#ed4b09'],[.69,'#b51629'],[.91,'#462237'],[1,'#272036']])glaze.addColorStop(p,c);ctx.fillStyle=glaze;ctx.fillRect(0,0,1024,512);
   for(let x=0;x<1024;x+=2){
@@ -74,10 +125,14 @@ export function decalImage(index){return decalCanvas(index).toDataURL('image/png
 function decalTexture(index){
  if(!textures.has(index)){const t=new THREE.CanvasTexture(decalCanvas(index));t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;t.anisotropy=4;textures.set(index,t);}return textures.get(index);
 }
-function bowlModel(index,decorated){
+export function bowlModel(index,decorated){
  const group=new THREE.Group();
  const outer=[];for(let i=0;i<=32;i++){const t=i/32;outer.push(new THREE.Vector2(.4+1.03*Math.sin(t*Math.PI/2),.16+t*1.06));}
- const material=new THREE.MeshStandardMaterial({color:0xffffff,map:decorated?decalTexture(index):null,roughness:.2,metalness:.04});
+ // Linglong (scene 2) is lit from within: the pattern itself carries the light.
+ const linglong=index===1&&decorated;
+ const material=linglong
+  ?new THREE.MeshPhysicalMaterial({color:0xffffff,map:decalTexture(index),roughness:.14,metalness:.02,clearcoat:.7,clearcoatRoughness:.24,sheen:.7,sheenColor:new THREE.Color(0xfff3dc),emissive:0xffe2ad,emissiveIntensity:1.5,emissiveMap:glowTexture(index)})
+  :new THREE.MeshStandardMaterial({color:0xffffff,map:decorated?decalTexture(index):null,roughness:.2,metalness:.04});
  group.add(new THREE.Mesh(new THREE.LatheGeometry(outer,96),material));
  const inner=[];for(let i=32;i>=0;i--){const t=i/32;inner.push(new THREE.Vector2(.37+1.00*Math.sin(t*Math.PI/2),.25+t*.97));}inner.push(new THREE.Vector2(0,.25));
  const white=new THREE.MeshStandardMaterial({color:0xfffbf1,roughness:.17,metalness:.02});

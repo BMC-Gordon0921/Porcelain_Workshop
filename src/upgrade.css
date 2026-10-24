@@ -1,0 +1,245 @@
+/* Layer added on top of the three original sheets: new components plus legibility fixes. */
+
+/* ── brand marks ───────────────────────────────────────────── */
+.brand-mark{background:transparent;box-shadow:none;border-radius:13px;overflow:hidden;transform:rotate(-4deg)}
+.brand-mark img{width:100%;height:100%;object-fit:cover;display:block;border-radius:13px}
+.opening-brand>b{display:none}
+.opening-logo{height:30px;width:auto;display:block;mix-blend-mode:multiply}
+.lang-button{min-width:40px;font-size:12px;font-weight:700;letter-spacing:.4px}
+
+/* ── opening: four bowls on a turntable ────────────────────── */
+.prologue-carousel{position:absolute;inset:0;z-index:2}
+.prologue-porcelain>.porcelain-caption{display:none}
+.hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:pan-y}
+.hero-canvas.is-dragging{cursor:grabbing}
+.hero-canvas.is-hover{cursor:pointer}
+.hero-caption{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);width:min(94%,430px);display:flex;gap:11px;align-items:flex-start;padding:11px 15px;border-radius:15px;background:#fbf8eeea;border:1px solid #e3ddc9;box-shadow:0 12px 34px #4d55401c;backdrop-filter:blur(7px);transition:transform .35s ease,background .35s ease}
+.hero-caption.is-hover{transform:translateX(-50%) translateY(-3px);background:#fffdf6f5}
+.hero-index{font-family:'Fraunces',Georgia,serif;font-size:22px;line-height:1;color:#a46c4f;padding-top:2px}
+.hero-caption b{display:block;font-family:Georgia,'Songti SC',serif;font-size:15px;font-weight:600;color:#2f4757}
+.hero-caption small{display:block;margin-top:3px;font-size:12px;letter-spacing:1.1px;color:#8b8574}
+.hero-caption p{margin-top:6px;font-size:12px;line-height:1.65;color:#6f7568}
+.hero-hint{position:absolute;right:6%;top:6%;font-size:12px;letter-spacing:1.6px;color:#9a9c8b;background:#fbf8eecc;border:1px solid #e2dcc9;border-radius:999px;padding:5px 11px}
+
+/* ── kiln timing gauge ─────────────────────────────────────── */
+.kiln-view{height:190px}
+.kiln-gauge-wrap{position:relative;width:min(100%,310px);margin:2px auto 0;display:grid;place-items:center}
+.kiln-gauge{width:100%;height:auto;overflow:visible}
+.kiln-track{fill:#e3dbc4}
+.kiln-good{fill:#e9b471}
+.kiln-perfect{fill:#d4642c}
+#kiln-needle line{stroke:#7c4a2a;stroke-width:5;stroke-linecap:round;transition:stroke .2s}
+#kiln-needle circle{fill:#7c4a2a}
+#kiln-needle.live line{stroke:#cf4f24}
+#kiln-needle.live circle{fill:#cf4f24}
+.kiln-readout{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.kiln-readout strong{display:block;font-family:'Fraunces',Georgia,serif;font-size:32px;font-weight:600;color:#7c4a2a;line-height:1}
+.kiln-readout strong small{font-size:13px;margin-left:1px}
+.kiln-readout span{display:block;margin-top:4px;font-size:12px;letter-spacing:2px;color:#9a7a52}
+.kiln-readout span.grade-perfect{color:#c2502a}
+.kiln-readout span.grade-good{color:#5f7a45}
+.kiln-readout span.grade-plain{color:#8a8577}
+.kiln-caption{text-align:center;font-size:12px;color:#8b8574;margin-top:6px;min-height:18px}
+.kiln-verdict{margin:10px 0 0;padding:9px 13px;border-radius:10px;background:#f4edda;font-size:12px;text-align:center;color:#8a6a3c;letter-spacing:.3px}
+.kiln-verdict.grade-perfect{background:#fbeade;color:#b64d26}
+.kiln-verdict.grade-good{background:#eef1e2;color:#5b7343}
+.kiln-verdict.grade-plain{background:#eeebe1;color:#7d7a6d}
+
+/* ── legibility: the original UI set several labels at 7–9px ─ */
+.brand p{font-size:12px;letter-spacing:2.4px}
+.day-pill b{font-size:13px}
+.day-pill small{font-size:12px}
+.wallet small{font-size:12px}
+.wallet strong{font-size:15px}
+.scene-heading>span{font-size:12px}
+.scene-path>span{font-size:12px}
+.reference-heading span{font-size:12px}
+.reference-card p{font-size:12px}
+.reference-link{font-size:12px}
+.decal-goal small{font-size:12px}
+.decal-goal b{font-size:13px}
+.decal-goal div>span{font-size:12px}
+.collection-link{font-size:12px}
+.guide-card small{font-size:12px;letter-spacing:1.6px}
+.guide-card strong{font-size:14px}
+.guide-card p{font-size:12px;line-height:1.6}
+#interaction strong{font-size:13px}
+#interaction small{font-size:12px;letter-spacing:1.2px}
+.station-label{font-size:12px}
+.station-label .station-num{font-size:12px;width:19px;height:19px}
+.bottom-bar .controls span{font-size:12px}
+.bottom-bar .controls b{font-size:12px}
+.task-eyebrow,.eyebrow{font-size:12px}
+.task-header p,#task-description{font-size:12px;line-height:1.7}
+.task-footer{font-size:12px}
+.board-label{font-size:12px}
+.primary-button{font-size:13px}
+.secondary-button{font-size:12px}
+.purchase-note{font-size:12px}
+.score-detail{font-size:12px}
+.score-card p{font-size:12px}
+.score-card b{font-size:12px}
+.collection-card p{font-size:12px}
+.collection-card span{font-size:12px}
+.preset-gallery-card small{font-size:12px}
+.preset-gallery-card span{font-size:12px}
+.atlas-caption{font-size:12px}
+.atlas-rule{font-size:12px}
+.atlas-place-details>p{font-size:12px;line-height:1.8}
+.atlas-landmark-note small{font-size:12px}
+.atlas-sticker small{font-size:12px}
+.atlas-sticker span{font-size:12px}
+.opening-rules{font-size:12px}
+.opening-kicker{font-size:12px}
+.opening-lead{font-size:12px}
+.opening-chapter small{font-size:12px}
+.opening-chapter p{font-size:12px;line-height:1.75}
+.help-route p{font-size:12px;line-height:1.8}
+.help-note{font-size:12px;line-height:1.75}
+.prologue-caption,.porcelain-caption{font-size:12px}
+.opening-footnote{font-size:12px}
+.journey-layout p,.decal-details p{font-size:12px;line-height:1.7}
+.preview-caption{font-size:12px}
+.purchase-check{font-size:12px}
+.review-pair figcaption{font-size:12px}
+.earnings-banner span{font-size:12px}
+.reward-table span{font-size:12px}
+
+@media(max-width:760px){
+ .hero-caption{bottom:2%;padding:9px 12px;gap:8px}
+ .hero-caption b{font-size:13px}
+ .hero-caption small{font-size:12px}
+ .hero-caption p{font-size:12px}
+ .hero-hint{display:none}
+ .kiln-view{height:150px}
+ .kiln-readout strong{font-size:26px}
+ #interaction small{font-size:12px}
+ .station-label{font-size:12px}
+ .task-footer{font-size:12px}
+}
+
+/* opening language pill */
+.opening-lang{margin-left:auto;margin-right:10px;background:transparent;border:1px solid #d3cbb6;border-radius:999px;color:#7c7c6b;font:700 12px/1 inherit;letter-spacing:1px;padding:7px 12px;cursor:pointer;transition:background .2s,color .2s}
+.opening-lang:hover{background:#efe9d9;color:#3f4a3d}
+
+/* Readable controls and a single, fully framed porcelain specimen. */
+.prologue-porcelain{height:450px;animation:none}
+.hero-caption{bottom:0;max-width:420px;pointer-events:none}
+.hero-caption b{font-size:18px}
+.hero-caption small{font-size:12px;letter-spacing:.4px}
+.hero-caption p{display:none;font-size:14px;line-height:1.65}
+.hero-carousel.is-reading .hero-caption p{display:block}
+.hero-hint{font-size:12px;letter-spacing:.4px;pointer-events:none}
+.hero-canvas{touch-action:none}
+.prologue-unfold{font-size:16px;min-height:48px}
+.opening-skip{font-size:14px;letter-spacing:0}
+.opening-actions{flex-wrap:wrap}
+.opening-start{font-size:16px;white-space:normal}
+.opening-lead,.opening-chapter p,.atlas-place-details>p{font-size:14px;line-height:1.8}
+.opening-chapter{min-height:150px}
+.opening-copy,.atlas-detail,.editor-reference{min-width:0}
+.reset-view{position:absolute;left:18px;top:16px;z-index:2;border:1px solid #d2cbb8;border-radius:999px;padding:10px 16px;background:#faf6ebee;color:#465747;font-size:14px}
+.reset-view:disabled{opacity:.45}
+#world{touch-action:none;cursor:grab}
+#world.is-orbiting{cursor:grabbing}
+.interact-key{display:grid;place-items:center;border:2px solid #a9b69b;border-radius:50%}
+.interact-key>span{position:static;font-size:20px}
+.task-panel,.help-panel{max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain}
+.task-header p,#task-description,.help-panel>p,.help-route p,.help-note,.editor-reference>p,.maker-tip p,.guide-note{font-size:14px;line-height:1.75}
+.task-footer,.task-footer kbd,.canvas-corner,.board-label,.brush-row,.station-only,.station-tool,.preview-caption,.reward-table span{font-size:12px}
+.primary-button,.secondary-button{font-size:14px;min-height:44px;white-space:normal}
+.task-action-row{flex-wrap:wrap}
+.board-top{gap:10px;flex-wrap:wrap}
+.board-top>span:last-child{display:inline;font-size:12px}
+.guide-note{display:block!important;min-height:42px;color:#526d56}
+.brush-row{flex-wrap:wrap}
+.brush-row input{min-width:90px}
+.small-tool{min-width:36px;min-height:36px}
+.station-label{font-size:13px}
+.reference-card p,.reference-heading,.reference-link{font-size:12px;letter-spacing:0;line-height:1.6}
+.commissions{width:260px;right:22px;max-height:calc(100dvh - 185px);overflow-y:auto;padding:2px 4px 12px}
+#world-wrap{right:310px}
+.reference-card>img{height:135px}
+.reference-card h3{font-size:20px}
+.decal-goal div>span{font-size:12px;white-space:normal;line-height:1.5}
+.decal-goal b{white-space:normal;font-size:14px}
+.wallet strong{font-size:24px}
+.guide-card p{font-size:14px}
+.kiln-view{height:130px}
+.kiln-preview img{height:115px}
+.kiln-gauge-wrap{width:min(100%,270px)}
+.kiln-readout span,.kiln-caption,.kiln-verdict{font-size:14px;letter-spacing:0}
+.kiln-legend,.reward-breakdown{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:14px;line-height:1.8;margin:10px 0}
+.kiln-legend>span{padding:3px 9px;border-radius:7px;background:#e3dbc4}
+.kiln-legend>.grade-good{background:#e9b471;color:#543a18}
+.kiln-legend>.grade-perfect{background:#d4642c;color:#fff}
+.reward-breakdown b{font-size:18px}
+.earnings-banner span{font-size:14px}
+.reward-table{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:1100px) and (min-width:761px){.day-pill{display:none}.opening-copy>h1{font-size:38px}.opening-header{padding-inline:30px}.opening-layout{width:92%;gap:22px}}
+@media(max-width:760px){
+ .opening-header{flex-wrap:wrap;padding:12px 18px;gap:8px}
+ .opening-brand>span{display:none}
+ .opening-logo{height:25px}
+ .opening-lang{font-size:12px;padding:9px 12px;margin-right:0}
+ .opening-skip{font-size:12px}
+ .city-prologue{justify-content:flex-start;min-height:0;padding:10px 7vw 30px}
+ .prologue-porcelain{height:280px;max-width:400px;margin:0 auto 14px}
+ .hero-caption{bottom:0;padding:8px 12px}
+ .hero-caption b{font-size:16px}.hero-caption p{font-size:14px}
+ .hero-caption small{font-size:12px}
+ .prologue-copy>h1{font-size:58px}.prologue-copy>h2{font-size:18px;letter-spacing:2px}
+ .prologue-copy>p{font-size:14px;min-height:0;margin:16px 0}
+ .prologue-beats{margin-top:16px}
+ .prologue-unfold{font-size:16px}
+ .opening-lead,.opening-chapter p{font-size:14px}
+ .opening-chapter{min-height:0}.opening-start{font-size:14px}
+ .opening-footer{flex-wrap:wrap}.opening-timeline{width:100%;flex:none}.opening-timeline b{font-size:12px}
+ .topbar{padding-inline:12px}.brand h1{font-size:29px}.brand p{display:none}.brand-mark{width:34px;height:34px}.top-actions{gap:7px}.wallet{gap:5px;margin-right:0}.wallet svg{width:22px}.wallet small{display:none}.wallet strong{font-size:19px}
+ #world-wrap{right:0}
+ .commissions{left:12px;right:12px;top:80px;width:auto;max-height:160px;padding:0 0 6px;pointer-events:auto}
+ .reference-card{height:auto;min-height:98px;grid-template-columns:54px minmax(0,1fr);grid-template-rows:auto auto auto;gap:3px 9px}
+ .reference-card>img{width:51px;height:74px;grid-row:1/4}
+ .reference-heading{grid-column:2;grid-row:1;flex-wrap:wrap;gap:4px}
+ .reference-card h3{grid-column:2;grid-row:2;font-size:18px;line-height:1.4}
+ .reference-card p{grid-column:2;grid-row:3;margin:0;font-size:12px}
+ .reference-link{display:none}
+ .reset-view{top:auto;bottom:18px;left:12px;font-size:12px;padding:9px 12px}
+ .guide-card{max-width:calc(100vw - 28px)}.guide-card p{font-size:12px}
+ .camera-hint{display:none}.bottom-bar .controls{gap:10px}.bottom-bar kbd{font-size:12px}
+ .task-panel,.help-panel{max-height:calc(100dvh - 24px)}
+ .wide-panel .task-header p,.editor-reference>p,.help-panel>p{font-size:14px}
+ .editor-layout{grid-template-columns:1fr;gap:16px}
+ .editor-reference{display:grid;grid-template-columns:110px minmax(0,1fr);gap:7px 14px;align-items:start}
+ .editor-reference .board-label{grid-column:1}.target-preview{grid-column:1;grid-row:2/5;height:110px;width:110px}
+ .editor-reference h3{grid-column:2;grid-row:2;margin:0;font-size:18px}.editor-reference>p{grid-column:2;margin:0}
+ .editor-reference>.guide-note{grid-column:1/-1;min-height:0}
+ .editor-reference .paint-colors,.editor-reference .palette-label,.editor-reference .color-name{grid-column:2}
+ .sculpt-canvas-wrap canvas{max-height:none}.small-tool{min-width:36px;min-height:36px}
+ .paint-color{width:38px;height:38px}.canvas-corner{font-size:12px}
+ .editor-bottom>span{display:block;font-size:12px}
+ .wide-panel .task-footer,.wide-panel .task-footer kbd,.editor-bottom .primary-button,.secondary-button{font-size:12px}
+ .preset-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .preset-gallery-card>b{font-size:14px}.preset-gallery-card small,.preset-gallery-card span{font-size:12px}
+ .brief-pair{grid-template-columns:1fr 18px 1fr}.brief-rules{flex-wrap:wrap}
+ .brief-pair figcaption,.brief-rules,.brief-rules b{font-size:12px}
+ .kiln-view{height:95px}.kiln-preview img{height:90px}.kiln-gauge-wrap{width:230px}.kiln-legend{gap:8px;font-size:12px}
+ .reward-breakdown{font-size:14px}.earnings-banner{flex-wrap:wrap;gap:8px}
+}
+@media(pointer:coarse){.hero-caption p{display:block}.hero-caption small{display:none}}
+
+.kiln-preview{height:116px;width:140px;border-width:11px;border-radius:65px 65px 12px 12px;box-shadow:0 4px 0 #a97550,inset 0 0 24px #f6a34c}
+.kiln-preview img{height:88px;width:88px}
+.wide-panel .task-header p{font-size:14px}
+@media(max-width:760px){
+ .commissions{grid-template-columns:minmax(0,1fr) 132px;max-height:165px;overflow-y:auto}
+ .decal-goal{height:auto;min-height:110px;align-items:center}
+ .decal-goal>img{width:24px;height:43px}
+ .collection-link{position:static;grid-column:1/-1;justify-self:end;width:auto;gap:12px;padding:7px 10px}
+ .bottom-bar .controls .camera-hint{display:none}
+ .editor-reference>p:not(.guide-note){grid-row:3}
+ .editor-reference .station-note{display:none!important}
+ .kiln-view{height:100px}
+ .kiln-preview{height:92px;width:116px;border-width:9px}
+ .kiln-preview img{height:68px;width:68px}
+}

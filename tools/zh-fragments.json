@@ -1,0 +1,1422 @@
+[
+ {
+  "frag": "'青花缠枝纹'",
+  "count": 2,
+  "where": "campaign.js:5"
+ },
+ {
+  "frag": "'玲珑白瓷纹'",
+  "count": 2,
+  "where": "campaign.js:6"
+ },
+ {
+  "frag": "'红金窑变纹'",
+  "count": 2,
+  "where": "campaign.js:7"
+ },
+ {
+  "frag": "'粉彩花瓣纹'",
+  "count": 2,
+  "where": "campaign.js:8"
+ },
+ {
+  "frag": "80% 通关",
+  "count": 2,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "'▷ 继续'",
+  "count": 2,
+  "where": "city-map.js:17"
+ },
+ {
+  "frag": "'古窑民俗'",
+  "count": 2,
+  "where": "landmarks.js:29"
+ },
+ {
+  "frag": "'中国陶瓷博物馆'",
+  "count": 2,
+  "where": "landmarks.js:35"
+ },
+ {
+  "frag": "'陶溪川'",
+  "count": 2,
+  "where": "landmarks.js:54"
+ },
+ {
+  "frag": "硬币",
+  "count": 2,
+  "where": "main.js:32"
+ },
+ {
+  "frag": "`场景 {} / 4 · {}`",
+  "count": 2,
+  "where": "main.js:34"
+ },
+ {
+  "frag": "订单参考图",
+  "count": 2,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "'请先到取泥台领取瓷泥。'",
+  "count": 2,
+  "where": "main.js:62"
+ },
+ {
+  "frag": "'粗塑成形'",
+  "count": 2,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'细节雕刻'",
+  "count": 2,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'手绘上色'",
+  "count": 2,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "`{} · 第 {} 关`",
+  "count": 2,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "你的作品",
+  "count": 2,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "\"开启声音\"",
+  "count": 2,
+  "where": "index.html:15"
+ },
+ {
+  "frag": "\"玩法说明\"",
+  "count": 2,
+  "where": "index.html:15"
+ },
+ {
+  "frag": "\"更换瓷泥\"",
+  "count": 2,
+  "where": "index.html:20"
+ },
+ {
+  "frag": "'青花瓷碗'",
+  "count": 1,
+  "where": "campaign.js:5"
+ },
+ {
+  "frag": "'钴蓝花朵、舒展的藤蔓与双线边饰，取自第一张青花瓶。'",
+  "count": 1,
+  "where": "campaign.js:5"
+ },
+ {
+  "frag": "'玲珑白瓷碗'",
+  "count": 1,
+  "where": "campaign.js:6"
+ },
+ {
+  "frag": "'以第二张白瓷杯为灵感，米粒状花瓣在淡青白釉上透出柔光。'",
+  "count": 1,
+  "where": "campaign.js:6"
+ },
+ {
+  "frag": "'红金窑变碗'",
+  "count": 1,
+  "where": "campaign.js:7"
+ },
+ {
+  "frag": "'第三张窑变瓶的金黄、朱红和深紫，化作向下流淌的釉色。'",
+  "count": 1,
+  "where": "campaign.js:7"
+ },
+ {
+  "frag": "'粉彩花瓣碗'",
+  "count": 1,
+  "where": "campaign.js:8"
+ },
+ {
+  "frag": "'第四张花形瓷器的粉色花瓣、纤细脉络与嫩绿花萼，环绕碗身。'",
+  "count": 1,
+  "where": "campaign.js:8"
+ },
+ {
+  "frag": "\"第 {} 站：{}\"",
+  "count": 1,
+  "where": "city-map.js:4"
+ },
+ {
+  "frag": "'景德镇瓷器之旅开场'",
+  "count": 1,
+  "where": "city-map.js:10"
+ },
+ {
+  "frag": "景德镇 · 瓷器之旅",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "跳过动画",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "江西 · 景德镇",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "景德镇",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "千年瓷都 · 窑火不息",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "展开游历地图",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "瓷",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "韵",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "一抔泥，一炉火，一城瓷。",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "千年瓷都 · 一城窑火",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "循着窑火，",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "走进",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "景德镇。",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "一张地图，四处瓷韵。",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "从古窑到陶溪川，把城市的故事",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "做成你亲手收藏的四只瓷碗。",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "↺ 重播",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "每站 5 关",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "400 币兑换贴画",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "景德镇 · 手作游历图",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "探索路线 01—04",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "Ⅱ 暂停",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "山水之间，人文与烟火。",
+  "count": 1,
+  "where": "city-map.js:13"
+ },
+ {
+  "frag": "'Ⅱ 暂停'",
+  "count": 1,
+  "where": "city-map.js:17"
+ },
+ {
+  "frag": "'继续开场动画'",
+  "count": 1,
+  "where": "city-map.js:17"
+ },
+ {
+  "frag": "'暂停开场动画'",
+  "count": 1,
+  "where": "city-map.js:17"
+ },
+ {
+  "frag": "'路线已展开 ✓'",
+  "count": 1,
+  "where": "city-map.js:32"
+ },
+ {
+  "frag": "'↺ 重播'",
+  "count": 1,
+  "where": "city-map.js:32"
+ },
+ {
+  "frag": "'重播开场动画'",
+  "count": 1,
+  "where": "city-map.js:32"
+ },
+ {
+  "frag": "'跳过路线动画 ↗'",
+  "count": 1,
+  "where": "city-map.js:44"
+ },
+ {
+  "frag": "'跳过介绍 · 展开地图 ↗'",
+  "count": 1,
+  "where": "city-map.js:47"
+ },
+ {
+  "frag": "根据景德镇手绘地图展开的游戏路线 · 点击标记查看各站",
+  "count": 1,
+  "where": "city-map.js:54"
+ },
+ {
+  "frag": "'已收藏'",
+  "count": 1,
+  "where": "city-map.js:54"
+ },
+ {
+  "frag": "'待收集'",
+  "count": 1,
+  "where": "city-map.js:54"
+ },
+ {
+  "frag": "完成本站五关，购买并贴好贴画，才能开启下一站。",
+  "count": 1,
+  "where": "city-map.js:54"
+ },
+ {
+  "frag": "这一站的景致",
+  "count": 1,
+  "where": "city-map.js:56"
+ },
+ {
+  "frag": "纪念贴画",
+  "count": 1,
+  "where": "city-map.js:56"
+ },
+ {
+  "frag": "${owned?'✓ 已收藏':selected===state.scene?`",
+  "count": 1,
+  "where": "city-map.js:56"
+ },
+ {
+  "frag": "`:selected>state.scene?'尚未抵达 · 先完成前一站':'已走过'}",
+  "count": 1,
+  "where": "city-map.js:56"
+ },
+ {
+  "frag": "'御窑 · 寻迹'",
+  "count": 1,
+  "where": "landmarks.js:49"
+ },
+ {
+  "frag": "'关闭声音'",
+  "count": 1,
+  "where": "main.js:26"
+ },
+ {
+  "frag": "'开启声音'",
+  "count": 1,
+  "where": "main.js:26"
+ },
+ {
+  "frag": "${[[\"低于60%\",0],[\"60–69%\",60],[\"70–79%\",70],[\"80–89%\",80],[\"90–99%\",90],[\"100%\",100]].map(([score,coins])=>`",
+  "count": 1,
+  "where": "main.js:28"
+ },
+ {
+  "frag": "瓷器之旅 · {} / 4",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "${state.phase==='practice'?'练习订单':`",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "60% 起奖励 · 最高 100 硬币",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "\"第 {} 关：{}\"",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "本场景贴画 · 400 币",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "${state.phase==='decal'?'已购买 · 点击贴花':state.phase==='crafted'?'已制成 · 进入下一场景':state.completed?'四件作品已集齐':`",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "我的瓷器藏品",
+  "count": 1,
+  "where": "main.js:35"
+ },
+ {
+  "frag": "`第 {} 关 · 第 {} 次尝试`",
+  "count": 1,
+  "where": "main.js:37"
+ },
+ {
+  "frag": "'80% 通关 · 60% 起奖励'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'五关完成 · 制作场景成品'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'塑形、雕刻、上色'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'到取泥台领取瓷泥'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'点击右侧贴画，完成你的瓷碗'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'走近对应工作台，长按 E 开始操作。'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'购买 → 选择贴画 → 贴到碗上 → 下一场景'",
+  "count": 1,
+  "where": "main.js:38"
+ },
+ {
+  "frag": "'进度自动保存。按 Esc 返回工坊。'",
+  "count": 1,
+  "where": "main.js:42"
+ },
+ {
+  "frag": "`{} · ${state.phase==='practice'?'练习订单':`",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "`} · 尝试 {}`",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "对照形状与蓝色装饰，自由制作。",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "达到 80% 通关",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "未通过则重试本关，已获得硬币保留。",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "累计 400 币购买贴画",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "完成五关后购买，贴到瓷碗上进入下一场景。",
+  "count": 1,
+  "where": "main.js:51"
+ },
+ {
+  "frag": "'用双手推压瓷泥'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'从外边缘向内拖动以压缩瓷泥，向外拖动以拉伸。用宽手掌调整大体形状，再去雕刻台修整。'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'✋ 推压瓷泥 · 宽手掌'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'这里只能推压塑形，现有颜色会随瓷泥一起移动。雕刻和上色请去对应工作台。'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'刻去多余的瓷泥'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'拖动刻刀去除多余瓷泥，对照右侧图片修整轮廓。刻多了可以撤销。'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'✂ 雕刻 · 刻刀'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'这里只能去除瓷泥。推压造型请去塑形台，绘制颜色请去上色台。'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'画上你的青花'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'选择颜色，在瓷器表面拖动画笔。上色只改变颜色，不改变轮廓。'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'● 上色 · 画笔'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "'这里只能绘画。切去瓷泥请去雕刻台，改变造型请去塑形台。'",
+  "count": 1,
+  "where": "main.js:64"
+ },
+ {
+  "frag": "`第 {} 关 · {} · 尝试 {}`",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "你的瓷泥 · 正面",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "已保存",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "亲手制作",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "对照参考图，观察形状与花纹。",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "保存并离开",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "带上作品到评分与交付台查看分数。",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "拖动操作",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "撤销本次操作",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "工具大小",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "保存并关闭",
+  "count": 1,
+  "where": "main.js:66"
+ },
+ {
+  "frag": "'正在制作…'",
+  "count": 1,
+  "where": "main.js:67"
+ },
+ {
+  "frag": "'已保存'",
+  "count": 1,
+  "where": "main.js:67"
+ },
+ {
+  "frag": "'可选 · 瓷器窑炉'",
+  "count": 1,
+  "where": "main.js:73"
+ },
+ {
+  "frag": "'让窑火温暖你的作品'",
+  "count": 1,
+  "where": "main.js:73"
+ },
+ {
+  "frag": "'烧制是可选步骤，不增加相似度分数。烧制之后仍可继续雕刻和上色。'",
+  "count": 1,
+  "where": "main.js:73"
+ },
+ {
+  "frag": "开始烧制",
+  "count": 1,
+  "where": "main.js:73"
+ },
+ {
+  "frag": "`{} 秒`",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'烧制完成 ✦'",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'随时可以开始'",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'烧制期间可以离开窑炉，继续制作。'",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'烧制完成后，到交付台根据形状和上色评分。'",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'烧制中…'",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'完成 · 返回工坊'",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'开始烧制",
+  "count": 1,
+  "where": "main.js:76"
+ },
+ {
+  "frag": "'先带上你制作的瓷器，再到这里评分。'",
+  "count": 1,
+  "where": "main.js:78"
+ },
+ {
+  "frag": "'看看这件作品吧'",
+  "count": 1,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "'评分由形状 65% 和上色 35% 组成。达到 80% 通过本关；低于 80% 重试，60% 起仍可获得硬币。'",
+  "count": 1,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "参考作品",
+  "count": 1,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "继续完善",
+  "count": 1,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "提交评分",
+  "count": 1,
+  "where": "main.js:79"
+ },
+ {
+  "frag": "'前往贴画台'",
+  "count": 1,
+  "where": "main.js:84"
+ },
+ {
+  "frag": "'查看下一关'",
+  "count": 1,
+  "where": "main.js:84"
+ },
+ {
+  "frag": "'再试一次'",
+  "count": 1,
+  "where": "main.js:84"
+ },
+ {
+  "frag": "`{} · ${result.practice?'练习订单':`",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "'作品通过啦！'",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "'再完善一点，就更好了'",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "'本次得分与硬币已保存。'",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "'本关需要达到 80%。这次获得的硬币保留，领取新瓷泥后继续尝试。'",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "订单参考",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "相似度",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "通关标准 80%",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "形状 · 权重 65%",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "上色 · 权重 35%",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "当前余额 {} 币 · 本场景 {}/5 关",
+  "count": 1,
+  "where": "main.js:85"
+ },
+ {
+  "frag": "'从一块瓷泥开始'",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "'领取瓷泥后，自由选择塑形、雕刻、上色的顺序。每个工作台使用自己的工具。'",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "'✓ 已通过'",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "'当前订单'",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "'80% 解锁下一关'",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "查看订单",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "领取完整瓷泥",
+  "count": 1,
+  "where": "main.js:90"
+ },
+ {
+  "frag": "'瓷泥已领取，去工作台开始制作吧。'",
+  "count": 1,
+  "where": "main.js:91"
+ },
+ {
+  "frag": "'请到取泥台领取新瓷泥。'",
+  "count": 1,
+  "where": "main.js:94"
+ },
+ {
+  "frag": "'重新制作'",
+  "count": 1,
+  "where": "main.js:96"
+ },
+ {
+  "frag": "'换一块新瓷泥？'",
+  "count": 1,
+  "where": "main.js:96"
+ },
+ {
+  "frag": "'当前作品会重置，已通过的关卡、藏品与硬币会保留。'",
+  "count": 1,
+  "where": "main.js:96"
+ },
+ {
+  "frag": "保留作品",
+  "count": 1,
+  "where": "main.js:96"
+ },
+ {
+  "frag": "领取新瓷泥",
+  "count": 1,
+  "where": "main.js:96"
+ },
+ {
+  "frag": "'走到取泥台，可以换一块新瓷泥。'",
+  "count": 1,
+  "where": "main.js:99"
+ },
+ {
+  "frag": "'到取泥台更换瓷泥'",
+  "count": 1,
+  "where": "main.js:99"
+ },
+ {
+  "frag": "`场景 {} / 4 · 贴画工坊`",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "成品预览 · 拖动旋转",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "参考图 {} · 按上传顺序",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "完成本场景五关，用 400 硬币购买贴画；亲手贴到白瓷碗上，开启下一场景。",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "五关通过",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "硬币余额",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "购买贴画 · {} 币",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "`:state.sceneComplete?'余额不足，可以完成练习订单获得硬币。':'先完成本场景的五个订单。'}",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "'达到 400 币即可购买 · 贴好后进入下一场景 · 每个场景限购一次'",
+  "count": 1,
+  "where": "main.js:104"
+ },
+ {
+  "frag": "`{}，完成！`",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "'为白瓷碗贴上新纹样'",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "'这件瓷器已经收进你的藏品。准备去下一处工坊吧。'",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "'先选择右侧贴画，再点击白瓷碗或“贴到碗上”。拖动瓷碗可以旋转查看。'",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "'完成旅程 · 查看四件藏品'",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "'进入下一场景：'",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "贴到碗上",
+  "count": 1,
+  "where": "main.js:112"
+ },
+ {
+  "frag": "'贴画已选中 · 点击瓷碗完成贴花'",
+  "count": 1,
+  "where": "main.js:116"
+ },
+ {
+  "frag": "`瓷器之旅 · {} / 4 件藏品`",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'四方瓷韵，圆满收藏'",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'你的瓷器藏品'",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'四个场景、二十个订单，四张贴画都成为了你亲手完成的瓷碗。'",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'按参考图的顺序，走过四个工坊，收集四种瓷器。'",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "待收藏",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'✓ 已贴花 · 已收藏'",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'五关通关 + 400 硬币'",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "剩余 {} 硬币",
+  "count": 1,
+  "where": "main.js:120"
+ },
+ {
+  "frag": "'我的藏品'",
+  "count": 1,
+  "where": "main.js:127"
+ },
+ {
+  "frag": "拖动旋转 · 查看环绕纹样",
+  "count": 1,
+  "where": "main.js:127"
+ },
+ {
+  "frag": "返回藏品",
+  "count": 1,
+  "where": "main.js:127"
+ },
+ {
+  "frag": "'景德镇 · 四站游历图'",
+  "count": 1,
+  "where": "main.js:134"
+ },
+ {
+  "frag": "'循着地图，走向下一站'",
+  "count": 1,
+  "where": "main.js:134"
+ },
+ {
+  "frag": "'你的瓷都足迹'",
+  "count": 1,
+  "where": "main.js:134"
+ },
+ {
+  "frag": "'沿地图上的 1—4 号地点，完成五关、收集贴画，把每一站做成一件纪念。'",
+  "count": 1,
+  "where": "main.js:134"
+ },
+ {
+  "frag": "'游戏探索路线 · 当前关卡、硬币与瓷器进度自动保存'",
+  "count": 1,
+  "where": "main.js:134"
+ },
+ {
+  "frag": "'重新开启旅程'",
+  "count": 1,
+  "where": "main.js:139"
+ },
+ {
+  "frag": "'从第一间工坊重新开始？'",
+  "count": 1,
+  "where": "main.js:139"
+ },
+ {
+  "frag": "'会清空本次旅程的关卡、硬币和四件藏品。'",
+  "count": 1,
+  "where": "main.js:139"
+ },
+ {
+  "frag": "取消",
+  "count": 1,
+  "where": "main.js:139"
+ },
+ {
+  "frag": "重新开始",
+  "count": 1,
+  "where": "main.js:139"
+ },
+ {
+  "frag": "'领取完整瓷泥'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'推压瓷泥，调整形状'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'用刻刀去除多余瓷泥'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'选择颜色，亲手绘制'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'烧制瓷器 · 可选'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'提交作品并评分'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'购买贴画与制作成品'",
+  "count": 1,
+  "where": "main.js:143"
+ },
+ {
+  "frag": "'叮！烧制完成，可以继续制作或提交评分。'",
+  "count": 1,
+  "where": "main.js:161"
+ },
+ {
+  "frag": "'再坚持一下…'",
+  "count": 1,
+  "where": "main.js:167"
+ },
+ {
+  "frag": "'长按 E 开始操作'",
+  "count": 1,
+  "where": "main.js:167"
+ },
+ {
+  "frag": "'古窑民俗博览区'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'第一站 · 窑火初见'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'古窑 · 制瓷 · 传承'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'古窑手作坊'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'从老窑的烟囱下出发，让第一抹青花在瓷泥上生长。'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'窑火微明，木架上摆着待烧的瓷坯。你的第一份青花订单正在这里等你。'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'砖窑、烟囱、灰瓦坡顶与木制晾坯架'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'窑火'",
+  "count": 1,
+  "where": "places.js:4"
+ },
+ {
+  "frag": "'陶瓷博物馆'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'第二站 · 瓷光入藏'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'展馆 · 玲珑 · 光影'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'博物馆体验工坊'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'循着昌江的水色，走进收藏瓷光的展馆，寻找白瓷上的玲珑花影。'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'明亮的展厅与玻璃展柜之间，观察瓷器的形与光，把玲珑纹样带回你的碗上。'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'现代展馆、玻璃幕墙、陈列柜与青花大瓶'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'瓷光'",
+  "count": 1,
+  "where": "places.js:5"
+ },
+ {
+  "frag": "'御窑厂国家考古遗址公园'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'御窑厂遗址'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'第三站 · 御窑寻色'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'遗址 · 拱券 · 流釉'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'御窑遗址研习坊'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'转向御窑旧址，穿过红砖拱券，在窑火留下的颜色里寻找金与红。'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'砖拱与旧窑遗迹围起新的手作课堂。完成五份订单，收集一张红金窑变贴画。'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'红砖拱券、残墙、考古探方与旧窑基座'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'御色'",
+  "count": 1,
+  "where": "places.js:6"
+ },
+ {
+  "frag": "'陶溪川文创街区'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'第四站 · 花开陶溪'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'厂房 · 市集 · 新生'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'陶溪川创意工坊'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'最后来到陶溪川，在老厂房与创意市集间，给这段旅程添上一瓣粉色。'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'高烟囱旁的红砖厂房亮起灯光。把最后一张花瓣贴画贴上瓷碗，集齐景德镇四件纪念。'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'红砖厂房、锯齿屋顶、高烟囱与文创市集'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'花开'",
+  "count": 1,
+  "where": "places.js:7"
+ },
+ {
+  "frag": "'因瓷而名，因瓷而兴。\\n山水之间，一座城市与泥、火相伴。'",
+  "count": 1,
+  "where": "places.js:16"
+ },
+ {
+  "frag": "'千年窑火不熄，匠心代代相传。\\n从一抔瓷泥，到一件温润的器物。'",
+  "count": 1,
+  "where": "places.js:17"
+ },
+ {
+  "frag": "'走过古窑与展馆，穿行遗址与街巷。\\n把景德镇的故事，做成属于你的瓷韵。'",
+  "count": 1,
+  "where": "places.js:18"
+ },
+ {
+  "frag": "'瓷白'",
+  "count": 1,
+  "where": "sculpture.js:6"
+ },
+ {
+  "frag": "'钴蓝'",
+  "count": 1,
+  "where": "sculpture.js:6"
+ },
+ {
+  "frag": "'一抹青花罐'",
+  "count": 1,
+  "where": "sculpture.js:8"
+ },
+ {
+  "frag": "'把瓷泥做成圆润的罐子，在中间画一条宽宽的蓝色横带，其余保持白色。'",
+  "count": 1,
+  "where": "sculpture.js:8"
+ },
+ {
+  "frag": "'横带保持平整，上下留出白色。'",
+  "count": 1,
+  "where": "sculpture.js:8"
+ },
+ {
+  "frag": "'双环青花瓶'",
+  "count": 1,
+  "where": "sculpture.js:9"
+ },
+ {
+  "frag": "'做一个细高、短颈的白瓷瓶，在瓶身画两条宽蓝色横带。'",
+  "count": 1,
+  "where": "sculpture.js:9"
+ },
+ {
+  "frag": "'两条横带中间留出清楚的白色间隔。'",
+  "count": 1,
+  "where": "sculpture.js:9"
+ },
+ {
+  "frag": "'三点青花坛'",
+  "count": 1,
+  "where": "sculpture.js:10"
+ },
+ {
+  "frag": "'做一个宽肚瓷坛，在白色瓶身的中间画三个大蓝点。'",
+  "count": 1,
+  "where": "sculpture.js:10"
+ },
+ {
+  "frag": "'用中等画笔，分别画出三个圆点。'",
+  "count": 1,
+  "where": "sculpture.js:10"
+ },
+ {
+  "frag": "'蓝沿瓷罐'",
+  "count": 1,
+  "where": "sculpture.js:11"
+ },
+ {
+  "frag": "'把罐口做宽、底部收窄，再沿顶部画一圈宽蓝边。'",
+  "count": 1,
+  "where": "sculpture.js:11"
+ },
+ {
+  "frag": "'只需要在宽罐口上画一条厚实的蓝边。'",
+  "count": 1,
+  "where": "sculpture.js:11"
+ },
+ {
+  "frag": "'青带月光罐'",
+  "count": 1,
+  "where": "sculpture.js:12"
+ },
+ {
+  "frag": "'做一个短颈的圆形月光罐，在瓶身画两条宽的竖向蓝带。'",
+  "count": 1,
+  "where": "sculpture.js:12"
+ },
+ {
+  "frag": "'两条蓝带中间留出一条白色区域。'",
+  "count": 1,
+  "where": "sculpture.js:12"
+ },
+ {
+  "frag": "'取泥与订单'",
+  "count": 1,
+  "where": "world.js:21"
+ },
+ {
+  "frag": "'瓷器窑炉'",
+  "count": 1,
+  "where": "world.js:24"
+ },
+ {
+  "frag": "'评分与交付'",
+  "count": 1,
+  "where": "world.js:26"
+ },
+ {
+  "frag": "\"查看景德镇地图\"",
+  "count": 1,
+  "where": "index.html:15"
+ },
+ {
+  "frag": "\"3D 瓷器工坊，WASD 移动，靠近工作台长按 E 操作\"",
+  "count": 1,
+  "where": "index.html:17"
+ },
+ {
+  "frag": "\"场景进度与订单\"",
+  "count": 1,
+  "where": "index.html:18"
+ },
+ {
+  "frag": "\"上\"",
+  "count": 1,
+  "where": "index.html:23"
+ },
+ {
+  "frag": "\"左\"",
+  "count": 1,
+  "where": "index.html:23"
+ },
+ {
+  "frag": "\"下\"",
+  "count": 1,
+  "where": "index.html:23"
+ },
+ {
+  "frag": "\"右\"",
+  "count": 1,
+  "where": "index.html:23"
+ },
+ {
+  "frag": "\"关闭面板\"",
+  "count": 1,
+  "where": "index.html:24"
+ },
+ {
+  "frag": "\"关闭帮助\"",
+  "count": 1,
+  "where": "index.html:26"
+ }
+]

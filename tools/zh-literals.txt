@@ -1,0 +1,252 @@
+campaign.js:5	'青花缠枝纹'
+campaign.js:5	'青花瓷碗'
+campaign.js:5	'钴蓝花朵、舒展的藤蔓与双线边饰，取自第一张青花瓶。'
+campaign.js:6	'玲珑白瓷纹'
+campaign.js:6	'玲珑白瓷碗'
+campaign.js:6	'以第二张白瓷杯为灵感，米粒状花瓣在淡青白釉上透出柔光。'
+campaign.js:7	'红金窑变纹'
+campaign.js:7	'红金窑变碗'
+campaign.js:7	'第三张窑变瓶的金黄、朱红和深紫，化作向下流淌的釉色。'
+campaign.js:8	'粉彩花瓣纹'
+campaign.js:8	'粉彩花瓣碗'
+campaign.js:8	'第四张花形瓷器的粉色花瓣、纤细脉络与嫩绿花萼，环绕碗身。'
+city-map.js:4	`<div class="city-map-art" data-map-mode="${mode}"><img class="city-map-image" src="${CITY_MAP}" alt="景德镇手绘地图：依次探索古窑民俗博览区、中国陶瓷博物馆、御窑厂国家考古遗址公园、陶溪川文创街区" draggable="false"/><svg class="city-route" viewBox="0 0 1024 1024" aria-hidden="true">${ROUTE_SEGMENTS.map((path,i)=>`
+city-map.js:4	"第 ${i+1} 站：${place.name}"
+city-map.js:10	'景德镇瓷器之旅开场'
+city-map.js:13	`<header class="opening-header"><div class="opening-brand"><b>terra<span>®</span></b><span>景德镇 · 瓷器之旅</span></div><button class="opening-skip" id="skip-opening">跳过动画 <span>↗</span></button></header><section class="city-prologue"><div class="prologue-landscape" aria-hidden="true"><i></i><i></i><i></i></div><div class="prologue-copy"><span class="prologue-kicker">江西 · 景德镇</span><h1>景德镇</h1><h2>千年瓷都 · 窑火不息</h2><p id="prologue-text" aria-live="polite"></p><button id="unfold-map" class="prologue-unfold">展开游历地图 <span>→</span></button><div class="prologue-beats">${INTRO_LINES.map((_,i)=>`
+city-map.js:13	`).join('')}</div></div><div class="prologue-porcelain"><span class="porcelain-halo"></span><img src="${heroImage}" alt="青花瓷碗"/><div class="porcelain-seal">瓷<br/>韵</div><span class="porcelain-caption">一抔泥，一炉火，一城瓷。</span></div></section><div class="opening-map-phase" inert><div class="opening-layout"><section class="opening-copy"><div class="opening-kicker"><span></span>千年瓷都 · 一城窑火</div><h1>循着窑火，<br/>走进<span>景德镇。</span></h1><p class="opening-lead">一张地图，四处瓷韵。<br/>从古窑到陶溪川，把城市的故事<br class="desktop-break"/>做成你亲手收藏的四只瓷碗。</p><div class="opening-chapter" aria-live="polite"><span id="opening-chapter-number">01</span><div><small id="opening-chapter-tag"></small><h2 id="opening-chapter-name"></h2><p id="opening-chapter-story"></p></div></div><div class="opening-actions"><button class="opening-start" id="start-button">${state.completed?'重温景德镇 · 查看藏品':state.scene>0||state.hasClay||state.level>0||state.money>0?'继续旅程 · '+PLACES[state.scene].shortName:'从古窑出发'} <span>→</span></button><button class="opening-replay" id="replay-opening" aria-label="重播开场动画">↺ 重播</button></div><div class="opening-rules"><span>每站 5 关</span><span>80% 通关</span><span>400 币兑换贴画</span></div>${state.scene>0||state.money>0||state.hasClay||state.completed?'<button class="opening-reset" id="opening-new-game">重新开始旅程</button>':''}</section><section class="opening-map-section" aria-label="四站探索路线"><div class="opening-map-border">${mapMarkup({selected:0,completed:state.collection.length,mode:'opening'})}</div><div class="opening-map-caption"><span>景德镇 · 手作游历图</span><span>探索路线 01—04</span></div></section></div><footer class="opening-footer"><div class="opening-timeline">${PLACES.map((place,i)=>`
+city-map.js:13	`).join('')}</div><button class="opening-pause" id="pause-opening" aria-label="暂停开场动画">Ⅱ 暂停</button><span class="opening-footnote">山水之间，人文与烟火。</span></footer></div>`
+city-map.js:17	'▷ 继续'
+city-map.js:17	'Ⅱ 暂停'
+city-map.js:17	'继续开场动画'
+city-map.js:17	'暂停开场动画'
+city-map.js:18	'▷ 继续'
+city-map.js:32	'路线已展开 ✓'
+city-map.js:32	'↺ 重播'
+city-map.js:32	'重播开场动画'
+city-map.js:44	'跳过路线动画 ↗'
+city-map.js:47	'跳过介绍 · 展开地图 ↗'
+city-map.js:54	`<div class="atlas-layout ${traveling?'atlas-travel':''}"><div class="atlas-map-column">${mapMarkup({selected,completed:state.collection.length,mode:traveling?'travel':'atlas',from})}<p class="atlas-caption">根据景德镇手绘地图展开的游戏路线 · 点击标记查看各站</p></div><section class="atlas-detail"><span class="atlas-eyebrow">${traveling?'一件瓷器完成 · 新的一站启程':'瓷都游历手记'}</span><div class="atlas-place-details"></div><div class="atlas-passport">${PLACES.map((p,i)=>`
+city-map.js:54	'已收藏'
+city-map.js:54	'待收集'
+city-map.js:54	`).join('')}</div><button class="primary-button" id="${traveling?'arrive-scene':'map-continue'}">${traveling?'抵达 '+PLACES[state.scene].shortName:'返回当前站'} <span>→</span></button>${traveling?'':'<button class="atlas-replay" id="map-replay-opening">重播地图开场 ↗</button>'}<small class="atlas-rule">完成本站五关，购买并贴好贴画，才能开启下一站。</small></section></div>`
+city-map.js:56	`<div class="atlas-place-number">0${selected+1}<span> / 04</span></div><h3>${p.name}</h3><span class="atlas-place-tag">${p.tag}</span><p>${traveling?p.arrival:p.story}</p><div class="atlas-landmark-note"><small>这一站的景致</small><span>${p.architecture}</span></div><div class="atlas-sticker"><small>纪念贴画</small><b>${p.sticker}</b><span>${owned?'✓ 已收藏':selected===state.scene?`
+city-map.js:56	`:selected>state.scene?'尚未抵达 · 先完成前一站':'已走过'}</span></div>`
+landmarks.js:29	'古窑民俗'
+landmarks.js:35	'中国陶瓷博物馆'
+landmarks.js:49	'御窑 · 寻迹'
+landmarks.js:54	'陶溪川'
+main.js:26	'关闭声音'
+main.js:26	'开启声音'
+main.js:28	`<div class="reward-table" aria-label="评分奖励表">${[["低于60%",0],["60–69%",60],["70–79%",70],["80–89%",80],["90–99%",90],["100%",100]].map(([score,coins])=>`
+main.js:32	`${state.money}<span> 硬币</span>`
+main.js:34	`场景 ${state.scene+1} / 4 · ${theme.decal}`
+main.js:35	`<div class="scene-heading"><span>瓷器之旅 · ${state.scene+1} / 4</span><h2 title="${theme.name}">${PLACES[state.scene].shortName}</h2></div><div class="scene-path">${SCENES.map((s,i)=>`
+main.js:35	`).join('')}</div><button class="reference-card" id="view-brief"><div class="reference-heading"><span>${state.phase==='practice'?'练习订单':`
+main.js:35	`}</span><span>80% 通关</span></div><img src="${presetImages[p.id]}" alt="${p.name}参考图"/><h3>${p.name}</h3><p>60% 起奖励 · 最高 100 硬币</p><span class="reference-link">${state.canWork?'查看订单 ↗':'五关已完成 ✓'}</span></button><div class="preset-path">${PRESETS.map((d,i)=>`
+main.js:35	"第 ${i+1} 关：${d.name}"
+main.js:35	`).join('')}</div><button class="decal-goal" id="open-journey"><img src="${decalImages[state.scene]}" alt="${theme.decal}贴画"/><div><small>本场景贴画 · 400 币</small><b>${theme.decal}</b><span>${state.phase==='decal'?'已购买 · 点击贴花':state.phase==='crafted'?'已制成 · 进入下一场景':state.completed?'四件作品已集齐':`
+main.js:35	`}</span></div><span>↗</span></button><button class="collection-link" id="view-collection">我的瓷器藏品 <b>${state.collection.length} / 4</b></button>`
+main.js:37	`<img src="${thumbnail(state.piece.pixels,112)}" alt="当前瓷泥"/>`
+main.js:37	`第 ${state.level+1} 关 · 第 ${state.attempt} 次尝试`
+main.js:38	'80% 通关 · 60% 起奖励'
+main.js:38	'五关完成 · 制作场景成品'
+main.js:38	'塑形、雕刻、上色'
+main.js:38	'到取泥台领取瓷泥'
+main.js:38	'点击右侧贴画，完成你的瓷碗'
+main.js:38	'走近对应工作台，长按 E 开始操作。'
+main.js:38	'购买 → 选择贴画 → 贴到碗上 → 下一场景'
+main.js:42	'进度自动保存。按 Esc 返回工坊。'
+main.js:51	`${state.sceneInfo.name} · ${state.phase==='practice'?'练习订单':`
+main.js:51	`} · 尝试 ${state.attempt}`
+main.js:51	`<div class="brief-pair"><figure><span class="board-label">${state.hasClay?'你正在制作的瓷泥':'初始瓷泥'}</span><img src="${thumbnail(state.piece.pixels,448)}" alt="当前瓷泥"/><figcaption>${state.hasClay?'保留当前作品，继续完善。':'到取泥台领取一整块瓷泥。'}</figcaption></figure><div class="brief-arrow">→</div><figure><span class="board-label">订单参考图</span><img src="${presetImages[p.id]}" alt="${p.name}"/><figcaption>对照形状与蓝色装饰，自由制作。</figcaption></figure></div><div class="brief-rules"><span><b>达到 80% 通关</b>未通过则重试本关，已获得硬币保留。</span><span><b>累计 400 币购买贴画</b>完成五关后购买，贴到瓷碗上进入下一场景。</span></div>${rewardTable()}<div class="task-action-row"><button class="primary-button" id="brief-done">${state.hasClay?'继续制作':'去领取瓷泥'} <span>→</span></button></div>`
+main.js:62	'请先到取泥台领取瓷泥。'
+main.js:64	'粗塑成形'
+main.js:64	'用双手推压瓷泥'
+main.js:64	'从外边缘向内拖动以压缩瓷泥，向外拖动以拉伸。用宽手掌调整大体形状，再去雕刻台修整。'
+main.js:64	'✋ 推压瓷泥 · 宽手掌'
+main.js:64	'这里只能推压塑形，现有颜色会随瓷泥一起移动。雕刻和上色请去对应工作台。'
+main.js:64	'细节雕刻'
+main.js:64	'刻去多余的瓷泥'
+main.js:64	'拖动刻刀去除多余瓷泥，对照右侧图片修整轮廓。刻多了可以撤销。'
+main.js:64	'✂ 雕刻 · 刻刀'
+main.js:64	'这里只能去除瓷泥。推压造型请去塑形台，绘制颜色请去上色台。'
+main.js:64	'手绘上色'
+main.js:64	'画上你的青花'
+main.js:64	'选择颜色，在瓷器表面拖动画笔。上色只改变颜色，不改变轮廓。'
+main.js:64	'● 上色 · 画笔'
+main.js:64	'这里只能绘画。切去瓷泥请去雕刻台，改变造型请去塑形台。'
+main.js:66	`第 ${state.level+1} 关 · ${setup.name} · 尝试 ${state.attempt}`
+main.js:66	`<div class="editor-layout"><section class="work-area"><div class="board-top"><span class="board-label">你的瓷泥 · 正面</span><span id="work-status">已保存</span></div><div class="sculpt-canvas-wrap"><canvas id="sculpt-canvas" width="560" height="560" tabindex="0" aria-label="${setup.name}. Drag to ${setup.mode==='push'?'push clay':setup.mode==='cut'?'cut clay':'paint clay'}. Compare with the separate reference picture."></canvas><span class="canvas-corner">亲手制作</span></div><div class="tool-row"><span class="station-tool" data-station-tool="${setup.mode}">${setup.tool}</span><button class="small-tool" id="undo-stroke" title="Undo this station's last stroke (Ctrl/Cmd Z)" aria-label="Undo stroke">↶</button><button class="small-tool" id="redo-stroke" title="Redo stroke" aria-label="Redo stroke">↷</button></div><div class="brush-row"><label for="brush-size">${setup.mode==='push'?'手掌宽度':'工具大小'}</label><input type="range" id="brush-size" min="${setup.min}" max="${setup.max}" value="${setup.size}"/><output id="brush-size-value">${setup.size}</output><span class="station-only">${setup.mode==='push'?'仅用于粗塑':'本站专用工具'}</span></div></section><aside class="editor-reference"><span class="board-label">订单参考图</span><img class="target-preview" src="${presetImages[p.id]}" alt="Target ${p.name}"/><h3>${p.name}</h3><p>${p.task}</p>${setup.mode==='paint'?`
+main.js:66	`:''}<div class="maker-tip station-note"><b>${setup.name}</b><p>${setup.note}</p></div><p class="guide-note">对照参考图，观察形状与花纹。</p></aside></div><div class="editor-bottom"><button class="primary-button" id="save-editor">保存并离开 <span>→</span></button><span>带上作品到评分与交付台查看分数。</span></div>`
+main.js:66	'<span>拖动操作</span><span><kbd>⌘ / Ctrl Z</kbd> 撤销本次操作</span><span><kbd>[</kbd><kbd>]</kbd> 工具大小</span><span><kbd>Esc</kbd> 保存并关闭</span>'
+main.js:67	'正在制作…'
+main.js:67	'已保存'
+main.js:72	'请先到取泥台领取瓷泥。'
+main.js:73	'可选 · 瓷器窑炉'
+main.js:73	'让窑火温暖你的作品'
+main.js:73	'烧制是可选步骤，不增加相似度分数。烧制之后仍可继续雕刻和上色。'
+main.js:73	`<div class="kiln-view"><div class="kiln-preview"><img src="${thumbnail(state.piece.pixels,224)}" alt="你的作品"/></div></div><div class="kiln-progress"><span id="kiln-progress-fill"></span></div><div class="kiln-time" id="kiln-time"></div><p class="kiln-caption" id="kiln-caption"></p><div class="task-action-row"><button class="primary-button" id="fire-button">开始烧制 <span>✦</span></button></div>`
+main.js:76	`${Math.ceil(k.remaining)} 秒`
+main.js:76	'烧制完成 ✦'
+main.js:76	'随时可以开始'
+main.js:76	'烧制期间可以离开窑炉，继续制作。'
+main.js:76	'烧制完成后，到交付台根据形状和上色评分。'
+main.js:76	'烧制中…'
+main.js:76	'完成 · 返回工坊'
+main.js:76	'开始烧制 <span>✦</span>'
+main.js:78	'先带上你制作的瓷器，再到这里评分。'
+main.js:79	`${state.sceneInfo.name} · 第 ${state.level+1} 关`
+main.js:79	'看看这件作品吧'
+main.js:79	'评分由形状 65% 和上色 35% 组成。达到 80% 通过本关；低于 80% 重试，60% 起仍可获得硬币。'
+main.js:79	`<div class="review-pair"><figure><img src="${thumbnail(state.piece.pixels,336)}" alt="你的作品"/><figcaption>你的作品</figcaption></figure><figure><img src="${presetImages[state.preset.id]}" alt="参考作品"/><figcaption>参考作品</figcaption></figure></div>${rewardTable()}<div class="task-action-row"><button class="secondary-button" id="keep-working">继续完善</button><button class="primary-button" id="confirm-review">提交评分 <span>→</span></button></div>`
+main.js:84	'前往贴画台'
+main.js:84	'查看下一关'
+main.js:84	'再试一次'
+main.js:85	`${SCENES[result.scene].name} · ${result.practice?'练习订单':`
+main.js:85	'作品通过啦！'
+main.js:85	'再完善一点，就更好了'
+main.js:85	'本次得分与硬币已保存。'
+main.js:85	'本关需要达到 80%。这次获得的硬币保留，领取新瓷泥后继续尝试。'
+main.js:85	`<div class="result-layout"><div class="result-images"><figure><img src="${thumbnail(result.pixels,336)}" alt="提交的作品"/><figcaption>你的作品</figcaption></figure><figure><img src="${presetImages[result.design]}" alt="参考作品"/><figcaption>订单参考</figcaption></figure></div><div class="score-card ${result.passed?'pass':'fail'}"><span class="score-label">相似度</span><strong>${result.score.toFixed(1)}<small>%</small></strong><b>${result.passed?'已通过':'未通过 · 重新尝试'}</b><p>通关标准 80%</p><div class="score-detail"><span>形状 · 权重 65%</span><b>${result.shape.toFixed(1)}%</b></div><div class="score-meter"><span style="width:${result.shape}%"></span></div><div class="score-detail"><span>上色 · 权重 35%</span><b>${result.paint.toFixed(1)}%</b></div><div class="score-meter"><span style="width:${result.paint}%"></span></div></div></div><div class="earnings-banner"><b>+${result.earned} <small>硬币</small></b><span>当前余额 ${state.money} 币 · 本场景 ${state.scenePassed}/5 关</span></div>${rewardTable()}<div class="task-action-row"><button class="primary-button" id="result-next">${next} <span>→</span></button></div>`
+main.js:90	`${state.sceneInfo.name} · 第 ${state.level+1} 关`
+main.js:90	'从一块瓷泥开始'
+main.js:90	'领取瓷泥后，自由选择塑形、雕刻、上色的顺序。每个工作台使用自己的工具。'
+main.js:90	'✓ 已通过'
+main.js:90	'当前订单'
+main.js:90	'80% 解锁下一关'
+main.js:90	`).join('')}</div><div class="task-action-row"><button class="secondary-button" id="supply-brief">查看订单</button><button class="primary-button" id="fresh-clay">领取完整瓷泥 <span>→</span></button></div>`
+main.js:91	'瓷泥已领取，去工作台开始制作吧。'
+main.js:94	'请到取泥台领取新瓷泥。'
+main.js:96	'重新制作'
+main.js:96	'换一块新瓷泥？'
+main.js:96	'当前作品会重置，已通过的关卡、藏品与硬币会保留。'
+main.js:96	`<div class="task-action-row"><button class="secondary-button" id="cancel-restart">保留作品</button><button class="primary-button" id="confirm-restart">领取新瓷泥 <span>↺</span></button></div>`
+main.js:99	'走到取泥台，可以换一块新瓷泥。'
+main.js:99	'到取泥台更换瓷泥'
+main.js:104	`场景 ${state.scene+1} / 4 · 贴画工坊`
+main.js:104	`<div class="journey-layout"><div class="bowl-stage"><canvas id="bowl-preview" aria-label="${theme.product}成品预览，可拖动旋转"></canvas><span class="preview-caption">成品预览 · 拖动旋转</span></div><div class="decal-details"><span class="board-label">参考图 ${String(state.scene+1).padStart(2,'0')} · 按上传顺序</span><div class="reference-texture"><img src="${theme.reference}" alt="用户提供的第 ${state.scene+1} 张陶瓷参考图"/><span>→</span><img src="${decalImages[state.scene]}" alt="${theme.decal}环绕贴图"/></div><h3>${theme.product}</h3><p>完成本场景五关，用 400 硬币购买贴画；亲手贴到白瓷碗上，开启下一场景。</p><div class="purchase-check ${state.sceneComplete?'met':''}"><span>${state.sceneComplete?'✓':'○'}</span> 五关通过 <b>${state.scenePassed} / 5</b></div><div class="purchase-check ${state.money>=400?'met':''}"><span>${state.money>=400?'✓':'○'}</span> 硬币余额 <b>${state.money} / 400</b></div><button class="primary-button" id="buy-decal" ${state.canPurchase?'':'disabled'}>购买贴画 · ${DECAL_PRICE} 币 <span>→</span></button><small class="purchase-note">${state.canPurchase?`
+main.js:104	`:state.sceneComplete?'余额不足，可以完成练习订单获得硬币。':'先完成本场景的五个订单。'}</small>${state.phase==='ready'&&state.money<400?'<button class="secondary-button" id="practice-order">接一个练习订单</button>':''}${state.canWork?'<button class="secondary-button" id="return-order">继续当前订单</button>':''}</div></div>`
+main.js:104	'达到 400 币即可购买 · 贴好后进入下一场景 · 每个场景限购一次'
+main.js:112	`场景 ${state.scene+1} / 4 · ${crafted?'成品完成':'贴花台'}`
+main.js:112	`${theme.product}，完成！`
+main.js:112	'为白瓷碗贴上新纹样'
+main.js:112	'这件瓷器已经收进你的藏品。准备去下一处工坊吧。'
+main.js:112	'先选择右侧贴画，再点击白瓷碗或“贴到碗上”。拖动瓷碗可以旋转查看。'
+main.js:112	`<div class="journey-layout"><div class="bowl-stage"><canvas id="bowl-preview" aria-label="${crafted?theme.product:'待贴花的白瓷碗'}，拖动旋转"></canvas><span class="preview-caption" id="decal-status">${crafted?'已贴好 · 拖动欣赏':'白瓷素胎 · 等待贴画'}</span></div><div class="decal-details"><span class="board-label">${crafted?'已收藏的纹样':'你的新贴画'}</span><button class="decal-picker ${crafted?'selected':''}" id="select-decal" aria-pressed="${crafted}"><img src="${decalImages[state.scene]}" alt="${theme.decal}"/><b>${theme.decal}</b><span>${crafted?'✓ 已贴到碗上':'点击选择这张贴画'}</span></button><p>${theme.description}</p>${crafted?`
+main.js:112	'完成旅程 · 查看四件藏品'
+main.js:112	'进入下一场景：'
+main.js:112	`:'<button class="primary-button" id="apply-decal" disabled>贴到碗上 <span>✦</span></button>'}<small class="purchase-note">${crafted?'剩余硬币 '+state.money+' 币，将继续保留。':'购买已完成。离开或刷新页面后，可以继续贴花。'}</small></div></div>`
+main.js:116	'贴画已选中 · 点击瓷碗完成贴花'
+main.js:120	`瓷器之旅 · ${state.collection.length} / 4 件藏品`
+main.js:120	'四方瓷韵，圆满收藏'
+main.js:120	'你的瓷器藏品'
+main.js:120	'四个场景、二十个订单，四张贴画都成为了你亲手完成的瓷碗。'
+main.js:120	'按参考图的顺序，走过四个工坊，收集四种瓷器。'
+main.js:120	`<button data-bowl="${i}" aria-label="欣赏${s.product}"><img src="${bowlImage(i)}" alt="已制作的${s.product}"/></button>`
+main.js:120	`<div class="locked-bowl"><img src="${decalImages[i]}" alt="待收集的${s.decal}"/><b>待收藏</b></div>`
+main.js:120	'✓ 已贴花 · 已收藏'
+main.js:120	'五关通关 + 400 硬币'
+main.js:120	`;}).join('')}</div><p class="collection-money">剩余 ${state.money} 硬币</p><div class="task-action-row">${state.completed?'<button class="secondary-button" id="replay">重新开启旅程</button><button class="primary-button" id="collection-done">返回工坊</button>':'<button class="primary-button" id="continue-journey">继续旅程 <span>→</span></button>'}</div>`
+main.js:127	'我的藏品'
+main.js:127	'<div class="bowl-stage single-bowl"><canvas id="bowl-preview" aria-label="已收藏瓷碗，可拖动旋转"></canvas><span class="preview-caption">拖动旋转 · 查看环绕纹样</span></div><div class="task-action-row"><button class="primary-button" id="back-collection">返回藏品</button></div>'
+main.js:134	'景德镇 · 四站游历图'
+main.js:134	'循着地图，走向下一站'
+main.js:134	'你的瓷都足迹'
+main.js:134	'沿地图上的 1—4 号地点，完成五关、收集贴画，把每一站做成一件纪念。'
+main.js:134	'游戏探索路线 · 当前关卡、硬币与瓷器进度自动保存'
+main.js:139	'重新开启旅程'
+main.js:139	'从第一间工坊重新开始？'
+main.js:139	'会清空本次旅程的关卡、硬币和四件藏品。'
+main.js:139	'<div class="task-action-row"><button class="secondary-button" id="cancel-new">取消</button><button class="primary-button" id="confirm-new">重新开始</button></div>'
+main.js:143	'领取完整瓷泥'
+main.js:143	'推压瓷泥，调整形状'
+main.js:143	'用刻刀去除多余瓷泥'
+main.js:143	'选择颜色，亲手绘制'
+main.js:143	'烧制瓷器 · 可选'
+main.js:143	'提交作品并评分'
+main.js:143	'购买贴画与制作成品'
+main.js:161	'叮！烧制完成，可以继续制作或提交评分。'
+main.js:167	'再坚持一下…'
+main.js:167	'长按 E 开始操作'
+places.js:4	'古窑民俗博览区'
+places.js:4	'古窑民俗'
+places.js:4	'第一站 · 窑火初见'
+places.js:4	'古窑 · 制瓷 · 传承'
+places.js:4	'古窑手作坊'
+places.js:4	'从老窑的烟囱下出发，让第一抹青花在瓷泥上生长。'
+places.js:4	'窑火微明，木架上摆着待烧的瓷坯。你的第一份青花订单正在这里等你。'
+places.js:4	'砖窑、烟囱、灰瓦坡顶与木制晾坯架'
+places.js:4	'青花缠枝纹'
+places.js:4	'窑火'
+places.js:5	'中国陶瓷博物馆'
+places.js:5	'陶瓷博物馆'
+places.js:5	'第二站 · 瓷光入藏'
+places.js:5	'展馆 · 玲珑 · 光影'
+places.js:5	'博物馆体验工坊'
+places.js:5	'循着昌江的水色，走进收藏瓷光的展馆，寻找白瓷上的玲珑花影。'
+places.js:5	'明亮的展厅与玻璃展柜之间，观察瓷器的形与光，把玲珑纹样带回你的碗上。'
+places.js:5	'现代展馆、玻璃幕墙、陈列柜与青花大瓶'
+places.js:5	'玲珑白瓷纹'
+places.js:5	'瓷光'
+places.js:6	'御窑厂国家考古遗址公园'
+places.js:6	'御窑厂遗址'
+places.js:6	'第三站 · 御窑寻色'
+places.js:6	'遗址 · 拱券 · 流釉'
+places.js:6	'御窑遗址研习坊'
+places.js:6	'转向御窑旧址，穿过红砖拱券，在窑火留下的颜色里寻找金与红。'
+places.js:6	'砖拱与旧窑遗迹围起新的手作课堂。完成五份订单，收集一张红金窑变贴画。'
+places.js:6	'红砖拱券、残墙、考古探方与旧窑基座'
+places.js:6	'红金窑变纹'
+places.js:6	'御色'
+places.js:7	'陶溪川文创街区'
+places.js:7	'陶溪川'
+places.js:7	'第四站 · 花开陶溪'
+places.js:7	'厂房 · 市集 · 新生'
+places.js:7	'陶溪川创意工坊'
+places.js:7	'最后来到陶溪川，在老厂房与创意市集间，给这段旅程添上一瓣粉色。'
+places.js:7	'高烟囱旁的红砖厂房亮起灯光。把最后一张花瓣贴画贴上瓷碗，集齐景德镇四件纪念。'
+places.js:7	'红砖厂房、锯齿屋顶、高烟囱与文创市集'
+places.js:7	'粉彩花瓣纹'
+places.js:7	'花开'
+places.js:16	'因瓷而名，因瓷而兴。\n山水之间，一座城市与泥、火相伴。'
+places.js:17	'千年窑火不熄，匠心代代相传。\n从一抔瓷泥，到一件温润的器物。'
+places.js:18	'走过古窑与展馆，穿行遗址与街巷。\n把景德镇的故事，做成属于你的瓷韵。'
+sculpture.js:6	'瓷白'
+sculpture.js:6	'钴蓝'
+sculpture.js:8	'一抹青花罐'
+sculpture.js:8	'把瓷泥做成圆润的罐子，在中间画一条宽宽的蓝色横带，其余保持白色。'
+sculpture.js:8	'横带保持平整，上下留出白色。'
+sculpture.js:9	'双环青花瓶'
+sculpture.js:9	'做一个细高、短颈的白瓷瓶，在瓶身画两条宽蓝色横带。'
+sculpture.js:9	'两条横带中间留出清楚的白色间隔。'
+sculpture.js:10	'三点青花坛'
+sculpture.js:10	'做一个宽肚瓷坛，在白色瓶身的中间画三个大蓝点。'
+sculpture.js:10	'用中等画笔，分别画出三个圆点。'
+sculpture.js:11	'蓝沿瓷罐'
+sculpture.js:11	'把罐口做宽、底部收窄，再沿顶部画一圈宽蓝边。'
+sculpture.js:11	'只需要在宽罐口上画一条厚实的蓝边。'
+sculpture.js:12	'青带月光罐'
+sculpture.js:12	'做一个短颈的圆形月光罐，在瓶身画两条宽的竖向蓝带。'
+sculpture.js:12	'两条蓝带中间留出一条白色区域。'
+world.js:21	'取泥与订单'
+world.js:22	'粗塑成形'
+world.js:23	'细节雕刻'
+world.js:24	'瓷器窑炉'
+world.js:25	'手绘上色'
+world.js:26	'评分与交付'
+index.html:15	"查看景德镇地图"
+index.html:15	"开启声音"
+index.html:15	"开启声音"
+index.html:15	"玩法说明"
+index.html:15	"玩法说明"
+index.html:17	"3D 瓷器工坊，WASD 移动，靠近工作台长按 E 操作"
+index.html:18	"场景进度与订单"
+index.html:20	"更换瓷泥"
+index.html:20	"更换瓷泥"
+index.html:23	"上"
+index.html:23	"左"
+index.html:23	"下"
+index.html:23	"右"
+index.html:24	"关闭面板"
+index.html:26	"关闭帮助"

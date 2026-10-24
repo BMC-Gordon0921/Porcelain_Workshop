@@ -1,5 +1,6 @@
 // Coordinates use the supplied 1024 × 1024 illustrated map, not a road-navigation map.
-export const CITY_MAP='/maps/jingdezhen.png';
+import {publicAsset} from './public-assets.js';
+export const CITY_MAP=publicAsset('maps/jingdezhen.png');
 export const PLACES=[
  {id:'guyao',name:'古窑民俗博览区',shortName:'古窑民俗',chapter:'第一站 · 窑火初见',tag:'古窑 · 制瓷 · 传承',point:[606,188],workshop:'古窑手作坊',story:'从老窑的烟囱下出发，让第一抹青花在瓷泥上生长。',arrival:'窑火微明，木架上摆着待烧的瓷坯。你的第一份青花订单正在这里等你。',architecture:'砖窑、烟囱、灰瓦坡顶与木制晾坯架',sticker:'青花缠枝纹',stamp:'窑火',color:'#995637'},
  {id:'museum',name:'中国陶瓷博物馆',shortName:'陶瓷博物馆',chapter:'第二站 · 瓷光入藏',tag:'展馆 · 玲珑 · 光影',point:[821,447],workshop:'博物馆体验工坊',story:'循着昌江的水色，走进收藏瓷光的展馆，寻找白瓷上的玲珑花影。',arrival:'明亮的展厅与玻璃展柜之间，观察瓷器的形与光，把玲珑纹样带回你的碗上。',architecture:'现代展馆、玻璃幕墙、陈列柜与青花大瓶',sticker:'玲珑白瓷纹',stamp:'瓷光',color:'#457b89'},
