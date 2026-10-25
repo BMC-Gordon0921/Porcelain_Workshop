@@ -11,7 +11,7 @@ const errors=[];
 context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
 const page=await context.newPage();
 const shot=async(name,p=page)=>p.screenshot({path:fileURLToPath(new URL(name+'.png',out))});
-const ready=async(p=page)=>p.waitForFunction(()=>!!window.__terra);
+const ready=async(p=page)=>{await p.waitForFunction(()=>!!window.__terra);await p.evaluate(()=>{window.__terra.state.tutorial={status:'complete',step:null};});};
 const camera=()=>page.evaluate(()=>({...window.__terra.world.orbit}));
 async function station(id){
  await page.evaluate(id=>{const t=window.__terra;t.closeTask();const s=t.world.stations.find(s=>s.id===id);t.world.player.group.position.set(s.approach[0],0,s.approach[1]);},id);
@@ -29,7 +29,7 @@ try{
  const rotation=Number(await hero.getAttribute('data-rotation'));await drag(page.locator('.hero-canvas'),110,45);assert.ok(Math.abs(Number(await hero.getAttribute('data-rotation'))-rotation)>.5);await shot('02-home-drag');
  await page.mouse.move(0,0);await hidden(page,true);await page.waitForTimeout(1200);assert.equal(await hero.getAttribute('data-index'),hovered);await hidden(page,false);
  await page.click('.opening-lang');await page.waitForTimeout(120);assert.equal((await page.locator('#unfold-map').innerText()).replace(/\s+/g,' '),'Explore the map introduction →');await shot('03-home-en');await page.click('.opening-lang');
- await page.click('#unfold-map');assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'map');await page.click('#skip-opening');await page.click('#start-button');await page.click('#brief-done');
+ await page.click('#unfold-map');assert.equal(await page.locator('#welcome').getAttribute('data-opening-stage'),'map');await page.click('#start-button');await page.click('#brief-done');
  const initial=await camera();await drag(page.locator('#world'),150,70);const rotated=await camera();assert.notEqual(rotated.azimuth,initial.azimuth);assert.notEqual(rotated.polar,initial.polar);
  await page.mouse.wheel(0,-400);await page.waitForTimeout(100);assert.ok((await camera()).zoom>1);
  await drag(page.locator('#world'),0,1400);assert.ok(Math.abs((await camera()).polar-Math.PI/2)<1e-8);await drag(page.locator('#world'),0,-1400);assert.ok(Math.abs((await camera()).polar-24*Math.PI/180)<1e-8);
@@ -67,6 +67,6 @@ try{
  await mp.evaluate(()=>{const t=window.__terra;t.state.collectClay();const s=t.world.stations.find(s=>s.id==='wheel');t.world.player.group.position.set(s.approach[0],0,s.approach[1]);});await mp.waitForTimeout(100);await mp.tap('#touch-interact');await shot('11-mobile-shaping',mp);
  const tooSmall=await mp.locator('#task-overlay').evaluate(el=>[...el.querySelectorAll('p,button,label,small')].filter(e=>e.getClientRects().length&&parseFloat(getComputedStyle(e).fontSize)<12).map(e=>e.textContent));assert.deepEqual(tooSmall,[]);
  await mp.click('#save-editor');await mp.evaluate(()=>{const s=window.__terra.state;s.shapeEdits=1;s.piece.pixels=s.target.slice();window.__terra.openKiln();});await mp.click('#fire-button');await mp.waitForTimeout(250);await mp.tap('#stoke-button');await mp.evaluate(()=>window.__terra.state.tick(60));assert.equal(await mp.evaluate(()=>window.__terra.state.kilnResult.grade),'plain');await shot('12-mobile-kiln',mp);await mobile.close();
- const reduced=await browser.newContext({viewport:{width:1280,height:800},reducedMotion:'reduce'});const rp=await reduced.newPage();await rp.goto(url);await ready(rp);await rp.mouse.move(0,0);const rr=await rp.locator('#prologue-carousel').getAttribute('data-rotation');await rp.waitForTimeout(250);assert.equal(await rp.locator('#prologue-carousel').getAttribute('data-rotation'),rr);await rp.click('#unfold-map');assert.equal(await rp.locator('#welcome').getAttribute('data-intro-state'),'complete');await reduced.close();
+ const reduced=await browser.newContext({viewport:{width:1280,height:800},reducedMotion:'reduce'});const rp=await reduced.newPage();await rp.goto(url);await ready(rp);await rp.mouse.move(0,0);const rr=await rp.locator('#prologue-carousel').getAttribute('data-rotation');await rp.waitForTimeout(250);assert.equal(await rp.locator('#prologue-carousel').getAttribute('data-rotation'),rr);await rp.click('#unfold-map');assert.equal(await rp.locator('#welcome').getAttribute('data-intro-state'),'playing');await reduced.close();
  assert.deepEqual(errors,[]);console.log('PASS: touch, narrow-screen typography, reduced motion and no browser errors');
 }finally{await browser.close();}

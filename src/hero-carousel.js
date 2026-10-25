@@ -3,6 +3,7 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {bowlModel} from './decals.js';
 import {SCENES} from './campaign.js';
 import {HeroPlayback} from './hero-playback.js';
+import {createCarouselControls} from './carousel-controls.js';
 
 const STORIES=[
  '钴蓝花朵与舒展藤蔓绕碗而生，呈现青花瓷清雅的韵味。',
@@ -27,6 +28,7 @@ export function createHeroCarousel(host){
  const rim=new THREE.DirectionalLight(0xdfe9ff,.85);rim.position.set(3.2,2.4,-4.6);scene.add(rim);
  const bowls=SCENES.map((_,index)=>{const bowl=bowlModel(index,true);bowl.visible=index===0;scene.add(bowl);return bowl;});
  const playback=new HeroPlayback(bowls.length),reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const controls=createCarouselControls(host,playback,{names:SCENES.map(s=>s.product),onChange:()=>present()});
  let dragging=null,hovered=false,focused=false,enabled=true,disposed=false,last=0,raf=0,active=-1;
  const removers=[];
  const listen=(target,event,fn,options)=>{target.addEventListener(event,fn,options);removers.push(()=>target.removeEventListener(event,fn,options));};
@@ -39,9 +41,10 @@ export function createHeroCarousel(host){
   host.classList.toggle('is-reading',hovered||focused||!!dragging);
   host.dataset.rotation=String(bowls[active].rotation.y);host.dataset.visibleCount='1';
   canvas.style.opacity=String(playback.opacity);
+  controls.update();
  }
  function resize(){
-  const {width,height}=host.getBoundingClientRect();if(!width||!height)return;
+  const {width,height}=canvas.getBoundingClientRect();if(!width||!height)return;
   renderer.setSize(width,height,false);camera.aspect=width/height;
   const distance=6.4/Math.min(1,camera.aspect/1.3);camera.position.set(0,distance*.29,distance);camera.lookAt(0,0,0);camera.updateProjectionMatrix();
  }
@@ -49,8 +52,8 @@ export function createHeroCarousel(host){
  const stopDrag=()=>{const drag=dragging;dragging=null;canvas.classList.remove('is-dragging');if(drag&&canvas.hasPointerCapture(drag.id))canvas.releasePointerCapture(drag.id);if(drag)playback.interact();};
  listen(host,'pointerenter',e=>{if(e.pointerType==='touch')return;hovered=true;playback.interact();});
  listen(host,'pointerleave',()=>{hovered=false;playback.interact();});
- listen(canvas,'focus',()=>{focused=true;playback.interact();});
- listen(canvas,'blur',()=>{focused=false;stopDrag();});
+ listen(host,'focusin',()=>{focused=true;playback.interact();});
+ listen(host,'focusout',e=>{focused=host.contains(e.relatedTarget);stopDrag();playback.interact();});
  listen(canvas,'pointerdown',e=>{if(e.button!==0||!e.isPrimary)return;e.preventDefault();dragging={id:e.pointerId,x:e.clientX};playback.interact();canvas.setPointerCapture(e.pointerId);canvas.classList.add('is-dragging');});
  listen(canvas,'pointermove',e=>{if(!dragging||e.pointerId!==dragging.id)return;bowls[playback.index].rotation.y+=(e.clientX-dragging.x)*.01;dragging.x=e.clientX;playback.interact();});
  listen(canvas,'pointerup',stopDrag);listen(canvas,'pointercancel',stopDrag);listen(canvas,'lostpointercapture',stopDrag);

@@ -8,7 +8,7 @@ const context=await browser.newContext({viewport:{width:1440,height:1000}}),page
 context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));page.on('pageerror',e=>errors.push(e.message));
 const snapshot=(name,p=page)=>p.screenshot({path:`qa/progression/${name}.png`});
 const elapsed=()=>page.evaluate(()=>{window.__terra.syncClocks();return window.__terra.state.efficiency.elapsedMs;});
-async function enter(p=page){await p.waitForFunction(()=>!!window.__terra);await p.click('#skip-opening');if(await p.locator('#brief-done').isVisible())await p.click('#brief-done');}
+async function enter(p=page){await p.waitForFunction(()=>!!window.__terra);await p.evaluate(()=>{window.__terra.state.tutorial={status:'complete',step:null};});await p.click('#skip-opening');if(await p.locator('#brief-done').isVisible())await p.click('#brief-done');}
 async function station(id,p=page){await p.evaluate(id=>{const t=window.__terra;t.closeTask();const s=t.world.stations.find(s=>s.id===id);t.world.player.group.position.set(s.approach[0],0,s.approach[1]);},id);await p.waitForTimeout(80);await p.keyboard.press('f');}
 async function paused(action,leave){await action();const a=await elapsed();await page.waitForTimeout(300);assert.equal(await elapsed(),a);await leave();}
 async function finishFire(p=page,seconds={perfect:12,good:0,fair:0}){await p.waitForFunction(()=>!!window.__terra.state.kiln);await p.evaluate(seconds=>{const s=window.__terra.state;s.kiln.seconds={...seconds};s.kiln.remaining=0;s.finishFiring();},seconds);await p.waitForFunction(()=>!!window.__terra.state.kilnResult);}

@@ -1,6 +1,7 @@
 // A small, deterministic relief canvas: 0 is empty, 1–5 are actual clay/paint colors.
 export const SIZE = 112;
-import {SCENES, DECAL_PRICE, rewardForScore} from './campaign.js';
+import {SCENES, DECAL_PRICE, ORDERS_PER_SCENE, rewardForScore} from './campaign.js';
+import {freshTutorial,completedTutorial,tutorialInfo,nextTutorialStep,tutorialAllows} from './tutorial.js';
 import {WORKBENCH_IDS,UPGRADE_COSTS,freshWorkshopLevels,restoreWorkshopLevels,FIRE_DURATION,FIRE_HEAT_RATE,FIRE_COOL_RATE,FIRE_START_HEAT,fireBand,fireGrade,fireRatio,fireSeed,createFireDrift,orderIncome,EFFICIENCY_LIMIT_MS} from './workshop.js';
 export const PASS_SCORE = 80;
 // Firing is one continuous, twelve-second stoking beat: hold to heat, release to
@@ -21,6 +22,7 @@ export const PRESETS = [
  {id:'moon-jar',name:'青带月光罐',customer:'Hazel',species:'rabbit',task:'做一个短颈的圆形月光罐，在瓶身画两条宽的竖向蓝带。',hint:'两条蓝带中间留出一条白色区域。'}
 ];
 export const DESIGNS = Object.fromEntries(PRESETS.map(p=>[p.id,p]));
+export const CAMPAIGN_PRESETS = PRESETS.slice(0,ORDERS_PER_SCENE);
 const ellipse=(x,y,cx,cy,rx,ry)=>((x-cx)/rx)**2+((y-cy)/ry)**2<=1;
 const rect=(x,y,l,t,r,b)=>x>=l&&x<=r&&y>=t&&y<=b;
 function poly(x,y,points){let inside=false;for(let i=0,j=points.length-1;i<points.length;j=i++){const [xi,yi]=points[i],[xj,yj]=points[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;}return inside;}
@@ -145,7 +147,10 @@ export function compareSculpture(actual,target){
  return {score:Math.floor(raw*10+1e-8)/10,shape:Math.floor(shape*10+1e-8)/10,paint:Math.floor(paint*10+1e-8)/10,passed:raw+1e-9>=PASS_SCORE,missing,excess};
 }
 export class SculptureChallenge {
- constructor(){this.scene=0;this.phase='levels';this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.submissions=0;this.results=[];this.collection=[];this.workshopLevels=freshWorkshopLevels();this.shelf=[0,0,0,0];this.kiln=null;this.revision=0;this.newPiece();}
+ constructor({tutorial=true}={}){this.tutorial=tutorial?freshTutorial():completedTutorial();this.scene=0;this.phase='levels';this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.submissions=0;this.results=[];this.collection=[];this.workshopLevels=freshWorkshopLevels();this.shelf=[0,0,0,0];this.kiln=null;this.revision=0;this.newPiece();}
+ get tutorialStep(){return tutorialInfo(this.tutorial);}
+ advanceTutorial(action){this.tutorial=nextTutorialStep(this.tutorial,action);}
+ allowsStation(station){return tutorialAllows(this.tutorial,station);}
  stationLevel(id){return this.workshopLevels[this.scene][id]||1;}
  upgradeStation(id,expectedLevel=this.stationLevel(id)){
   if(!WORKBENCH_IDS.includes(id)||this.completed||this.stationLevel(id)!==expectedLevel||expectedLevel>=3)return false;
@@ -155,21 +160,22 @@ export class SculptureChallenge {
  advanceEfficiency(ms){if(this.hasClay&&this.canWork&&this.efficiency.eligible&&Number.isFinite(ms)&&ms>0)this.efficiency.elapsedMs+=ms;}
  get completed(){return this.phase==='complete';}
  get sceneInfo(){return SCENES[this.scene];}
- get sceneResults(){return this.results.filter(r=>r.scene===this.scene);}
+ get sceneResults(){return this.results.filter(r=>r.scene===this.scene&&r.level<=ORDERS_PER_SCENE);}
  get scenePassed(){return this.sceneResults.length;}
- get sceneComplete(){return this.scenePassed===PRESETS.length;}
+ get sceneComplete(){return this.scenePassed===ORDERS_PER_SCENE;}
  get canWork(){return this.phase==='levels'||this.phase==='practice';}
- get canSubmit(){return this.canWork&&this.hasClay&&!!this.kilnResult;}
+ get canSubmit(){return this.canWork&&this.hasClay&&!!this.kilnResult&&this.allowsStation('serve');}
  get canPurchase(){return this.phase==='ready'&&this.sceneComplete&&this.money>=DECAL_PRICE;}
  get preset(){return PRESETS[this.level];}
  get hasPaint(){return this.piece.pixels.includes(2);}
  get hasShape(){return this.shapeEdits>0;}
  get stageIndex(){return this.kilnResult?3:this.hasPaint?2:this.hasShape?1:0;}
- get orders(){return Array.from({length:3},(_,i)=>({id:this.submissions+i+1,design:PRESETS[(this.level+i)%PRESETS.length].id}));}
+ get orders(){return this.phase==='levels'?CAMPAIGN_PRESETS.slice(this.level).map((p,i)=>({id:this.scene*ORDERS_PER_SCENE+this.level+i+1,design:p.id})):this.phase==='practice'?[{id:SCENES.length*ORDERS_PER_SCENE+this.submissions+1,design:this.preset.id}]:[];}
  newPiece(){this.target=createTarget(this.preset.id);this.piece={design:this.preset.id,stage:'sculpting',pixels:suppliedClay(this.target,this.stationLevel('clay')),revision:++this.revision};this.undoStack=[];this.redoStack=[];this.pendingStroke=null;this.edits=0;this.shapeEdits=0;this.hasClay=false;this.activeStation=null;this.fired=false;this.kiln=null;this.kilnResult=null;this._fireDrift=null;this.efficiency={elapsedMs:0,limitMs:EFFICIENCY_LIMIT_MS,eligible:false};}
- collectClay(){if(!this.canWork)return false;this.newPiece();this.hasClay=true;this.efficiency.eligible=true;return true;}
+ collectClay(){if(!this.canWork||!this.allowsStation('clay'))return false;this.newPiece();this.hasClay=true;this.efficiency.eligible=true;if(this.tutorialStep)this.tutorial={status:'active',step:'wheel'};return true;}
  stationLock(station){
   if(!this.canWork||!STATION_TOOLS[station])return null;
+  if(!this.allowsStation(station))return 'tutorial';
   if(!this.hasClay)return 'clay';
   if(this.kilnResult)return station==='paint'?null:'fired';
   if(this.hasPaint&&(station==='wheel'||station==='carve'))return 'painted';
@@ -180,12 +186,12 @@ export class SculptureChallenge {
  endStation(){this.finishStroke();this.activeStation=null;}
  beginStroke(){
   if(!this.hasClay||!this.activeStation)return false;this.finishStroke();
-  this.pendingStroke={pixels:this.piece.pixels.slice(),station:this.activeStation,edits:this.edits,kiln:this.kiln,kilnResult:this.kilnResult};return true;
+  this.pendingStroke={pixels:this.piece.pixels.slice(),station:this.activeStation,edits:this.edits,kiln:this.kiln,kilnResult:this.kilnResult,tutorial:{...this.tutorial}};return true;
  }
  finishStroke(){
   const before=this.pendingStroke;if(!before)return false;this.pendingStroke=null;
   if(pixelsEqual(before.pixels,this.piece.pixels)){this.edits=before.edits;this.kiln=before.kiln;this.kilnResult=before.kilnResult;this.fired=!!this.kilnResult;return false;}
-  this.undoStack.push({pixels:before.pixels,station:before.station});if(this.undoStack.length>50)this.undoStack.shift();this.redoStack=[];return true;
+  this.undoStack.push({pixels:before.pixels,station:before.station,tutorial:before.tutorial});if(this.undoStack.length>50)this.undoStack.shift();this.redoStack=[];this.advanceTutorial(before.station);return true;
  }
  invalidateFiring(){this.kiln=null;this.kilnResult=null;this.fired=false;}
  stroke(x0,y0,x1,y1,radius,tool,color,base=null,grab=undefined,options={}){
@@ -207,13 +213,25 @@ export class SculptureChallenge {
    else{this.shapeEdits++;this.piece.stage=this.hasPaint?'painted':'shaped';this.invalidateFiring();}
   }return changed;
  }
- undo(){this.finishStroke();const last=this.undoStack.at(-1);if(!last||last.station!==this.activeStation)return false;if(this.fired&&last.station!=='paint')return false;this.redoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation});this.piece.pixels=this.undoStack.pop().pixels;this.piece.revision=++this.revision;if(last.station!=='paint')this.invalidateFiring();this.piece.stage=this.fired?'fired':this.hasPaint?'painted':this.hasShape?'shaped':'sculpting';return true;}
- redo(){this.finishStroke();const last=this.redoStack.at(-1);if(!last||last.station!==this.activeStation)return false;if(this.fired&&last.station!=='paint')return false;this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation});this.piece.pixels=this.redoStack.pop().pixels;this.piece.revision=++this.revision;if(last.station!=='paint')this.invalidateFiring();this.piece.stage=this.fired?'fired':this.hasPaint?'painted':this.hasShape?'shaped':'sculpting';return true;}
- restart(){if(!this.canWork)return false;this.attempt++;this.newPiece();return true;}
- nextStation(){if(!this.canWork)return null;if(!this.hasClay)return 'clay';if(!this.hasShape)return 'wheel';if(!this.hasPaint)return 'paint';if(!this.kilnResult)return 'kiln';return 'serve';}
+ undo(){
+  this.finishStroke();const last=this.undoStack.at(-1);if(!last||last.station!==this.activeStation||this.fired&&last.station!=='paint')return false;
+  this.redoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation,tutorial:{...this.tutorial}});
+  this.piece.pixels=this.undoStack.pop().pixels;this.piece.revision=++this.revision;
+  if(this.tutorialStep&&last.tutorial)this.tutorial={...last.tutorial};
+  if(last.station!=='paint')this.invalidateFiring();this.piece.stage=this.fired?'fired':this.hasPaint?'painted':this.hasShape?'shaped':'sculpting';return true;
+ }
+ redo(){
+  this.finishStroke();const last=this.redoStack.at(-1);if(!last||last.station!==this.activeStation||this.fired&&last.station!=='paint')return false;
+  this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation,tutorial:{...this.tutorial}});
+  this.piece.pixels=this.redoStack.pop().pixels;this.piece.revision=++this.revision;
+  if(this.tutorialStep&&last.tutorial)this.tutorial={...last.tutorial};
+  if(last.station!=='paint')this.invalidateFiring();this.piece.stage=this.fired?'fired':this.hasPaint?'painted':this.hasShape?'shaped':'sculpting';return true;
+ }
+ restart(){if(!this.canWork)return false;this.attempt++;this.newPiece();if(this.tutorialStep)this.tutorial={status:'active',step:'clay'};return true;}
+ nextStation(){if(!this.canWork)return null;if(this.tutorialStep)return this.tutorial.step==='move'?'clay':this.tutorial.step;if(!this.hasClay)return 'clay';if(!this.hasShape)return 'wheel';if(!this.hasPaint)return 'paint';if(!this.kilnResult)return 'kiln';return 'serve';}
  fire(){
   this.finishStroke();
-  if(this.kiln||this.kilnResult||!this.hasClay||!this.canWork||!this.hasShape||!this.hasPaint)return false;
+  if(this.kiln||this.kilnResult||!this.hasClay||!this.canWork||!this.hasShape||!this.hasPaint||!this.allowsStation('kiln'))return false;
   const level=this.stationLevel('kiln'),seed=fireSeed();this._fireDrift=createFireDrift(seed);
   this.kiln={design:this.preset.id,revision:this.piece.revision,pixels:this.piece.pixels.slice(),duration:FIRE_DURATION,remaining:FIRE_DURATION,heat:FIRE_START_HEAT,center:.6,stoking:false,seed,bands:fireBand(level),seconds:{perfect:0,good:0,fair:0},upgradeBonus:(level-1)*.1};
   return true;
@@ -238,11 +256,12 @@ export class SculptureChallenge {
   const seconds={perfect:+k.seconds.perfect.toFixed(4),good:+k.seconds.good.toFixed(4),fair:+k.seconds.fair.toFixed(4)};
   const grade=fireGrade(seconds),ratio=fireRatio(seconds);
   this.kilnResult={grade,multiplier:Number((KILN_GRADES[grade].multiplier+k.upgradeBonus).toFixed(2)),duration:k.duration,seconds,ratio:Number(ratio.toFixed(3)),progress:k.heat,center:k.center,zones:{...k.bands},seed:k.seed};
-  this.kiln=null;this.fired=true;this.piece.stage='fired';this._fireDrift=null;
+  this.kiln=null;this.fired=true;this.piece.stage='fired';this._fireDrift=null;this.advanceTutorial('kiln');
  }
  submit(){
   if(!this.canWork||!this.hasClay)return {valid:false,passed:false,complete:this.completed,earned:0};
   this.finishStroke();if(!this.canSubmit)return {valid:false,passed:false,earned:0,reason:'firing-required'};
+  this.advanceTutorial('serve');
   const practice=this.phase==='practice';
   const result={valid:true,...compareSculpture(this.piece.pixels,this.target),scene:this.scene,practice,level:this.level+1,attempt:this.attempt,design:this.preset.id,pixels:this.piece.pixels.slice(),target:this.target.slice()};
   const grade=KILN_GRADES[this.kilnResult.grade];
@@ -252,11 +271,11 @@ export class SculptureChallenge {
   this.money+=result.earned;
   this.submissions++;
   if(result.passed)this.shelf[this.scene]=Math.min(9,(this.shelf[this.scene]||0)+1);
-  if(practice){this.phase='ready';this.level=4;this.attempt=1;this.newPiece();}
+  if(practice){this.phase='ready';this.level=ORDERS_PER_SCENE-1;this.attempt=1;this.newPiece();}
   else if(result.passed){
    this.delivered++;
    this.results.push({scene:this.scene,level:result.level,score:result.score,earned:result.earned,baseEarned:result.baseEarned,kiln:result.kiln,serveMultiplier:result.serveMultiplier,regularEarned:result.regularEarned,serveBonus:result.serveBonus,efficiency:result.efficiency,efficiencyBonus:result.efficiencyBonus,firstPassBonus:result.firstPassBonus});
-   if(this.level===PRESETS.length-1)this.phase='ready';
+   if(this.level===ORDERS_PER_SCENE-1)this.phase='ready';
    else this.level++;
    this.attempt=1;this.newPiece();
   }else this.restart();
@@ -280,10 +299,10 @@ export class SculptureChallenge {
   if(this.scene===SCENES.length-1){this.phase='complete';return true;}
   this.scene++;this.phase='levels';this.level=0;this.attempt=1;this.newPiece();return true;
  }
- serialize(){return {version:7,workshopLevels:this.workshopLevels,efficiency:this.efficiency,scene:this.scene,phase:this.phase,collection:this.collection,level:this.level,attempt:this.attempt,money:this.money,delivered:this.delivered,submissions:this.submissions,results:this.results,shelf:this.shelf,pixels:Array.from(this.piece.pixels),hasClay:this.hasClay,fired:this.fired,kilnResult:this.kilnResult,kilnGrade:this.kilnResult?.grade||null,edits:this.edits,shapeEdits:this.shapeEdits,stage:this.piece.stage};}
+ serialize(){return {version:8,tutorial:{...this.tutorial},workshopLevels:this.workshopLevels,efficiency:this.efficiency,scene:this.scene,phase:this.phase,collection:this.collection,level:this.level,attempt:this.attempt,money:this.money,delivered:this.delivered,submissions:this.submissions,results:this.results,shelf:this.shelf,pixels:Array.from(this.piece.pixels),hasClay:this.hasClay,fired:this.fired,kilnResult:this.kilnResult,kilnGrade:this.kilnResult?.grade||null,edits:this.edits,shapeEdits:this.shapeEdits,stage:this.piece.stage};}
  static restore(data){
   const c=new SculptureChallenge();
-  if(!data||![4,5,6,7].includes(data.version)||!Number.isInteger(data.level)||data.level<0||data.level>=PRESETS.length||!Array.isArray(data.pixels)||data.pixels.length!==SIZE*SIZE||data.pixels.some(p=>!Number.isInteger(p)||p<0||p>=PALETTE.length))return c;
+  if(!data||![4,5,6,7,8].includes(data.version)||!Number.isInteger(data.level)||data.level<0||data.level>=PRESETS.length||!Array.isArray(data.pixels)||data.pixels.length!==SIZE*SIZE||data.pixels.some(p=>!Number.isInteger(p)||p<0||p>=PALETTE.length))return c;
   const integer=(v,fallback=0)=>Number.isSafeInteger(v)&&v>=0?v:fallback;
   const old=data.version===4;
   c.scene=old?0:integer(data.scene,0);
@@ -291,13 +310,20 @@ export class SculptureChallenge {
   if(c.scene>=SCENES.length||!['levels','ready','practice','decal','crafted','complete'].includes(c.phase))return new SculptureChallenge();
   c.level=data.level;c.attempt=Math.max(1,integer(data.attempt,1));c.money=integer(data.money);c.submissions=integer(data.submissions,data.delivered||0);
   c.results=(Array.isArray(data.results)?data.results:[]).filter(r=>r&&Number.isInteger(r.level)&&r.level>=1&&r.level<=5&&Number.isFinite(r.score)&&r.score>=PASS_SCORE&&r.score<=100&&(old||(Number.isInteger(r.scene)&&r.scene>=0&&r.scene<=c.scene))).map(r=>({scene:old?0:r.scene,level:r.level,score:r.score,earned:integer(r.earned,rewardForScore(r.score)),baseEarned:integer(r.baseEarned,rewardForScore(r.score)),kiln:KILN_GRADES[r.kiln?.grade]?{...r.kiln}:null}));
-  c.delivered=c.results.length;
+  c.delivered=c.results.filter(r=>r.level<=ORDERS_PER_SCENE).length;
   c.collection=old?[]:(Array.isArray(data.collection)?data.collection:[]).filter((item,i)=>item&&item.scene===i&&SCENES[i]?.id===item.id).map(item=>({scene:item.scene,id:SCENES[item.scene].id,product:SCENES[item.scene].product}));
   const expectedCollection=c.scene+(['crafted','complete'].includes(c.phase)?1:0);
   const unique=new Set(c.results.map(r=>`${r.scene}:${r.level}`));
   if(unique.size!==c.results.length||c.collection.length!==expectedCollection||(c.phase==='complete'&&c.scene!==3))return new SculptureChallenge();
-  for(let scene=0;scene<c.scene;scene++)if(c.results.filter(r=>r.scene===scene).length!==5)return new SculptureChallenge();
-  if(c.phase==='levels'?(c.scenePassed!==c.level||c.sceneResults.some(r=>r.level>c.level)):!c.sceneComplete)return new SculptureChallenge();
+  const legacy=data.version<8,required=legacy?PRESETS.length:ORDERS_PER_SCENE;
+  for(let scene=0;scene<c.scene;scene++){
+   const levels=new Set(c.results.filter(r=>r.scene===scene).map(r=>r.level));
+   if(!Array.from({length:required},(_,i)=>i+1).every(level=>levels.has(level)))return new SculptureChallenge();
+  }
+  const current=c.results.filter(r=>r.scene===c.scene),count=legacy?current.length:c.scenePassed;
+  if(c.phase==='levels'?(count!==c.level||current.some(r=>r.level>c.level)||(!legacy&&c.level>=ORDERS_PER_SCENE)):count<required)return new SculptureChallenge();
+  if(legacy&&c.phase==='levels'&&c.sceneComplete)c.phase=data.hasClay?'practice':'ready';
+  if(!c.canWork)c.level=ORDERS_PER_SCENE-1;
   c.newPiece();c.piece.pixels=Uint8Array.from(data.pixels);c.hasClay=c.canWork&&!!data.hasClay;c.fired=c.hasClay&&!!data.fired;c.edits=integer(data.edits);
   c.shapeEdits=Math.max(integer(data.shapeEdits),c.edits>0?1:0);
   c.piece.stage=c.fired?'fired':c.hasPaint?'painted':c.shapeEdits>0?'shaped':'sculpting';
@@ -314,6 +340,16 @@ export class SculptureChallenge {
    c.results=c.results.map(r=>{const source=(data.results||[]).find(v=>v.scene===r.scene&&v.level===r.level)||{};return {...r,regularEarned:integer(source.regularEarned,r.earned),serveBonus:integer(source.serveBonus),serveMultiplier:[1,1.1,1.2].includes(source.serveMultiplier)?source.serveMultiplier:1,efficiency:source.efficiency&&Number.isFinite(source.efficiency.elapsedMs)&&source.efficiency.elapsedMs>=0?{elapsedMs:source.efficiency.elapsedMs,limitMs:EFFICIENCY_LIMIT_MS,eligible:!!source.efficiency.eligible,qualified:!!source.efficiency.qualified}:null,efficiencyBonus:integer(source.efficiencyBonus),firstPassBonus:integer(source.firstPassBonus)};});}
   const savedShelf=Array.isArray(data.shelf)?data.shelf.map(v=>Math.min(9,integer(v))):null;
   c.shelf=data.version>=7&&savedShelf&&savedShelf.length===4?savedShelf:Array.from({length:4},(_,i)=>Math.min(9,c.results.filter(r=>r.scene===i).length));
+  c.tutorial=completedTutorial();
+  if(data.version===8&&c.scene===0&&c.level===0&&c.phase==='levels'&&c.submissions===0){
+   const saved=tutorialInfo(data.tutorial);
+   if(saved){
+    c.tutorial={status:'active',step:saved.id};
+    if(!c.hasClay&&saved.id!=='move')c.tutorial.step='clay';
+    else if(c.hasClay&&['move','clay'].includes(saved.id))c.tutorial.step='wheel';
+    if(c.tutorial.step==='serve'&&!c.kilnResult)c.tutorial.step='kiln';
+   }else if(data.tutorial?.status!=='complete')c.tutorial=c.hasClay?{status:'active',step:'wheel'}:freshTutorial();
+  }
   return c;
  }
 }
