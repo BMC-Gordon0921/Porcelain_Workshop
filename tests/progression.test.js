@@ -10,12 +10,12 @@ function fire(c,seconds=null){c.fire();if(!seconds){c.tick(60);return;}c.kiln.se
 function pass(c,ms=0){c.collectClay();shape(c);paint(c);c.piece.pixels=c.target.slice();c.advanceEfficiency(ms);fire(c);return c.submit();}
 
 test('all six upgrades debit exact costs once, cap at three, and do not alter current clay',()=>{
- const c=new SculptureChallenge({tutorial:false});c.collectClay();const before=c.piece.pixels.slice();c.money=29;assert.equal(c.upgradeStation('clay'),false);c.money=540;
+ const c=new SculptureChallenge({tutorial:false});c.collectClay();const before=c.piece.pixels.slice();c.money=99;assert.equal(c.upgradeStation('clay'),false);c.money=1800;
  for(const id of WORKBENCH_IDS){assert.equal(c.upgradeStation(id,1),true);const balance=c.money;assert.equal(c.upgradeStation(id,1),false);assert.equal(c.money,balance);assert.equal(c.upgradeStation(id,2),true);assert.equal(c.upgradeStation(id,3),false);}
  assert.equal(c.money,0);assert.ok(pixelsEqual(before,c.piece.pixels));assert.equal(c.upgradeStation('invalid'),false);assert.deepEqual(restore(c).workshopLevels,c.workshopLevels);
 });
 test('upgrades remain local to each scene and practice can fund a decal after investment',()=>{
- let c=new SculptureChallenge({tutorial:false});c.money=320;for(let i=0;i<3;i++)pass(c,300001);for(const id of WORKBENCH_IDS){c.upgradeStation(id,1);c.upgradeStation(id,2);}assert.equal(c.money,260);assert.equal(c.canPurchase,false);
+ let c=new SculptureChallenge({tutorial:false});c.money=1580;for(let i=0;i<3;i++)pass(c,300001);for(const id of WORKBENCH_IDS){c.upgradeStation(id,1);c.upgradeStation(id,2);}assert.equal(c.money,260);assert.equal(c.canPurchase,false);
  assert.equal(c.beginPractice(),true);const r=pass(c);assert.equal(r.firstPassBonus,0);assert.equal(r.efficiencyBonus,29);assert.equal(c.scenePassed,3);assert.ok(c.canPurchase);c.buyDecal();c.applyDecal();c.nextScene();c=restore(c);assert.equal(c.stationLevel('clay'),1);assert.equal(c.workshopLevels[0].clay,3);
 });
 test('supplied white clay becomes progressively closer for all five targets',()=>{
@@ -63,8 +63,8 @@ test('efficiency survives saves and edits, resets only for new clay, and pays on
 test('old saves retain income and clay, with efficiency starting on the next new piece',()=>{
  const c=new SculptureChallenge({tutorial:false});pass(c);c.collectClay();c.advanceEfficiency(12);for(const version of [4,5]){const legacy={...c.serialize(),version};if(version===4)legacy.results=legacy.results.map(({scene,...r})=>r);const d=SculptureChallenge.restore(legacy);assert.equal(d.money,c.money);assert.equal(d.hasClay,true);assert.equal(d.efficiency.eligible,false);assert.equal(d.stationLevel('clay'),1);d.collectClay();assert.equal(d.efficiency.eligible,true);}
 });
-test('unfinished firings reset on reload without resetting efficiency, bad optional fields do not erase progress',()=>{
- const c=new SculptureChallenge({tutorial:false});c.collectClay();shape(c);paint(c);c.advanceEfficiency(12345);c.fire();c.setStoking(true);c.tick(.5);const saved=c.serialize();saved.workshopLevels=[{clay:99}];const d=SculptureChallenge.restore(saved);assert.equal(d.kiln,null);assert.equal(d.efficiency.elapsedMs,12345);assert.equal(d.stationLevel('clay'),1);
+test('unfinished firings resume paused on reload without resetting efficiency, bad optional fields do not erase progress',()=>{
+ const c=new SculptureChallenge({tutorial:false});c.collectClay();shape(c);paint(c);c.advanceEfficiency(12345);c.fire();c.setStoking(true);c.tick(.5);const saved=c.serialize();saved.workshopLevels=[{clay:99}];const d=SculptureChallenge.restore(saved);assert.equal(d.kiln.remaining,c.kiln.remaining);assert.equal(d.kiln.stoking,false);assert.equal(d.efficiency.elapsedMs,12345);assert.equal(d.stationLevel('clay'),1);
 });
 test('clock policy separates workshop efficiency time from kiln-only time and all pauses',()=>{
  const base={started:true,helpOpen:false,hidden:false,focused:true,hasClay:true,canWork:true};

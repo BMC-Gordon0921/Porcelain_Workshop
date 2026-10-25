@@ -42,9 +42,9 @@ test('three grades multiply rewards, round to coins, and persist actual historic
  assert.equal(Math.floor(compareSculpture(c.piece.pixels,c.target).score/10),9);fire(c,.66);assert.equal(c.submit().regularEarned,113);
  const blank=new SculptureChallenge({tutorial:false});prepare(blank,makeBlank());blank.piece.pixels[56*112+56]=2;fire(blank,.66);assert.equal(blank.submit().earned,0);
 });
-test('legacy fired work gets fair heat; unfinished firings restore clay without a timer',()=>{
- const c=new SculptureChallenge({tutorial:false});prepare(c,null);c.fire();c.tick(3);const loaded=restore(c);assert.equal(loaded.hasClay,true);assert.equal(loaded.kiln,null);assert.equal(loaded.canSubmit,false);assert.equal(loaded.fire(),true);
- const legacy={...c.serialize(),fired:true};delete legacy.kilnResult;delete legacy.kilnGrade;assert.deepEqual(SculptureChallenge.restore(legacy).kilnResult,{grade:'plain',progress:1,multiplier:1,legacy:true});
+test('legacy fired work gets fair heat; unfinished firings restore paused with their elapsed time',()=>{
+ const c=new SculptureChallenge({tutorial:false});prepare(c,null);c.fire();c.tick(3);const loaded=restore(c);assert.equal(loaded.hasClay,true);assert.equal(loaded.kiln.remaining,c.kiln.remaining);assert.equal(loaded.kiln.stoking,false);assert.equal(loaded.canSubmit,false);assert.equal(loaded.fire(),false);
+ const legacy={...c.serialize(),version:8,fired:true};delete legacy.kilnResult;delete legacy.kilnGrade;assert.deepEqual(SculptureChallenge.restore(legacy).kilnResult,{grade:'plain',progress:1,multiplier:1,legacy:true});
 });
 test('fired pieces refuse reshaping, while repainting and undo keep the heat',()=>{
  const c=new SculptureChallenge({tutorial:false});prepare(c,c.target);fire(c,.66);const result=c.kilnResult,base=c.piece.pixels.slice();

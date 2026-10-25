@@ -1,5 +1,5 @@
 export const WORKBENCH_IDS = ['clay','wheel','carve','paint','kiln','serve'];
-export const UPGRADE_COSTS = {1:30,2:60};
+export const UPGRADE_COSTS = {1:100,2:200};
 export const FIRST_PASS_BONUS = 60;
 export const EFFICIENCY_LIMIT_MS = 300000;
 export const WORKBENCHES = {

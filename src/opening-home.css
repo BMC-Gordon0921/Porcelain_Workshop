@@ -1,0 +1,37 @@
+@font-face {
+ font-family:'ZCOOL KuaiLe Title';
+ src:url('./assets/fonts/zcool-kuaile-title.woff2') format('woff2');
+ font-style:normal;font-weight:400;font-display:swap;
+}
+
+.opening-background{position:absolute;inset:0;overflow:hidden;pointer-events:none;background:#e9e5d6;z-index:0}
+.opening-background::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#f2ead7ed 0%,#f2ead7cf 38%,#f2ead74d 100%),linear-gradient(0deg,#f2ead7d9,transparent 42%,#f2ead766);pointer-events:none}
+.opening-background .scene-carousel{position:absolute;inset:-28px;width:calc(100% + 56px);height:calc(100% + 56px);border:0;border-radius:0;background:transparent}
+.scene-carousel[data-presentation=background] canvas{width:100%;height:100%;filter:blur(12px);cursor:default;touch-action:auto}
+.scene-carousel[data-presentation=background] :is(.carousel-controls,.hero-hint,.scene-load,.demo-caption){display:none}
+.opening-screen[data-opening-stage=map]>.opening-background{display:none}
+.opening-screen>.opening-header{position:relative;z-index:5;background:transparent}
+.opening-screen>.city-prologue{z-index:1;overflow:visible}
+.opening-brand{border:0;padding:0;background:transparent;color:inherit;text-align:left;cursor:pointer;border-radius:8px;min-height:44px}
+.opening-brand:hover .opening-mark{filter:brightness(1.1)}
+.opening-brand:focus-visible,.background-pause:focus-visible{outline:2px solid #244f6a;outline-offset:5px}
+.prologue-copy>.opening-title{font:400 clamp(76px,8.8vw,132px)/1.18 'ZCOOL KuaiLe Title','KaiTi','STKaiti',serif;letter-spacing:.025em;color:#244458;text-shadow:0 3px 0 #fff6e766;animation:none;filter:none}
+.opening-title-word{display:inline-block;white-space:nowrap}
+.opening-title-word>span{display:inline-block;animation:opening-letter-in 600ms cubic-bezier(.22,1,.36,1) var(--letter-delay,0ms) both}
+.prologue-copy>.opening-title[data-language=en]{font-size:clamp(56px,6.4vw,94px);line-height:1.1;letter-spacing:0;max-width:600px}
+.opening-screen[data-opening-stage=intro] .prologue-copy>p{color:#53665f}
+.opening-screen[data-opening-stage=intro] .porcelain-halo{background:radial-gradient(circle,#fff9e9b3,#e5e9de66 65%,transparent 73%);border-color:#f8f4e177}
+.background-pause{position:absolute;right:4.2vw;bottom:22px;color:#40594f;background:#fcf7e9d9;border-color:#9eaa9466;min-height:36px;cursor:pointer;backdrop-filter:blur(8px)}
+@keyframes opening-letter-in{from{opacity:0;filter:blur(8px);transform:translateY(12px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+
+@media(max-width:760px){
+ .opening-screen>.opening-header{position:sticky;top:0;background:#f2ead7d9;backdrop-filter:blur(8px)}
+ .opening-background{position:fixed}
+ .opening-background::after{background:linear-gradient(180deg,#f2ead794,#f2ead755 23%,#f2ead7e6 65%,#f2ead7f2)}
+ .scene-carousel[data-presentation=background] canvas{filter:blur(8px)}
+ .prologue-copy>.opening-title{font-size:clamp(56px,17vw,94px);letter-spacing:.02em;line-height:1.2}
+ .prologue-copy>.opening-title[data-language=en]{font-size:clamp(44px,12.5vw,72px);line-height:1.12}
+ .opening-screen>.city-prologue{padding-bottom:76px}
+ .background-pause{right:9vw;bottom:19px;font-size:11px;min-height:36px}
+}
+@media(prefers-reduced-motion:reduce){.opening-title-word>span{animation:none;filter:none;transform:none;opacity:1}}

@@ -14,7 +14,7 @@ async function newContext(options={}){
 }
 const context=await newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
 const snapshot=(name,p=page)=>p.screenshot({path:`qa/journey-update/${name}.png`,fullPage:true});
-async function enter(p=page){await p.click('#skip-opening');if(await p.locator('#brief-done').isVisible())await p.click('#brief-done');await p.evaluate(()=>window.dispatchEvent(new Event('focus')));}
+async function enter(p=page){await p.click('#skip-opening');if(await p.locator('#welcome').isVisible())await p.click('#start-button');await p.waitForSelector('#brief-done');if(await p.locator('#brief-done').isVisible())await p.click('#brief-done');await p.evaluate(()=>window.dispatchEvent(new Event('focus')));}
 async function station(id,p=page){
  await p.evaluate(id=>{const t=window.__terra;t.closeTask();const station=t.world.stations.find(s=>s.id===id);t.world.player.group.position.set(station.approach[0],0,station.approach[1]);},id);
  await p.waitForTimeout(100);await p.keyboard.press('f');

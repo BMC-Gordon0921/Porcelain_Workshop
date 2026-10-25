@@ -1,0 +1,283 @@
+BUILDING DIORAMA 1
+/Users/ashton/Potter workshop/tools/build_blender_maps.py:30: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m=bpy.data.materials.new(key);m.diffuse_color=(*rgb,1);m.use_nodes=True
+Info: Saved as "01-guyao.blend"
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+10:55:13 | INFO: Starting glTF 2.0 export
+10:55:13 | INFO: Extracting primitive: Tapered trunk
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Visible spreading branch
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Handmade facade brick
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Handmade facade brick.002
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Handmade facade brick.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Cobalt perimeter inlay
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Garden flower
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: 20 × 20 square island
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Lower floating reveal
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Blue reflected glazing
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Corner porcelain medallion
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Lantern warm paper
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Mounded planting.002
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Layered leaf crown
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Layered leaf crown.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Mounded planting.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Kiln hall walls
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Porcelain perimeter band
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Sweeping tiled roof
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Raised roof tile seam
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Mounded planting
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Garden ground
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Groundcover mound
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Low stone garden wall
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Courtyard border
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Individual courtyard flagstone
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Individual courtyard flagstone.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Individual courtyard flagstone.002
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Window wood frame
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Window central mullion
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Finished glTF 2.0 export in 0.06941080093383789 s
+
+EXPORTED {'id': 'guyao', 'file': 'models/maps/guyao.glb', 'blend': 'art/blender/01-guyao.blend', 'size': 20, 'center': [0, -2], 'bounds': {'min': [-10.03, -1.28, -12.03], 'max': [10.03, 6.5, 8.03]}, 'chimney': {'x': 6.0, 'y': 5.68, 'z': -9.3}, 'material_batches': 30, 'triangles': 69580, 'bytes': 2759164}
+BUILDING DIORAMA 2
+/Users/ashton/Potter workshop/tools/build_blender_maps.py:30: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m=bpy.data.materials.new(key);m.diffuse_color=(*rgb,1);m.use_nodes=True
+Info: Saved as "02-museum.blend"
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+10:55:13 | INFO: Starting glTF 2.0 export
+10:55:13 | INFO: Extracting primitive: Tapered trunk.009
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Visible spreading branch.009
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Cobalt perimeter inlay.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: 20 × 20 square island.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Lower floating reveal.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Blue reflected glazing.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Reflecting glass skylight
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Corner porcelain medallion.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Lantern warm paper.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Mounded planting.005
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Layered leaf crown.002
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Layered leaf crown.003
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Mounded planting.004
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Garden flower.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Porcelain perimeter band.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Lantern dark top.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Garden ground.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Groundcover mound.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Low stone garden wall.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Courtyard border.002
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Individual courtyard flagstone.005
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Individual courtyard flagstone.003
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Individual courtyard flagstone.004
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Still turquoise reflecting pool
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Window wood frame.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Extracting primitive: Window central mullion.001
+10:55:13 | INFO: Primitives created: 1
+10:55:13 | INFO: Finished glTF 2.0 export in 0.049427032470703125 s
+
+EXPORTED {'id': 'museum', 'file': 'models/maps/museum.glb', 'blend': 'art/blender/02-museum.blend', 'size': 20, 'center': [0, -2], 'bounds': {'min': [-10.03, -1.28, -12.03], 'max': [10.03, 6.5, 8.03]}, 'chimney': None, 'material_batches': 26, 'triangles': 54828, 'bytes': 2123428}
+BUILDING DIORAMA 3
+Info: Saved as "03-imperial.blend"
+Warning: No mesh data to join
+Warning: No mesh data to join
+Warning: No mesh data to join
+10:55:14 | INFO: Starting glTF 2.0 export
+10:55:14 | INFO: Extracting primitive: Tapered trunk.015
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Visible spreading branch.015
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Brick barrel vault with real open interior
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Vault side wall
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Individual arch voussoir.001
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Cobalt perimeter inlay.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Garden ground.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Garden flower.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: 20 × 20 square island.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Lower floating reveal.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Layered leaf crown.005
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Layered leaf crown.004
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Layered leaf crown.006
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Corner porcelain medallion.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Lantern warm paper.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Mounded planting.008
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Slender bamboo leaves.004
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Bamboo node.004
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Mounded planting.007
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Individual arch voussoir
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Porcelain perimeter band.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Lantern dark top.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Mounded planting.006
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Groundcover mound.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Low stone garden wall.002
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Courtyard border.004
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Individual courtyard flagstone.007
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Individual courtyard flagstone.008
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Individual courtyard flagstone.006
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Exposed earth inside excavation
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Extracting primitive: Excavation safety rail
+10:55:14 | INFO: Primitives created: 1
+10:55:14 | INFO: Finished glTF 2.0 export in 0.05057191848754883 s
+
+EXPORTED {'id': 'imperial', 'file': 'models/maps/imperial.glb', 'blend': 'art/blender/03-imperial.blend', 'size': 20, 'center': [0, -2], 'bounds': {'min': [-10.03, -1.28, -12.03], 'max': [10.03, 6.5, 8.03]}, 'chimney': None, 'material_batches': 31, 'triangles': 47534, 'bytes': 1796472}
+BUILDING DIORAMA 4
+Info: Saved as "04-taoxichuan.blend"
+Warning: No mesh data to join
+Warning: No mesh data to join
+10:55:15 | INFO: Starting glTF 2.0 export
+10:55:15 | INFO: Extracting primitive: Tapered trunk.024
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Visible spreading branch.024
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Historic brick factory
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Handmade facade brick.005
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Handmade facade brick.004
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Cobalt perimeter inlay.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: 20 × 20 square island.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Lower floating reveal.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Blue reflected glazing.002
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Sawtooth glazed clerestory
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Corner porcelain medallion.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Warm festival bulb
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Mounded planting.011
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Slender bamboo leaves.006
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Bamboo node.005
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Mounded planting.010
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Striped linen awning
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Striped linen awning.002
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Layered leaf crown.007
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Garden flower.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Porcelain perimeter band.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Sawtooth factory roof
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Mounded planting.009
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Groundcover mound.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Garden ground.003
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Courtyard border.006
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Striped linen awning.001
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Individual courtyard flagstone.009
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Individual courtyard flagstone.010
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Individual courtyard flagstone.011
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Window wood frame.002
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Extracting primitive: Window central mullion.002
+10:55:15 | INFO: Primitives created: 1
+10:55:15 | INFO: Finished glTF 2.0 export in 0.07099795341491699 s
+
+EXPORTED {'id': 'taoxichuan', 'file': 'models/maps/taoxichuan.glb', 'blend': 'art/blender/04-taoxichuan.blend', 'size': 20, 'center': [0, -2], 'bounds': {'min': [-10.03, -1.28, -12.03], 'max': [10.03, 6.5, 8.03]}, 'chimney': {'x': 5.7, 'y': 6.279999999999999, 'z': -9.3}, 'material_batches': 32, 'triangles': 93130, 'bytes': 3576296}
+All four editable Blender maps and optimized GLBs are ready.
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:49:19)
+
+Blender quit

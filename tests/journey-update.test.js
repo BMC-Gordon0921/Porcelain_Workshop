@@ -26,7 +26,7 @@ test('tutorial requires real ordered actions, persists, and undo restores its ch
 test('first valid submission ends teaching even on failure, without completing an order',()=>{
  const c=new SculptureChallenge();prepareTutorial(c);assert.equal(c.tutorial.step,'kiln');
  assert.equal(c.submit().valid,false);assert.equal(c.tutorial.status,'active');
- c.fire();c.tick(3);let saved=restore(c);assert.equal(saved.tutorial.step,'kiln');assert.equal(saved.kiln,null);
+ c.fire();c.tick(3);let saved=restore(c);assert.equal(saved.tutorial.step,'kiln');assert.equal(saved.kiln.remaining,c.kiln.remaining);assert.equal(saved.kiln.stoking,false);
  c.tick(9);assert.equal(c.tutorial.step,'serve');saved=restore(c);assert.equal(saved.tutorial.step,'serve');
  const result=saved.submit();assert.equal(result.valid,true);assert.equal(result.passed,false);assert.equal(saved.tutorial.status,'complete');
  assert.equal(saved.scenePassed,0);assert.equal(saved.attempt,2);assert.equal(restore(saved).tutorial.status,'complete');

@@ -1,3 +1,4 @@
+import {EXPERIENCE_EN} from './experience-i18n.js';
 // Bilingual UI layer: Chinese is the source of truth, English is a lookup table.
 // Text is translated at the DOM level so every template keeps working untouched.
 import {WORKSHOP_EN} from './workshop-i18n.js';
@@ -503,6 +504,7 @@ const EN = {
     'Four finished bowls — drag to spin, hover for a short introduction',
 };
 
+Object.assign(EN,EXPERIENCE_EN);
 const EXTRA_RULES = [
   [/^继续旅程 · (.+)$/, (m) => `Continue · ${m[1]}`],
   [/^抵达 (.+)$/, (m) => `Arrive at ${m[1]}`],

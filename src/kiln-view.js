@@ -27,7 +27,14 @@ export function createKilnModel(){
  for(let i=0;i<9;i++){const mat=new THREE.MeshBasicMaterial({color:i%2?0xffb940:0xff6d20,transparent:true,opacity:.7,depthWrite:false});const m=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),mat);m.position.set((i%5-2)*.23,.52,i<5?.83:.0);m.scale.set(.07,.18+(i%3)*.06,.07);flameGroup.add(m);flames.push(m);}
  const light=new THREE.PointLight(0xff9c46,0,4);light.position.set(0,1,.72);group.add(light);
  const gauge=add(new THREE.CylinderGeometry(.14,.14,.04,24),iron,.86,1.7,.95);gauge.rotation.x=Math.PI/2;
- const upgrades=new THREE.Group();group.add(upgrades);for(let i=0;i<2;i++){const m=new THREE.Mesh(new THREE.TorusGeometry(.29+i*.045,.025,6,24),trim);m.rotation.x=Math.PI/2;m.position.set(-.25,2.47+i*.16,-.35);upgrades.add(m);}
+ const upgrades=new THREE.Group();group.add(upgrades);
+ const tiers=[new THREE.Group(),new THREE.Group()];tiers.forEach(t=>upgrades.add(t));
+ for(const side of [-1,1]){tiers[0].add(box(iron,side*1.06,1.12,0,.11,1.7,1.78));tiers[0].add(box(trim,side*.83,.55,.93,.37,.55,.14));}
+ tiers[0].add(box(iron,.74,1.95,.68,.43,.5,.22));
+ for(let i=0;i<5;i++)tiers[0].add(box(trim,.82,.55+i*.075,.91,.5,.035,.13));
+ for(const x of [-.7,.7]){tiers[1].add(box(iron,x,2.18,-.25,.21,.95,.36));tiers[1].add(box(trim,x,2.64,-.25,.42,.12,.48));}
+ tiers[1].add(box(iron,0,2.05,.93,1.4,.16,.16));
+ for(const x of [-.42,0,.42]){const dial=add(new THREE.CylinderGeometry(.14,.14,.065,20),trim,x,1.94,1.03);dial.rotation.x=Math.PI/2;tiers[1].add(dial);}
  let piece=null,key='',piecePixels=null,time=0;
  return {group,setPiece(pixels,revision){if(key===revision&&piecePixels===pixels)return;key=revision;piecePixels=pixels;if(piece){group.remove(piece);disposeTree(piece);}piece=reliefSculpture(pixels);piece.scale.setScalar(.86);piece.position.set(0,.4,.5);group.add(piece);},
   update(dt,{firing=false,heat=0,level=1,reduced=false}={}){if(firing)time+=dt;const hot=THREE.MathUtils.clamp(heat,0,1);

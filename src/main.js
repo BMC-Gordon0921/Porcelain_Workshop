@@ -6,6 +6,10 @@ import './upgrade.css';
 import './workshop.css';
 import './tutorial.css';
 import './carousel.css';
+import './experience.css';
+import './opening-home.css';
+import {createUpgradesView} from './upgrades-view.js';
+import {createGuidance} from './guidance.js';
 import {WORKBENCHES,WORKBENCH_IDS,UPGRADE_COSTS,fireBand,fireRatio,fireGrade,FIRE_DURATION,formatElapsed,clockPolicy} from './workshop.js';
 import {createKilnPreview} from './kiln-view.js';
 import {PLACES} from './places.js';
@@ -27,6 +31,8 @@ let saved=null;
 try{saved=JSON.parse(localStorage.getItem(SAVE_KEY)||sessionStorage.getItem(SAVE_KEY)||localStorage.getItem('terra-porcelain-journey-v5')||sessionStorage.getItem('terra-porcelain-journey-v5')||sessionStorage.getItem('terra-porcelain-challenge-v4')||'null');}catch{}
 let state=SculptureChallenge.restore(saved);
 const world=createWorld($('world'));
+const guidance=createGuidance($('world-wrap'),world);
+let traveling=false;
 const presetImages=Object.fromEntries(PRESETS.map(p=>[p.id,thumbnail(createTarget(p.id))]));
 const decalImages=SCENES.map((_,i)=>decalImage(i));
 let started=false,helpOpen=false,activeTask=null,nearest=null,previousTime=0,toastTimeout;
@@ -72,11 +78,15 @@ function efficiencyText(){
  return `效率用时 ${formatElapsed(state.efficiency.elapsedMs)} / 05:00 · ${efficiencyRunning?'达标 +20%':'已暂停'}`;
 }
 function updateEfficiency(){const value=efficiencyText();document.querySelectorAll('[data-efficiency]').forEach(el=>{if(el.dataset.source!==value){el.dataset.source=value;el.textContent=value;}});}
-function upgradeCard(id){const level=state.stationLevel(id),b=WORKBENCHES[id],price=UPGRADE_COSTS[level];return `<article class="workbench-card" data-workbench="${id}"><div class="workbench-heading"><b>${b.name}</b><span>Lv.${level} / 3</span></div><p>${b.effects[level-1]}</p>${level<3?`<small>下一级：${b.effects[level]}</small><button class="secondary-button" data-upgrade="${id}" data-from="${level}" ${state.money<price||state.completed?'disabled':''}>升级 · ${price} 币</button>${state.money<price?'<small>金币不足，可通过订单赚取</small>':''}`:'<strong class="max-level">已满级</strong>'}</article>`;}
-let upgradePendingUntil=0;
-function bindUpgrades(){document.querySelectorAll('[data-upgrade]').forEach(button=>button.onclick=()=>{if(performance.now()<upgradePendingUntil)return;syncClocks();const id=button.dataset.upgrade;if(!state.upgradeStation(id,Number(button.dataset.from)))return;upgradePendingUntil=performance.now()+350;button.disabled=true;save();sound('coin');updateUI();if(activeTask?.kind==='upgrades')openUpgrades();else{const station=activeTask.station;activeTask.editor?.finish();state.endStation();if(station==='wheel'||station==='carve'||station==='paint')openEditor(station);else if(station==='kiln')openKiln();else if(station==='clay')openSupply();else if(station==='serve')openReview();}});}
-function mountStationInfo(id){activeTask.station=id;const timer=document.createElement('div');timer.className='efficiency-indicator task-efficiency';timer.dataset.efficiency='';$('task-body').prepend(timer);const host=document.createElement('div');host.className='station-upgrade-strip';host.innerHTML=upgradeCard(id);$('task-body').append(host);bindUpgrades();updateEfficiency();}
-function openUpgrades(){if(!started)return;taskShell('upgrades',`${state.sceneInfo.name} · 独立建设`,'升级你的工作台','每个场景独立升级。五分钟内通过订单可多赚 20%，首次通关另得 60 币。',`<div class="upgrade-wallet">当前余额 <b>${state.money}</b> 币</div><div class="workbench-grid">${WORKBENCH_IDS.map(upgradeCard).join('')}</div><div class="efficiency-indicator" data-efficiency></div>`);bindUpgrades();updateEfficiency();}
+function mountStationInfo(id){
+ activeTask.station=id;const timer=document.createElement('div');timer.className='efficiency-indicator task-efficiency';timer.dataset.efficiency='';$('task-body').prepend(timer);
+ const button=document.createElement('button');button.type='button';button.className='secondary-button station-upgrade-entry';button.textContent=`${WORKBENCHES[id].name} · Lv.${state.stationLevel(id)} · 查看升级预览`;button.onclick=()=>openUpgrades(id);$('task-body').append(button);updateEfficiency();
+}
+function openUpgrades(initial){
+ if(!started)return;if(!WORKBENCH_IDS.includes(initial))initial=state.nextStation()||'clay';
+ taskShell('upgrades',`${state.sceneInfo.name} · 独立建设`,'升级你的工作台','悬停预览，点击选定，再确认升级。每个场景独立保存等级。','<div id="upgrade-content"></div><div class="efficiency-indicator" data-efficiency></div>');
+ activeTask.upgrades=createUpgradesView($('upgrade-content'),{state,initial,onUpgrade(){save();sound('coin');updateUI();}});updateEfficiency();
+}
 $('upgrades-button').onclick=openUpgrades;
 function updateUI(){
  const p=state.preset,theme=state.sceneInfo;
@@ -84,7 +94,7 @@ function updateUI(){
  $('money').innerHTML=`${state.money}<span> 硬币</span>`;
  document.querySelector('.day-pill b').textContent=PLACES[state.scene].shortName;
  document.querySelector('.day-pill small').textContent=`场景 ${state.scene+1} / 4 · ${theme.decal}`;
- document.querySelector('.commissions').innerHTML=`<div class="scene-heading"><span>瓷器之旅 · ${state.scene+1} / 4</span><h2 title="${theme.name}">${PLACES[state.scene].shortName}</h2></div><div class="scene-path">${SCENES.map((s,i)=>`<span class="${i===state.scene?'current':''} ${i<state.collection.length?'done':''}" title="${s.name}">${i<state.collection.length?'✓':String(i+1).padStart(2,'0')}</span>`).join('')}</div><button class="reference-card" id="view-brief"><div class="reference-heading"><span>${state.phase==='practice'?'练习订单':`第 ${state.level+1} 关 / ${ORDERS_PER_SCENE}`}</span><span>80% 通关</span></div><img src="${presetImages[p.id]}" alt="${p.name}参考图"/><h3>${p.name}</h3><p>60% 起奖励 · 首次通关 +60 币</p><div class="efficiency-indicator" data-efficiency></div><span class="reference-link">${state.canWork?'查看订单 ↗':'三关已完成 ✓'}</span></button><div class="preset-path">${CAMPAIGN_PRESETS.map((d,i)=>`<div class="preset-step ${i===state.level?'current':''} ${state.sceneResults.some(r=>r.level===i+1)?'passed':''}" title="第 ${i+1} 关：${d.name}"><img src="${presetImages[d.id]}" alt="${d.name}"/><span>${state.sceneResults.some(r=>r.level===i+1)?'✓':i+1}</span></div>`).join('')}</div><button class="decal-goal" id="open-journey"><img src="${decalImages[state.scene]}" alt="${theme.decal}贴画"/><div><small>本场景贴画 · 400 币</small><b>${theme.decal}</b><span>${state.phase==='decal'?'已购买 · 点击贴花':state.phase==='crafted'?'已制成 · 进入下一场景':state.completed?'四件作品已集齐':`${state.scenePassed}/${ORDERS_PER_SCENE} 关 · ${state.money}/400 币`}</span></div><span>↗</span></button><button class="collection-link" id="view-collection">我的瓷器藏品 <b>${state.collection.length} / 4</b></button>`;
+ document.querySelector('.commissions').innerHTML=`<div class="scene-heading"><span>瓷器之旅 · ${state.scene+1} / 4</span><h2 title="${theme.name}">${PLACES[state.scene].shortName}</h2></div><div class="scene-path">${SCENES.map((s,i)=>`<span class="${i===state.scene?'current':''} ${state.isCollected(i)?'done':''}" title="${s.name}">${state.isCollected(i)?'✓':String(i+1).padStart(2,'0')}</span>`).join('')}</div><button class="reference-card" id="view-brief"><div class="reference-heading"><span>${state.phase==='practice'?'练习订单':`第 ${state.level+1} 关 / ${ORDERS_PER_SCENE}`}</span><span>80% 通关</span></div><img src="${presetImages[p.id]}" alt="${p.name}参考图"/><h3>${p.name}</h3><p>60% 起奖励 · 首次通关 +60 币</p><div class="efficiency-indicator" data-efficiency></div><span class="reference-link">${state.canWork?'查看订单 ↗':'三关已完成 ✓'}</span></button><div class="preset-path">${CAMPAIGN_PRESETS.map((d,i)=>`<div class="preset-step ${i===state.level?'current':''} ${state.sceneResults.some(r=>r.level===i+1)?'passed':''}" title="第 ${i+1} 关：${d.name}"><img src="${presetImages[d.id]}" alt="${d.name}"/><span>${state.sceneResults.some(r=>r.level===i+1)?'✓':i+1}</span></div>`).join('')}</div><button class="decal-goal" id="open-journey"><img src="${decalImages[state.scene]}" alt="${theme.decal}贴画"/><div><small>本场景贴画 · 400 币</small><b>${theme.decal}</b><span>${state.phase==='decal'?'已购买 · 点击贴花':state.phase==='crafted'?'已制成 · 进入下一场景':state.completed?'四件作品已集齐':`${state.scenePassed}/${ORDERS_PER_SCENE} 关 · ${state.money}/400 币`}</span></div><span>↗</span></button><button class="collection-link" id="view-collection">我的瓷器藏品 <b>${state.collection.length} / 4</b></button>`;
  $('view-brief').onclick=routeTask;$('open-journey').onclick=openJourney;$('view-collection').onclick=openCollection;
  $('carrying').classList.toggle('hidden',!state.hasClay);$('carry-art').innerHTML=`<img src="${thumbnail(state.piece.pixels,112)}" alt="当前瓷泥"/>`;$('carry-name').textContent=p.name;$('carry-stage').textContent=`第 ${state.level+1} 关 · 第 ${state.attempt} 次尝试`;
  $('guide-number').textContent=String(state.scene+1).padStart(2,'0');$('guide-kicker').textContent=state.canWork?'制胚 → 彩绘 → 烧成 · 80% 通关':'三关完成 · 制作场景成品';$('guide-title').textContent=state.canWork?(state.hasClay?(state.fired?'作品已烧成 · 前往交付台':state.hasPaint?'去窑炉烧成，再交付作品':state.hasShape?'到上色台完成彩绘':'到塑形台制作胚体'):'到取泥台领取瓷泥'):'点击右侧贴画，完成你的瓷碗';$('guide-copy').textContent=state.canWork?'按顺序完成制胚、彩绘、烧成；走近工作台按 F 操作。':'购买 → 选择贴画 → 贴到碗上 → 下一场景';
@@ -110,7 +120,7 @@ function updateTutorial(){
   const focus=step.id==='clay'?document.querySelector('#fresh-clay'):['wheel','carve','paint'].includes(step.id)?document.querySelector('#sculpt-canvas'):step.id==='kiln'?document.querySelector('.kiln-control'):document.querySelector('#confirm-review');focus?.classList.add('tutorial-focus');
  }
 }
-function cleanupTask(){releaseStoke();activeTask?.editor?.finish();activeTask?.preview?.dispose();activeTask?.cityMap?.dispose();}
+function cleanupTask(){releaseStoke();activeTask?.editor?.finish();activeTask?.preview?.dispose();activeTask?.cityMap?.dispose();activeTask?.upgrades?.dispose();}
 function taskShell(kind,eyebrow,title,description,body,footer='进度自动保存。按 Esc 返回工坊。'){
  syncClocks();cleanupTask();activeTask={kind};world.setInteractionEnabled(false);keys.clear();clearTimeout(toastTimeout);$('toast').classList.remove('show');$('task-overlay').classList.remove('hidden');document.querySelector('.task-panel').classList.toggle('atlas-panel',kind==='citymap'||kind==='travel');document.querySelector('.task-panel').classList.toggle('wide-panel',['editor','kiln','upgrades','result','brief','journey','decal','crafted','collection','citymap','travel'].includes(kind));
  $('task-eyebrow').textContent=eyebrow;$('task-title').textContent=title;$('task-description').textContent=description;$('task-body').innerHTML=body;tutorialKey='';$('task-footer').innerHTML=footer+'<button type="button" id="task-help" class="secondary-button">玩法说明</button>';$('task-help').onclick=showHelp;document.querySelector('.task-panel').scrollTop=0;$('close-task').focus({preventScroll:true});syncClocks();updateEfficiency();save();
@@ -123,7 +133,12 @@ function openBrief(){
  const p=state.preset;taskShell('brief',`${state.sceneInfo.name} · ${state.phase==='practice'?'练习订单':`第 ${state.level+1} 关 / ${ORDERS_PER_SCENE}`} · 尝试 ${state.attempt}`,p.name,p.task,`<div class="brief-pair"><figure><span class="board-label">${state.hasClay?'你正在制作的瓷泥':'初始瓷泥'}</span><img src="${thumbnail(state.piece.pixels,448)}" alt="当前瓷泥"/><figcaption>${state.hasClay?'保留当前作品，继续完善。':'到取泥台领取一整块瓷泥。'}</figcaption></figure><div class="brief-arrow">→</div><figure><span class="board-label">订单参考图</span><img src="${presetImages[p.id]}" alt="${p.name}"/><figcaption>对照形状与蓝色装饰，自由制作。</figcaption></figure></div><div class="brief-rules"><span><b>达到 80% 通关</b>未通过则重试本关，已获得硬币保留。</span><span><b>累计 400 币购买贴画</b>完成三关后购买，贴到瓷碗上进入下一场景。</span></div>${rewardTable()}<div class="task-action-row"><button class="primary-button" id="brief-done">${state.hasClay?'继续制作':'去领取瓷泥'} <span>→</span></button></div>`);
  $('brief-done').onclick=closeTask;
 }
-function enterGame(){heroCarousel?.pause();started=true;world.resize();routeTask();}
+async function prepareScene(index){
+ if(traveling||!state.canSelectScene(index))return false;traveling=true;syncClocks();releaseStoke();
+ try{if(!await world.setScene(index,{force:!!world.loadError})){toast('场景加载失败，请重试。');return false;}if(!state.selectScene(index))return false;updateUI();save();return true;}finally{traveling=false;syncClocks();}
+}
+async function enterGame(index=state.scene){if(!await prepareScene(index))return false;heroCarousel?.pause();started=true;world.resize();routeTask();return true;}
+
 $('map-button').onclick=()=>openCityMap();
 $('reset-view').onclick=()=>{if(started&&!activeTask&&!helpOpen)world.resetView();};
 function showHelp(){syncClocks();releaseStoke();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();$('help-overlay').classList.remove('hidden');$('help-done').focus();syncClocks();updateEfficiency();save();}
@@ -228,7 +243,7 @@ function openRestart(){
 }
 $('discard-button').onclick=()=>toast('走到取泥台，可以换一块新瓷泥。');$('discard-button').title='到取泥台更换瓷泥';
 function openJourney(){
- if(state.phase==='decal'||state.phase==='crafted'){openDecal();return;}
+ if(state.phase==='decal'||state.isCollected()){openDecal();return;}
  if(state.completed){openCollection();return;}
  const theme=state.sceneInfo;
  taskShell('journey',`场景 ${state.scene+1} / 4 · 贴画工坊`,theme.decal,theme.description,`<div class="journey-layout"><div class="bowl-stage"><canvas id="bowl-preview" aria-label="${theme.product}成品预览，可拖动旋转"></canvas><span class="preview-caption">成品预览 · 拖动旋转</span></div><div class="decal-details"><span class="board-label">参考图 ${String(state.scene+1).padStart(2,'0')} · 按上传顺序</span><div class="reference-texture"><img src="${theme.reference}" alt="用户提供的第 ${state.scene+1} 张陶瓷参考图"/><span>→</span><img src="${decalImages[state.scene]}" alt="${theme.decal}环绕贴图"/></div><h3>${theme.product}</h3><p>完成本场景三关，用 400 硬币购买贴画；亲手贴到白瓷碗上，开启下一场景。</p><div class="purchase-check ${state.sceneComplete?'met':''}"><span>${state.sceneComplete?'✓':'○'}</span> 三关通过 <b>${state.scenePassed} / ${ORDERS_PER_SCENE}</b></div><div class="purchase-check ${state.money>=400?'met':''}"><span>${state.money>=400?'✓':'○'}</span> 硬币余额 <b>${state.money} / 400</b></div><button class="primary-button" id="buy-decal" ${state.canPurchase?'':'disabled'}>购买贴画 · ${DECAL_PRICE} 币 <span>→</span></button><small class="purchase-note">${state.canPurchase?`购买后余额 ${state.money-400} 币；剩余硬币带入下一场景。`:state.sceneComplete?'余额不足，可以完成练习订单获得硬币。':'先完成本场景的三个订单。'}</small>${state.phase==='ready'?'<button class="secondary-button" id="practice-order">接一个练习订单</button>':''}${state.canWork?'<button class="secondary-button" id="return-order">继续当前订单</button>':''}</div></div>`, '达到 400 币即可购买 · 贴好后进入下一场景 · 每个场景限购一次');
@@ -238,21 +253,21 @@ function openJourney(){
  if($('return-order'))$('return-order').onclick=openBrief;
 }
 function openPracticePicker(){
- if(state.phase!=='ready')return;
+ if(!['ready','crafted','complete'].includes(state.phase))return;
  taskShell('practice-picker','可选练习','选择练习订单','练习可以赚取硬币，不增加本场景的三单进度。',`<div class="preset-gallery">${PRESETS.map((p,i)=>`<button class="preset-gallery-card" data-practice-design="${i}"><img src="${presetImages[p.id]}" alt="${p.name}"/><b>${p.name}</b></button>`).join('')}</div>`);
  document.querySelectorAll('[data-practice-design]').forEach(button=>button.onclick=()=>{if(state.beginPractice(Number(button.dataset.practiceDesign))){updateUI();openBrief();}});
 }
 function openDecal(){
- const crafted=state.phase==='crafted',theme=state.sceneInfo;
- taskShell(crafted?'crafted':'decal',`场景 ${state.scene+1} / 4 · ${crafted?'成品完成':'贴花台'}`,crafted?`${theme.product}，完成！`:'为白瓷碗贴上新纹样',crafted?'这件瓷器已经收进你的藏品。准备去下一处工坊吧。':'先选择右侧贴画，再点击白瓷碗或“贴到碗上”。拖动瓷碗可以旋转查看。',`<div class="journey-layout"><div class="bowl-stage"><canvas id="bowl-preview" aria-label="${crafted?theme.product:'待贴花的白瓷碗'}，拖动旋转"></canvas><span class="preview-caption" id="decal-status">${crafted?'已贴好 · 拖动欣赏':'白瓷素胎 · 等待贴画'}</span></div><div class="decal-details"><span class="board-label">${crafted?'已收藏的纹样':'你的新贴画'}</span><button class="decal-picker ${crafted?'selected':''}" id="select-decal" aria-pressed="${crafted}"><img src="${decalImages[state.scene]}" alt="${theme.decal}"/><b>${theme.decal}</b><span>${crafted?'✓ 已贴到碗上':'点击选择这张贴画'}</span></button><p>${theme.description}</p>${crafted?`<div class="completion-seal">✓ 第 ${state.scene+1} 件瓷器已收藏</div><button class="primary-button" id="next-scene">${state.scene===3?'完成旅程 · 查看四件藏品':'进入下一场景：'+SCENES[state.scene+1].name} <span>→</span></button>`:'<button class="primary-button" id="apply-decal" disabled>贴到碗上 <span>✦</span></button>'}<small class="purchase-note">${crafted?'剩余硬币 '+state.money+' 币，将继续保留。':'购买已完成。离开或刷新页面后，可以继续贴花。'}</small></div></div>`);
+ const crafted=state.isCollected(),theme=state.sceneInfo;
+ taskShell(crafted?'crafted':'decal',`场景 ${state.scene+1} / 4 · ${crafted?'成品完成':'贴花台'}`,crafted?`${theme.product}，完成！`:'为白瓷碗贴上新纹样',crafted?'这件瓷器已经收进你的藏品。准备去下一处工坊吧。':'先选择右侧贴画，再点击白瓷碗或“贴到碗上”。拖动瓷碗可以旋转查看。',`<div class="journey-layout"><div class="bowl-stage"><canvas id="bowl-preview" aria-label="${crafted?theme.product:'待贴花的白瓷碗'}，拖动旋转"></canvas><span class="preview-caption" id="decal-status">${crafted?'已贴好 · 拖动欣赏':'白瓷素胎 · 等待贴画'}</span></div><div class="decal-details"><span class="board-label">${crafted?'已收藏的纹样':'你的新贴画'}</span><button class="decal-picker ${crafted?'selected':''}" id="select-decal" aria-pressed="${crafted}"><img src="${decalImages[state.scene]}" alt="${theme.decal}"/><b>${theme.decal}</b><span>${crafted?'✓ 已贴到碗上':'点击选择这张贴画'}</span></button><p>${theme.description}</p>${crafted?`<div class="completion-seal">✓ 第 ${state.scene+1} 件瓷器已收藏</div><button class="primary-button" id="next-scene">${state.completed?'回访工坊 / 继续练习':'选择下一处工坊'} <span>→</span></button><button class="secondary-button" id="revisit-practice">选择练习订单</button><button class="secondary-button" id="crafted-collection">查看藏品</button>`:'<button class="primary-button" id="apply-decal" disabled>贴到碗上 <span>✦</span></button>'}<small class="purchase-note">${crafted?'剩余硬币 '+state.money+' 币，将继续保留。':'购买已完成。离开或刷新页面后，可以继续贴花。'}</small></div></div>`);
  let selected=false;
  const apply=()=>{if(!selected||!state.applyDecal())return;save();sound('coin');updateUI();openDecal();confetti();};
  activeTask.preview=createBowlPreview($('bowl-preview'),{index:state.scene,decorated:crafted,onApply:crafted?null:apply});
  if(!crafted){$('select-decal').onclick=()=>{selected=true;$('select-decal').classList.add('selected');$('select-decal').setAttribute('aria-pressed','true');$('apply-decal').disabled=false;$('decal-status').textContent='贴画已选中 · 点击瓷碗完成贴花';};$('apply-decal').onclick=apply;}
- else{$('select-decal').disabled=true;$('next-scene').onclick=()=>{const previous=state.scene;if(state.nextScene()){updateUI();if(state.completed)openCollection();else openCityMap(previous);}};}
+ else{$('select-decal').disabled=true;$('next-scene').onclick=()=>openCityMap();$('revisit-practice').onclick=openPracticePicker;$('crafted-collection').onclick=openCollection;}
 }
 function openCollection(){
- taskShell('collection',`瓷器之旅 · ${state.collection.length} / 4 件藏品`,state.completed?'四方瓷韵，圆满收藏':'你的瓷器藏品',state.completed?'四个场景、十二个订单，四张贴画都成为了你亲手完成的瓷碗。':'按参考图的顺序，走过四个工坊，收集四种瓷器。',`<div class="collection-grid">${SCENES.map((s,i)=>{const owned=state.collection.some(c=>c.scene===i);return `<article class="collection-card ${owned?'owned':'locked'}"><span>0${i+1} · ${s.name}</span>${owned?`<button data-bowl="${i}" aria-label="欣赏${s.product}"><img src="${bowlImage(i)}" alt="已制作的${s.product}"/></button>`:`<div class="locked-bowl"><img src="${decalImages[i]}" alt="待收集的${s.decal}"/><b>待收藏</b></div>`}<h3>${s.product}</h3><p>${owned?'✓ 已贴花 · 已收藏':'三关通关 + 400 硬币'}</p></article>`;}).join('')}</div><p class="collection-money">剩余 ${state.money} 硬币</p><div class="task-action-row">${state.completed?'<button class="secondary-button" id="replay">重新开启旅程</button><button class="primary-button" id="collection-done">返回工坊</button>':'<button class="primary-button" id="continue-journey">继续旅程 <span>→</span></button>'}</div>`);
+ taskShell('collection',`瓷器之旅 · ${state.collection.length} / 4 件藏品`,state.completed?'四方瓷韵，圆满收藏':'你的瓷器藏品',state.completed?'四个场景、十二个订单，四张贴画都成为了你亲手完成的瓷碗。':'自由探索四个工坊，收集四种瓷器。',`<div class="collection-grid">${SCENES.map((s,i)=>{const owned=state.collection.some(c=>c.scene===i);return `<article class="collection-card ${owned?'owned':'locked'}"><span>0${i+1} · ${s.name}</span>${owned?`<button data-bowl="${i}" aria-label="欣赏${s.product}"><img src="${bowlImage(i)}" alt="已制作的${s.product}"/></button>`:`<div class="locked-bowl"><img src="${decalImages[i]}" alt="待收集的${s.decal}"/><b>待收藏</b></div>`}<h3>${s.product}</h3><p>${owned?'✓ 已贴花 · 已收藏':'三关通关 + 400 硬币'}</p></article>`;}).join('')}</div><p class="collection-money">剩余 ${state.money} 硬币</p><div class="task-action-row">${state.completed?'<button class="secondary-button" id="replay">重新开启旅程</button><button class="primary-button" id="collection-done">返回工坊</button>':'<button class="primary-button" id="continue-journey">继续旅程 <span>→</span></button>'}</div>`);
  document.querySelectorAll('[data-bowl]').forEach(b=>b.onclick=()=>openOwnedBowl(Number(b.dataset.bowl)));
  if($('continue-journey'))$('continue-journey').onclick=routeTask;
  if($('replay'))$('replay').onclick=requestNewGame;
@@ -266,8 +281,8 @@ function openOwnedBowl(index){
 function openCityMap(from=null){
  if(!started)return;
  const traveling=from!==null;
- taskShell(traveling?'travel':'citymap',traveling?`${PLACES[from].shortName} → ${PLACES[state.scene].shortName}`:'景德镇 · 四站游历图',traveling?'循着地图，走向下一站':'你的瓷都足迹',traveling?PLACES[state.scene].chapter:'沿地图上的 1—4 号地点，完成三关、收集贴画，把每一站做成一件纪念。','<div id="city-map-content"></div>','游戏探索路线 · 当前关卡、硬币与瓷器进度自动保存');
- activeTask.cityMap=createCityMap($('city-map-content'),{state,from,onContinue:()=>routeTask(),onReplay:()=>{closeTask();started=false;opening.show(true);}});
+ taskShell(traveling?'travel':'citymap',traveling?`${PLACES[from].shortName} → ${PLACES[state.scene].shortName}`:'景德镇 · 四站游历图',traveling?'循着地图，走向下一站':'你的瓷都足迹',traveling?PLACES[state.scene].chapter:'完成当前工坊的三单与贴花后，可任选下一处工坊。','<div id="city-map-content"></div>','游戏探索路线 · 当前关卡、硬币与瓷器进度自动保存');
+ activeTask.cityMap=createCityMap($('city-map-content'),{state,from,onSelect:async index=>{const previous=state.scene;if(!await prepareScene(index))return false;openCityMap(previous);return true;},onContinue:()=>routeTask(),onReplay:()=>{closeTask();started=false;opening.show(true);}});
 }
 
 function requestNewGame(){
@@ -276,7 +291,7 @@ function requestNewGame(){
 }
 function confetti(){for(let i=0;i<25;i++){const e=document.createElement('div');e.className='confetti';e.style.cssText=`left:60%;top:40%;background:${['#315fa9','#e1bc76','#d5a0ba'][i%3]};--dx:${Math.cos(i*2.4)*(100+i*7)}px;--dy:${140+Math.sin(i*7)*140}px;animation-delay:${i*.02}s`;$('app').append(e);setTimeout(()=>e.remove(),3000);}}
 function stationMessage(id){return {clay:'领取完整瓷泥',wheel:'推压瓷泥，调整形状',carve:'用刻刀去除多余瓷泥',paint:state.fired?'烧成后补绘青花':'选择颜色，亲手绘制',kiln:state.kilnResult?'查看火候结果':state.kiln?'继续烧制瓷器':'烧制瓷器 · 按住空格鼓风',serve:state.canWork?'提交作品并评分':'购买贴画与制作成品'}[id];}
-function openStation(id){if(activeTask||helpOpen||!started)return;if(!tutorialGate(id))return;sound();if(!state.canWork){openJourney();return;}({clay:openSupply,wheel:()=>openEditor('wheel'),carve:()=>openEditor('carve'),paint:()=>openEditor('paint'),kiln:openKiln,serve:openReview})[id]();}
+function openStation(id){if(activeTask||helpOpen||!started)return;const access=state.stationAccess(id);if(!access.allowed){guidance.deny(access);toast(access.reason);return;}sound();if(!state.canWork){openJourney();return;}({clay:openSupply,wheel:()=>openEditor('wheel'),carve:()=>openEditor('carve'),paint:()=>openEditor('paint'),kiln:openKiln,serve:openReview})[id]();}
 window.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
  if(!started){if(key==='escape'){e.preventDefault();opening?.skip();}else if(key==='enter'&&$('welcome').dataset.openingStage==='map'&&e.target.tagName!=='BUTTON'){e.preventDefault();$('start-button').click();}return;}
@@ -299,13 +314,14 @@ $('touch-interact').onpointerdown=e=>{e.preventDefault();if(!started||activeTask
 function frame(ms){
  const t=ms/1000,elapsed=previousTime?Math.max(0,t-previousTime):0,dt=Math.min(.05,elapsed);previousTime=t;
  syncClocks();if(ms-lastClockSave>=1000){lastClockSave=ms;if(state.hasClay)save();updateEfficiency();}
- activeTask?.preview?.update?.(elapsed,state,!kilnRunning);
- const playing=started&&!activeTask&&!helpOpen&&!document.hidden&&focused;world.setInteractionEnabled(playing);$('reset-view').disabled=!playing;const dx=playing?Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')):0,dz=playing?Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')):0;
+ activeTask?.preview?.update?.(elapsed,state,!kilnRunning);activeTask?.upgrades?.update?.(elapsed);
+ const playing=started&&!traveling&&!world.loading&&!world.loadError&&!activeTask&&!helpOpen&&!document.hidden&&focused;world.setInteractionEnabled(playing);$('reset-view').disabled=!playing;const dx=playing?Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')):0,dz=playing?Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')):0;
  const strideBefore=world.stride;world.move(dx,dz,dt);if(world.stride>strideBefore)state.advanceTutorial('move');sfx.walk(world.stride,world.stride>strideBefore,state.hasClay);sfx.firing(!!state.kiln&&kilnRunning);sfx.tick();nearest=world.nearest();$('world').dataset.player=JSON.stringify({x:world.player.group.position.x,z:world.player.group.position.z});$('app').dataset.task=activeTask?.kind||'';$('app').dataset.level=state.level+1;$('app').dataset.attempt=state.attempt;
- for(const s of STATIONS){const p=world.project(s.x,s.labelY,s.z);labels[s.id].style.left=`${p.x}px`;labels[s.id].style.top=`${p.y}px`;labels[s.id].classList.toggle('near',playing&&nearest?.id===s.id);}
+ for(const s of STATIONS){const p=world.project(s.x,s.labelY,s.z);labels[s.id].style.left=`${p.x}px`;labels[s.id].style.top=`${p.y}px`;labels[s.id].classList.toggle('near',playing&&nearest?.id===s.id);labels[s.id].classList.toggle('next',playing&&state.nextStation()===s.id);labels[s.id].classList.toggle('locked',playing&&!state.stationAccess(s.id).allowed);}
  $('kiln-small').textContent=state.kiln?`${Math.ceil(state.kiln.remaining)}s`:state.kilnResult?'✓':'';
  const interact=playing&&nearest;$('interaction').classList.toggle('hidden',!interact);
- if(interact){const p=world.project(world.player.group.position.x,2.25,world.player.group.position.z);$('interaction').style.left=`${Math.max(125,Math.min($('world-wrap').clientWidth-125,p.x+128))}px`;$('interaction').style.top=`${Math.max(4,p.y-76)}px`;$('interact-title').textContent=stationMessage(nearest.id);$('interact-sub').textContent='按 F 开始操作';}
+ if(interact){const p=world.project(world.player.group.position.x,2.25,world.player.group.position.z);$('interaction').style.left=`${Math.max(125,Math.min($('world-wrap').clientWidth-125,p.x+128))}px`;$('interaction').style.top=`${Math.max(4,p.y-76)}px`;$('interact-title').textContent=stationMessage(nearest.id);$('interact-sub').textContent=state.stationAccess(nearest.id).allowed?'按 F 开始操作':'🔒 请先完成前置步骤';}
+ guidance.update(dt,{state,playing,nearest,moving:!!(dx||dz),started});
  updateTutorial();updateKiln();if(started&&!activeTask?.editor)world.update(dt,t,state,playing);requestAnimationFrame(frame);
 }
 let heroCarousel=null;

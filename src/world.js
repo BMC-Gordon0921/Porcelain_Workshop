@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {PLACES} from './places.js';
-import {createLandmark} from './landmarks.js';
+import {loadSceneEnvironment} from './scene-environment.js';
+import {createWorkbenchModel} from './workbench-model.js';
 import {SCENES} from './campaign.js';
 import {decalCanvas} from './decals.js';
 import { DESIGNS } from './sculpture.js';
@@ -26,8 +27,8 @@ export const STATIONS = [
  {id:'clay',name:'取泥与订单',x:-5.65,z:-3.65,w:2.1,d:1.45,approach:[-5.65,-2.05],labelY:2.0},
  {id:'wheel',name:'粗塑成形',x:-2.7,z:-3.65,w:1.8,d:1.6,approach:[-2.7,-1.95],labelY:2.05},
  {id:'carve',name:'细节雕刻',x:.4,z:-3.65,w:2.35,d:1.45,approach:[.4,-2.05],labelY:2.0},
- {id:'kiln',name:'瓷器窑炉',x:-5.65,z:.3,w:2.2,d:2.1,approach:[-3.95,.3],labelY:2.7},
  {id:'paint',name:'手绘上色',x:-1.25,z:1.35,w:2.4,d:1.45,approach:[-1.25,2.95],labelY:1.9},
+ {id:'kiln',name:'瓷器窑炉',x:-5.65,z:.3,w:2.2,d:2.1,approach:[-3.95,.3],labelY:2.7},
  {id:'serve',name:'评分与交付',x:3.2,z:.0,w:1.25,d:3.1,approach:[1.7,0],labelY:2.05}
 ];
 export function sculpture(type,stage='finished') {
@@ -185,49 +186,14 @@ export function createWorld(canvas,{preview=false}={}) {
  }
  scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(preview?1024:2048,preview?1024:2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
  const root=group(scene);
- box(root,0,-.43,0,16.8,.65,11.65,0xa39169);box(root,0,-.11,0,16.6,.18,11.45,0xc5bb99);
- // One instanced mesh keeps the 17x12 flagstones at a single draw call.
- const floorMaterial=new THREE.MeshStandardMaterial({color:0xd8c6a3,roughness:.94});
- const tileGeo=new THREE.BoxGeometry(.905,.06,.853),tileCount=17*12;
- const tiles=new THREE.InstancedMesh(tileGeo,floorMaterial,tileCount);tiles.receiveShadow=true;tiles.castShadow=false;
- const tileDummy=new THREE.Object3D(),tileTint=new THREE.Color();
- for(let ix=0;ix<17;ix++)for(let iz=0;iz<12;iz++){
-  const i=ix*12+iz;
-  tileDummy.position.set(-7.95+(ix+.5)*(15.9/17),.01,-5.3+(iz+.5)*(10.6/12));tileDummy.updateMatrix();tiles.setMatrixAt(i,tileDummy.matrix);
-  tileTint.setScalar(.9+((ix*7+iz*13)%9)*.018);tiles.setColorAt(i,tileTint);
- }
- tiles.instanceMatrix.needsUpdate=true;if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;root.add(tiles);
- box(root,-.1,1.25,-5.58,16.6,2.55,.23,0xd8b780);box(root,-8.3,1.25,0,.23,2.55,11.4,0xd3b078);box(root,-.1,2.56,-5.58,16.85,.18,.36,0x9d784b);box(root,-8.3,2.56,0,.36,.18,11.7,0x9d784b);
- brickWall(root,-.1,.58,-5.4,16.2,1.05,.12);box(root,-.1,1.08,-5.38,16.35,.08,.18,0x8d6a45);
- brickWall(root,-8.16,1.05,0,.07,1.9,11.15);box(root,-8.14,2.04,0,.1,.08,11.25,0x8d6a45);
- // A bright window, its wooden frame, and the village beyond.
- box(root,-4.1,1.84,-5.37,3.35,1.28,.12,0x947849);box(root,-4.1,1.84,-5.285,3.06,1.05,.05,0xb6c6a0);box(root,-4.1,1.72,-5.245,3.06,.63,.045,0x91a57a);
- for(let i=0;i<8;i++)ball(root,-5.5+i*.42,1.73+(i%3)*.11,-5.2,.28,.31,.02,0xa7b782);
- for(const x of [-5.63,-4.1,-2.57])box(root,x,1.88,-5.19,.065,1.17,.12,0x9a7d50);box(root,-4.1,1.77,-5.18,3.1,.06,.12,0x9a7d50);box(root,-4.1,1.23,-5.13,3.5,.12,.36,0xe1c99c);
- plant(root,-5.2,1.31,-5.04,.36);
- // Shelf full of finished terracotta keepsakes.
- box(root,5.0,1.55,-5.2,4.2,.13,.63,0x987343);box(root,5,2.38,-5.2,4.2,.11,.58,0x987343);
- for(let i=0;i<6;i++){const s=sculpture('vase');s.position.set(3.4+i*.62,1.62,-5.05);s.scale.setScalar(.42);root.add(s);}plant(root,6.4,2.43,-5.18,.42);
- shrub(root,-6.4,-5.15,.9);shrub(root,-4.6,-5.18,1.05);shrub(root,6.6,-5.12,.85);shrub(root,7.35,.4,1.15);shrub(root,-7.25,2.4,.8);
- // Stations.
- const clay=bench(root,-5.65,-3.65,2.1,1.45);
- for(let c=0;c<2;c++){const crate=group(clay,-.5+c*.92,1.32,0);box(crate,0,.03,0,.81,.09,.95,0x8f7752);for(let k=0;k<3;k++){box(crate,-.4,.12+k*.14,0,.06,.1,1,0xa78c60);box(crate,.4,.12+k*.14,0,.06,.1,1,0xa78c60);box(crate,0,.12+k*.14,-.47,.8,.1,.06,0xa78c60);box(crate,0,.12+k*.14,.47,.8,.1,.06,0xa78c60);}for(let k=0;k<4;k++)ball(crate,(k%2-.5)*.33,.2,Math.floor(k/2)*.4-.2,.21,.2,.22,0xe9e3d6);}
- box(clay,0,.7,.75,.68,.35,.03,0xe7d4ac);textSign(clay,'CLAY',0,.72,.772,.55,.22,'#795b3e','#e7d4ac');
- const wheel=group(root,-2.7,0,-3.65);box(wheel,0,.49,0,1.6,.95,1.3,0x78938a);box(wheel,0,1,0,1.85,.2,1.6,0xaac0ad);cyl(wheel,0,1.14,0,.62,.62,.12,0x8c9990);torus(wheel,0,1.22,0,.45,.018,0xb5c3b3);const wheelTop=group(wheel,0,1.22,0);const wheelSculpt=sculpture('vase','shaped');wheelSculpt.scale.setScalar(.56);wheelTop.add(wheelSculpt);box(wheel,0,.25,.87,.55,.12,.32,0x727c68);cyl(wheel,.9,.4,.65,.31,.29,.12,0xa88257);cyl(wheel,.9,.2,.65,.06,.08,.3,0x86734f);
- const carving=bench(root,.4,-3.65,2.35,1.45);box(carving,-.2,1.32,0,1.1,.07,.99,0x8f9b7b);const sample=sculpture('vase','shaped');sample.position.set(-1.02,1.37,-.06);sample.scale.setScalar(.54);carving.add(sample);for(let i=0;i<3;i++){const tool=box(carving,.73+i*.15,1.38,-.1,.055,.055,.55,0x8d6442);tool.rotation.y=.1*i;box(carving,.73+i*.15,1.38,.2,.075,.035,.15,0xb8b5a2);}for(let i=0;i<5;i++)ball(carving,-.77+(i%3)*.23,1.37,.4+(i%2)*.14,.045,.025,.03,0xb98c6a);
- const kilnModel=createKilnModel();kilnModel.group.position.set(-5.65,0,.3);root.add(kilnModel.group);
- const paint=bench(root,-1.25,1.35,2.4,1.45);box(paint,-.3,1.32,0,1.13,.08,1.04,0xe4d5b2);let paintVase=sculpture('vase');paintVase.scale.setScalar(.59);paintVase.position.set(-.4,1.38,.02);paint.add(paintVase);for(let i=0;i<3;i++){cyl(paint,.6,1.37,-.4+i*.38,.14,.13,.17,0xeee0bf);cyl(paint,.6,1.46,-.4+i*.38,.115,.115,.008,[0x77937d,0xc89359,0xe2d5a8][i]);}cyl(paint,1,1.54,-.15,.13,.1,.45,0xa77d50);for(let i=0;i<3;i++){const brush=box(paint,1.01+(i-1)*.09,1.85,-.15,.027,.59,.027,0x85603e);brush.rotation.z=(i-1)*.13;}
- const serve=group(root,3.2,0,0);box(serve,0,.6,0,1.12,1.2,3.12,0x819481);for(let i=0;i<7;i++)box(serve,.59,.59,-1.37+i*.45,.055,1.04,.055,0x6e826c);box(serve,0,1.26,0,1.5,.18,3.4,0xd0b484);box(serve,0,1.37,0,.94,.05,1.15,0xf0dfbb);box(serve,0,1.48,-1.05,.65,.2,.54,0x809078);box(serve,0,1.72,-1.12,.56,.39,.08,0x526b54).rotation.x=-.22;box(serve,0,1.77,-1.048,.38,.18,.025,0xd8d7ae).rotation.x=-.22;cyl(serve,0,1.46,1.1,.13,.14,.16,0xd6b466);ball(serve,0,1.54,1.1,.14,.12,.14,0xd3b064);
- // Customer path, planters, paper bunting, and a little rug.
- box(root,5.42,.056,.5,3.25,.022,6.3,0xcdc9a3);for(let i=0;i<8;i++)box(root,5.42,.073,-2.25+i*.78,3.15,.012,.025,0xe5dfbb,false);
- plant(root,7.15,.06,-3.1,1.2);shrub(root,6.45,-3.35,.7);plant(root,6.9,.06,4.22,1.15);shrub(root,6.2,4.45,.75);plant(root,-7,.06,4.2,.95);shrub(root,-6.35,4.55,.7);plant(root,1.5,.06,-5,.62);
- box(root,5.7,.1,4.7,2.2,.1,.8,0xb99a66);box(root,5.7,.31,4.7,2.2,.33,.74,0xba9a65);for(let i=0;i<3;i++){const p=sculpture('vase');p.position.set(4.94+i*.71,.49,4.65);p.scale.setScalar(.55);root.add(p);}
- for(let i=0;i<6;i++){const flag=mesh(new THREE.ConeGeometry(.22,.43,3),[0xc78662,0xa4ad82,0xe3c486][i%3],root,-1.7+i*1.36,3.0-Math.sin(i/5*PI)*.35,-5.17);flag.rotation.z=PI;flag.rotation.y=PI;}
- const thread=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:31},(_,i)=>new THREE.Vector3(-1.85+i*.235,3.28-Math.sin(i/30*PI)*.38,-5.17))),new THREE.LineBasicMaterial({color:0x7d8063}));root.add(thread);
- const stationDecor=STATIONS.filter(s=>s.id!=='kiln').map(s=>{
-  const details=[];for(let i=0;i<2;i++){const d=group(root,s.x+(i-.5)*.3,1.35,s.z+.35);cyl(d,0,.055,0,.08,.1,.11,0xd1ad68);torus(d,0,.115,0,.07,.018,0xf0d8a1);details.push(d);}return {id:s.id,details};
- });
+ root.position.y=.09;
+ const benchModels=Object.fromEntries(STATIONS.map(station=>{
+  const model=createWorkbenchModel({id:station.id});model.group.position.set(station.x,0,station.z);root.add(model.group);return [station.id,model];
+ }));
+ const kilnModel=benchModels.kiln;
  const player=humanSculptor(root,-4.55,-2.15);player.group.rotation.y=-.2;
+ const demoTool=group(player.arms[1],0,-.35,.16);demoTool.visible=false;
+ box(demoTool,0,-.13,0,.045,.45,.045,0x805936);const demoTip=box(demoTool,0,-.4,0,.065,.12,.065,0x315fa9);
  let customers=[animal(root,'rabbit',4.9,-.25,0xb996a0),animal(root,'bear',4.95,1.65,0xbc9d5e),animal(root,'cat',4.98,3.35,0x92a292)];customers.forEach((c,i)=>{c.id=i+1;c.group.rotation.y=-PI/2;c.group.scale.setScalar(.85)});let lastOrders='1,2,3';const departing=[];
  const marker=mesh(new THREE.RingGeometry(.47,.56,40),new THREE.MeshBasicMaterial({color:0xf7dfa2,transparent:true,opacity:.83,side:THREE.DoubleSide,depthWrite:false}),root,0,.085,0);marker.rotation.x=-PI/2;
  const playerRing=mesh(new THREE.RingGeometry(.5,.54,36),new THREE.MeshBasicMaterial({color:0xffffdf,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false}),root,0,.09,0);playerRing.rotation.x=-PI/2;
@@ -260,45 +226,41 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   flowerDummy.position.set(x,.27+(i%4)*.03,z);flowerDummy.scale.setScalar(.8+(i%5)*.12);flowerDummy.updateMatrix();flowers.setMatrixAt(i,flowerDummy.matrix);flowerTint.setHex(flowerPalette[i%4]);flowers.setColorAt(i,flowerTint);
  }
  flowers.instanceMatrix.needsUpdate=true;if(flowers.instanceColor)flowers.instanceColor.needsUpdate=true;root.add(flowers);
- // Courtyard props: firewood, barrels, crates and drying herbs.
- for(let i=0;i<7;i++){const log=cyl(root,7.35,.16+(i%3)*.11,3.55+(i%2)*.12,.09,.09,.72,i%2?0x86613f:0x967048,8);log.rotation.z=PI/2;log.rotation.y=i*.4;}
- for(const [x,z] of [[6.55,-3.55],[7.5,1.95]]){const barrel=group(root,x,0,z);cyl(barrel,0,.38,0,.34,.3,.72,0x8f6641);torus(barrel,0,.2,0,.33,.025,0x5f4a35);torus(barrel,0,.56,0,.31,.025,0x5f4a35);cyl(barrel,0,.74,0,.3,.32,.05,0x6f5237);}
- for(let i=0;i<3;i++)box(root,6.4+(i%2)*.42,.2+Math.floor(i/2)*.4,.5,.5,.4,.5,i%2?0x9b7a52:0xaa875b);
- for(const z of [1.45,3.15]){box(root,-8.13,1.92,z,.04,.34,.04,0x5c4a35,false);for(let k=0;k<4;k++){const herb=ball(root,-8.13,1.63-k*.05,z-.09+k*.06,.05,.16,.05,[0x77875b,0x8a9663,0x6f8050][k%3]);herb.rotation.x=.24;}}
- let activeScene=-1,chimneyAnchor=null;
- const themeWalls=root.children.filter(m=>m.isMesh&&[0xd8b780,0xd3b078].includes(m.material?.color?.getHex()));
- themeWalls.forEach(m=>m.material=m.material.clone());
- // Open the rear of the workshop onto each destination; tall generic walls would hide the landmarks.
- for(const item of root.children){
-  if(item.position.z===-5.58||(item.position.z<=-5.0&&item.position.y>1.1)||item.isLine)item.visible=false;
+ let activeScene=-1,requestedScene=-1,chimneyAnchor=null,environment=null,loadTicket=0,loadPromise=null,loading=false,loadError=null;
+ const gallery=group(root);
+ function resetCustomers(){
+  for(const c of [...customers,...departing]){root.remove(c.group);disposeWorldTree(c.group);}
+  customers=[];departing.length=0;lastOrders='';
  }
- const gallery=group(root);let landmark=null;
- function setScene(index){
-  if(index===activeScene)return;
-  const sceneChanged=index!==activeScene;activeScene=index;const theme=SCENES[index];
-  if(sceneChanged){
-   if(landmark){root.remove(landmark);landmark.userData.dispose();}landmark=createLandmark(index);root.add(landmark);canvas.dataset.landmark=PLACES[index].id;
-   chimneyAnchor=landmark.userData.chimney||null;if(chimneyAnchor){smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y+.09,chimneyAnchor.z);smokeField.points.visible=true;}else smokeField.points.visible=false;
-   themeWalls.forEach(m=>m.material.color.setHex(theme.wall));floorMaterial.color.setHex(theme.floor);sun.color.setHex(theme.sun);
-  }
-  disposeWorldTree(gallery);gallery.clear();
-  box(gallery,4.7,1.53,-5.06,3.4,.13,.61,0x987343,false);
-  for(const x of [3.15,6.25])box(gallery,x,.77,-5.06,.09,1.48,.45,0x957751,false);
-  const texture=new THREE.CanvasTexture(decalCanvas(index));texture.colorSpace=THREE.SRGBColorSpace;
-  for(let i=0;i<3;i++){
-   const display=mesh(new THREE.CircleGeometry(.32,48),new THREE.MeshStandardMaterial({map:texture.clone(),roughness:.23}),gallery,3.8+i*.92,1.98,-5.05);display.material.map.needsUpdate=true;
-   const edge=mesh(new THREE.TorusGeometry(.34,.025,8,48),new THREE.MeshStandardMaterial({color:theme.accent,roughness:.3}),gallery,3.8+i*.92,1.98,-5.03);
-  }
-  texture.dispose();
-  workshopSign(gallery,PLACES[index].workshop,theme.accent);
-  if(sceneChanged)player.group.position.set(-4.55,0,-2.15);
+ async function setScene(index,{force=false}={}){
+  if(disposed)return false;
+  if(index===requestedScene&&!force)return loadPromise;
+  requestedScene=index;const ticket=++loadTicket;loading=true;loadError=null;canvas.dataset.loading='true';
+  loadPromise=(async()=>{
+   try{
+    const next=await loadSceneEnvironment(PLACES[index].id);
+    if(disposed||ticket!==loadTicket){next.dispose();return false;}
+    if(environment){scene.remove(environment.group);environment.dispose();}
+    environment=next;scene.add(next.group);activeScene=index;root.position.y=next.groundY;
+    chimneyAnchor=next.chimney;
+    if(chimneyAnchor)smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y-root.position.y,chimneyAnchor.z);
+    smokeField.points.visible=!!chimneyAnchor;
+    disposeWorldTree(gallery);gallery.clear();
+    workshopSign(gallery,PLACES[index].workshop,SCENES[index].accent);
+    resetCustomers();if(!preview)player.group.position.set(-4.55,0,-2.15);
+    canvas.dataset.landmark=PLACES[index].id;loading=false;canvas.dataset.loading='false';resize();return true;
+   }catch(error){if(ticket===loadTicket){loading=false;loadError=error;canvas.dataset.loading='error';}return false;}
+  })();return loadPromise;
  }
+ let demo=null;
+ function setDemoFrame(frame){demo=frame;}
  let width=1,height=1,carry=null,carryKey='',moving=false,walking=0,stride=0;
- function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(19,32/aspect):Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
+ function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
  function canMove(x,z){const r=.37;if(x<-7.76||x>2.45||z<-4.9||z>5.13)return false;for(const s of STATIONS){if(x>s.x-s.w/2-r&&x<s.x+s.w/2+r&&z>s.z-s.d/2-r&&z<s.z+s.d/2+r)return false;}return true;}
  function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt,x0=p.x,z0=p.z;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);if((p.x-x0)**2+(p.z-z0)**2>1e-8){moving=true;walking+=dt*11;stride+=dt*11;}else moving=false;}
- function project(x,y,z){const p=new THREE.Vector3(x,y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
+ function project(x,y,z){const p=new THREE.Vector3(x,y+root.position.y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
  function nearest(){let best=null,dist=Infinity;for(const s of STATIONS){const p=player.group.position;const dx=Math.max(Math.abs(p.x-s.x)-s.w/2,0),dz=Math.max(Math.abs(p.z-s.z)-s.d/2,0);const d=Math.hypot(dx,dz);if(d<1.04&&d<dist){best=s;dist=d;}}return best;}
+ const reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  function update(dt,time,state,playing=true){
   if(disposed)return;
   if(cameraTween){const p=Math.min(1,(performance.now()-cameraTween.start)/cameraTween.duration),e=p*p*(3-2*p);orbit.azimuth=THREE.MathUtils.lerp(cameraTween.fromAz,cameraTween.toAz,e);orbit.polar=THREE.MathUtils.lerp(cameraTween.fromPolar,cameraTween.toPolar,e);orbit.zoom=THREE.MathUtils.lerp(cameraTween.fromZoom,cameraTween.toZoom,e);placeCamera();if(p>=1)cameraTween=null;}
@@ -306,6 +268,18 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   player.feet.forEach((m,i)=>{m.position.z=.1+(moving?Math.sin(walking+i*PI)*.16:0);});
   player.arms.forEach((m,i)=>{m.rotation.x=state.hasClay?-1.05:moving?Math.sin(walking+i*PI)*.45:0;});
   player.head.rotation.z=moving?Math.sin(walking*.5)*.015:Math.sin(time*.7)*.02;
+  if(preview&&demo){
+   demoTool.visible=!demo.moving&&['paint','carve'].includes(demo.step);demoTip.material=mat(demo.step==='paint'?0x315fa9:0xa1a69d);
+   player.group.position.set(demo.x,0,demo.z);player.group.rotation.y=demo.moving?demo.angle:demo.face;
+   const wave=reducedMotion()?0:Math.sin(demo.time*9);
+   player.body.position.y=demo.moving?Math.abs(wave)*.04:0;
+   player.feet.forEach((foot,i)=>foot.position.z=.1+(demo.moving?Math.sin(demo.time*9+i*Math.PI)*.16:0));
+   player.arms.forEach((arm,i)=>arm.rotation.x=demo.moving?-.7:demo.step==='kiln'?-.65+wave*.32:demo.step==='serve'?-1.3:-.95+wave*.14);
+   player.head.rotation.x=demo.moving?0:.13;
+  }else if(!moving&&!reducedMotion()){
+   const beat=(time%18),gesture=beat>10&&beat<13?Math.sin((beat-10)/3*Math.PI):0;
+   player.head.rotation.y=gesture*.15;player.arms[0].rotation.x-=gesture*.65;
+  }
   playerRing.position.x=player.group.position.x;playerRing.position.z=player.group.position.z;
   const next=STATIONS.find(s=>s.id===state.nextStation());
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -315,12 +289,12 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
    hint.position.set(next.x,0,next.z);
    const pulse=1+Math.sin(time*2.5)*.07;hintGlow.scale.setScalar(pulse);hintRing.scale.setScalar(1+Math.sin(time*2.5+1)*.05);
    hintGlow.material.opacity=.13+Math.sin(time*2.5)*.035;hintRing.material.opacity=.46+Math.sin(time*2.5+1)*.1;
-   hintArrow.position.y=3.18+(reduced?0:Math.sin(time*2.1)*.1);hintArrow.rotation.y=reduced?0:time*1.45;
+   hintArrow.visible=false;hintArrow.position.y=3.18+(reduced?0:Math.sin(time*2.1)*.1);hintArrow.rotation.y=reduced?0:time*1.45;
    arrowHalo.rotation.z=reduced?0:time*1.1;curtain.rotation.y=reduced?0:time*.22;
    curtain.material.opacity=.34+Math.sin(time*2.2)*.06;hintMotes.update(dt,playing?1:0);
   }else hintMotes.update(dt,0);
   const key=state.hasClay&&state.piece?state.piece.design+state.piece.revision:'';if(key!==carryKey){if(carry){player.body.remove(carry);carry.traverse(m=>{if(m.userData.customRelief){m.geometry.dispose();m.material.dispose();}});}carryKey=key;if(state.hasClay&&state.piece){carry=state.piece.pixels?reliefSculpture(state.piece.pixels):sculpture(state.piece.design,state.piece.stage);carry.scale.setScalar(.45);carry.position.set(0,.86,.66);player.body.add(carry);}else carry=null;}
-  wheelTop.rotation.y=time*.55;
+  for(const [id,model] of Object.entries(benchModels))if(id!=='kiln')model.update(dt,{level:state.stationLevel(id),reduced});
   const orderKey=state.orders.map(o=>o.id).join(',');if(orderKey!==lastOrders){lastOrders=orderKey;for(const c of customers)if(!state.orders.some(o=>o.id===c.id))departing.push(c);customers=state.orders.map(o=>{let c=customers.find(c=>c.id===o.id);if(!c){const species=DESIGNS[o.design].species;const coats={rabbit:0xb996a0,bear:0xbc9d5e,cat:0x92a292};c=animal(root,species,7.8,3.5,coats[species]);c.id=o.id;c.group.scale.setScalar(.85);}return c;});}
   customers.forEach((c,i)=>{
    const targetZ=[-.25,1.65,3.35][i],p=c.group.position,seed=(c.id||i+1)*1.73;
@@ -335,19 +309,30 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
    c.ears.forEach((ear,j)=>{ear.rotation.z=ear.userData.baseZ+(walking?0:Math.sin(time*1.9+seed+j)*.045);});
    if(c.tail)c.tail.rotation.y=walking?0:Math.sin(time*1.35+seed)*.32;
    c.arms.forEach((arm,j)=>{arm.rotation.x=walking?Math.sin(time*8+j*2)*.18:Math.sin(time*1.5+seed+j*2.1)*.055;});
+   if(!walking&&!reduced){
+    const phase=(time+seed*3)%17,gesture=phase<3?Math.sin(phase/3*Math.PI):0;
+    const species=DESIGNS[state.orders[i]?.design]?.species||'rabbit';
+    c.head.rotation.x=gesture*(species==='cat'?.28:-.1);
+    c.arms.forEach((arm,j)=>{arm.rotation.x-=gesture*(species==='bear'?1.35:species==='cat'?.95:.75);arm.rotation.z=gesture*(j?-.16:.16);});
+    if(species==='rabbit')c.ears.forEach((ear,j)=>ear.rotation.z+=gesture*(j?-.25:.25));
+    if(species==='cat'&&c.tail)c.tail.rotation.y+=gesture*.5;
+   }
+
   });
   for(let i=departing.length-1;i>=0;i--){const c=departing[i];c.group.position.x+=dt*1.9;c.group.position.z+=dt*.28;c.group.rotation.y=PI/2;c.body.position.y=Math.abs(Math.sin(time*10))*.08;if(c.group.position.x>8.5){root.remove(c.group);disposeWorldTree(c.group);departing.splice(i,1);}}
   if(state.hasClay)kilnModel.setPiece(state.piece.pixels,state.piece.revision);
   const heat=state.kiln?state.kiln.heat:0;
   kilnModel.update(state.kilnPaused?0:dt,{firing:!!state.kiln,heat,level:state.stationLevel('kiln'),reduced});
+  // Landmark smoke is ambient; kilnPaused also stays true during normal walking.
+  // Preview pause/reduced-motion already supplies a zero world delta.
   if(chimneyAnchor)smokeField.update(dt,.78);else smokeField.points.visible=false;
   emberField.update(state.kilnPaused?0:dt,state.kiln ? .3+heat*.7 : 0);
-  stationDecor.forEach(({id,details})=>details.forEach((m,i)=>m.visible=state.stationLevel(id)>i+1));
+
   dust.forEach((m,i)=>{m.position.y+=dt*.018;if(m.position.y>3.8)m.position.y=.7;m.position.x+=Math.sin(time*.3+i)*dt*.012;});renderer.render(scene,camera);
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
- function dispose(){if(disposed)return;disposed=true;onOrbitUp();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
- resize();return {dispose,scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
+ function dispose(){if(disposed)return;disposed=true;loadTicket++;onOrbitUp();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
+ resize();return {dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
 }
 
 // Cache-owned primitives/materials are shared by the game and scene preview.
