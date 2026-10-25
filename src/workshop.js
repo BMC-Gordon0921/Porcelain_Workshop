@@ -12,12 +12,45 @@ export const WORKBENCHES = {
 };
 export const freshWorkshopLevels=()=>Array.from({length:4},()=>Object.fromEntries(WORKBENCH_IDS.map(id=>[id,1])));
 export function restoreWorkshopLevels(value){return freshWorkshopLevels().map((row,i)=>Object.fromEntries(WORKBENCH_IDS.map(id=>[id,[1,2,3].includes(value?.[i]?.[id])?value[i][id]:row[id]])));}
-export const KILN_ROUNDS = [
- {seconds:6,center:.6},{seconds:5.8,center:.68},{seconds:5.6,center:.56},{seconds:5.4,center:.64},
-];
-export const kilnRoundCount=level=>level<2?2:level<4?3:4;
-export function kilnWindows(round=0){const c=KILN_ROUNDS[round].center;return {good:[c-.17,c+.17],perfect:[c-.05,c+.05]};}
-export function aggregateKilnGrade(rounds){const score=rounds.reduce((sum,r)=>sum+({plain:0,good:1,perfect:2}[r.grade]),0)/rounds.length;return score>=1.5?'perfect':score>=.75?'good':'plain';}
+// One continuous firing: hold to stoke, release to cool, and keep the heat inside
+// a drifting band. The time spent in each band is the score.
+export const FIRE_DURATION = 12;
+export const FIRE_HEAT_RATE = .85;
+export const FIRE_COOL_RATE = .5;
+export const FIRE_START_HEAT = .42;
+const FIRE_BAND_GOOD = .12, FIRE_BAND_PERFECT = .045;
+export const FIRE_RATIO_PERFECT = .72, FIRE_RATIO_GOOD = .38;
+export function fireBand(level=1){
+ const bonus=Math.max(0,Math.min(2,Math.floor(level)-1));
+ return {good:FIRE_BAND_GOOD+bonus*.012,perfect:FIRE_BAND_PERFECT+bonus*.004};
+}
+const TAU=Math.PI*2;
+export function fireSeed(){return (Math.random()*4294967296)>>>0;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+// Every firing gets its own slow, layered drift plus one or two short gusts.
+// Amplitudes and gust widths are bounded so the band stays readable and reachable.
+export function createFireDrift(seed=1){
+ const rnd=mulberry32(seed>>>0),base=.6+(rnd()-.5)*.024;
+ const waves=Array.from({length:3},(_,i)=>({
+  amp:[.03,.016,.008][i]+rnd()*[.012,.008,.004][i],
+  freq:[.08+rnd()*.06,.18+rnd()*.08,.32+rnd()*.1][i],
+  phase:rnd()*TAU,
+ }));
+ const gusts=Array.from({length:1+(rnd()<.45?1:0)},()=>({at:2.2+rnd()*7.4,amp:(rnd()<.5?-1:1)*(.015+rnd()*.015),width:.8+rnd()*.7}));
+ return t=>{
+  let v=base;
+  for(const w of waves)v+=w.amp*Math.sin(TAU*w.freq*t+w.phase);
+  for(const g of gusts){const x=(t-g.at)/g.width;if(Math.abs(x)<1)v+=g.amp*(1+Math.cos(x*Math.PI))/2;}
+  const settle=Math.min(1,Math.max(0,t/1.2)),target=.6+(v-.6)*settle;
+  return Math.min(.72,Math.max(.48,target));
+ };
+}
+export function fireGrade(seconds,duration=FIRE_DURATION){
+ const total=Math.max(1e-9,seconds.perfect+seconds.good+seconds.fair);
+ const ratio=(seconds.perfect+seconds.good*.5)/total;
+ return ratio>=FIRE_RATIO_PERFECT?'perfect':ratio>=FIRE_RATIO_GOOD?'good':'plain';
+}
+export function fireRatio(seconds){const total=Math.max(1e-9,seconds.perfect+seconds.good+seconds.fair);return (seconds.perfect+seconds.good*.5)/total;}
 export function orderIncome(base,{kiln=1,serve=1,passed=false,elapsedMs=0,eligible=false,firstPass=false}={}){
  const kilnEarned=Math.round(base*kiln),regularEarned=Math.round(base*kiln*serve);
  const efficient=passed&&eligible&&elapsedMs<=EFFICIENCY_LIMIT_MS;

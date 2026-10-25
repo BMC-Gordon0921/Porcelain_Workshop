@@ -2,7 +2,9 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {SculptureChallenge, compareSculpture} from '../src/sculpture.js';
 import {rewardForScore, SCENES} from '../src/campaign.js';
-const pass=c=>{c.collectClay();c.piece.pixels=c.target.slice();c.fire();c.tick(60);return c.submit();};
+const shape=c=>{c.startStation('wheel');c.beginStroke();c.stroke(8,40,24,40,18,'push',2);c.finishStroke();};
+const paint=c=>{c.startStation('paint');c.beginStroke();c.stroke(45,50,60,50,4,'paint',2);c.finishStroke();};
+const pass=c=>{c.collectClay();shape(c);paint(c);c.piece.pixels=c.target.slice();c.fire();c.tick(60);return c.submit();};
 const passFive=c=>{for(let i=0;i<5;i++)pass(c);};
 const restore=c=>SculptureChallenge.restore(JSON.parse(JSON.stringify(c.serialize())));
 
@@ -10,7 +12,7 @@ test('reward brackets include every lower boundary and perfect scores',()=>{
  for(const [score,coins] of [[-1,0],[0,0],[59.999,0],[60,60],[60.1,60],[69.999,60],[70,70],[79.999,70],[80,80],[89.999,80],[90,90],[99.999,90],[100,100],[101,100],[NaN,0],[Infinity,0]])assert.equal(rewardForScore(score),coins,String(score));
 });
 test('60–79% submissions pay without unlocking the next level or paying twice',()=>{
- const c=new SculptureChallenge();c.collectClay();
+ const c=new SculptureChallenge();c.collectClay();shape(c);paint(c);
  const counts=[0,0,0];const total=[0,0,0];for(const value of c.target)total[value]++;
  c.piece.pixels=c.target.map(v=>v&&++counts[v]<=total[v]*.8?3-v:v);
  const score=compareSculpture(c.piece.pixels,c.target).score;assert.ok(score>=60&&score<80,score);

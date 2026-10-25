@@ -16,7 +16,7 @@ export function createLandmark(index){
  }
  function facade(x,y,z,w,h,d,color,roofColor){box(x,y+h/2,z,w,h,d,color);roof(x,y+h+.15,z,w,d,roofColor);}
  function window(x,y,z,w=.46,h=.65){box(x,y,z,w+.1,h+.1,.08,0xe8d5ad);box(x,y,z+.05,w,h,.04,0x50717a);box(x,y,z+.08,.035,h,.025,0xc3a27c);}
- function chimney(x,z,h,color){cylinder(x,h/2,z,.29,.44,h,color);cylinder(x,h-.03,z,.34,.34,.16,0x73523f);for(let i=1;i<h/.35;i++)cylinder(x,i*.35,z,.44-i*.35/h*.15,.445-i*.35/h*.15,.035,0xaa7960);}
+ function chimney(x,z,h,color){root.userData.chimney={x,z,y:h};cylinder(x,h/2,z,.29,.44,h,color);cylinder(x,h-.03,z,.34,.34,.16,0x73523f);for(let i=1;i<h/.35;i++)cylinder(x,i*.35,z,.44-i*.35/h*.15,.445-i*.35/h*.15,.035,0xaa7960);}
  function label(text,x,y,z,w=3.4){const c=document.createElement('canvas');c.width=1024;c.height=180;const ctx=c.getContext('2d');ctx.fillStyle='#f3e5c7';ctx.fillRect(0,0,1024,180);ctx.strokeStyle='#8c6e45';ctx.lineWidth=10;ctx.strokeRect(8,8,1008,164);ctx.fillStyle='#3b4a50';ctx.font='600 63px "Songti SC", serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,512,94,940);const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;return mesh(new THREE.PlaneGeometry(w,w*180/1024),new THREE.MeshStandardMaterial({map:texture,roughness:1}),x,y,z);}
  const canopyGeo=new THREE.SphereGeometry(1,10,8);
  function clump(x,y,z,sx,sy,sz,color){const m=mesh(canopyGeo,color,x,y,z);m.scale.set(sx,sy,sz);return m;}
@@ -42,8 +42,8 @@ export function createLandmark(index){
   facade(-2.6,0,-7.3,5.4,2.3,2.5,0xa67750,0x59665c);brickFace(-2.6,1.15,-6.08,5.15,2.15);facade(1.2,0,-7.7,2.7,1.8,2,0xb18355,0x5b675c);brickFace(1.2,.9,-6.73,2.5,1.65);chimney(4.25,-7.35,5.25,0xa4744b);
   for(const x of [-4.5,-3.3,-2.1,-.9])window(x,1.43,-6.015,.56,.75);
   cylinder(5.9,.9,-6.7,.35,1.08,1.8,0x9b7451);box(5.9,.47,-5.82,.47,.76,.08,0x453b32);
-  label('古窑民俗',-2.6,2.23,-5.93,2.2);tree(-6.5,-7,1.25);tree(7.3,-8.4,1.2);bamboo(-8,-6.4,.9);bamboo(8.1,-6.8,1);
-  for(let tier=0;tier<3;tier++){box(1.3,.35+tier*.6,-6,1.7,.08,.5,0x977446);for(let j=0;j<4;j++)vase(.7+j*.4,.41+tier*.6,-5.95,.25);}for(const x of [.36,2.26])box(x,.97,-6,.09,2,.56,0x74543a);
+  label('古窑民俗',-2.6,2.23,-5.93,2.2);tree(-6.5,-7,1.25);tree(7.3,-8.4,1.2);
+  // Keep the wall behind the workshop sign clear; the old keepsake rack was removed.
  }else if(index===1){
   box(-1,1.4,-7.45,11.2,2.8,2.65,0xe4e3d2);box(-1,2.9,-7.45,11.65,.23,3,0x426a7d);box(-1,3.1,-7.45,10.5,.13,2.7,0x839aa1);
   for(let i=0;i<12;i++)window(-5.8+i*.83,1.51,-6.07,.65,1.55);
