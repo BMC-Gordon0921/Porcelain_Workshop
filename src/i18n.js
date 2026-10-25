@@ -1,11 +1,13 @@
 // Bilingual UI layer: Chinese is the source of truth, English is a lookup table.
 // Text is translated at the DOM level so every template keeps working untouched.
 import {WORKSHOP_EN} from './workshop-i18n.js';
+import {JOURNEY_EN} from './journey-i18n.js';
 const STORAGE_KEY = 'terra-lang';
 const CJK = /[\u4e00-\u9fa5]/;
 
 const EN = {
   ...WORKSHOP_EN,
+  ...JOURNEY_EN,
   '进入地图介绍': 'Explore the map introduction',
   '跳过介绍，进入工坊 ↗': 'Skip introduction, enter workshop ↗',
   '↺ 恢复视角': '↺ Reset view',
@@ -122,10 +124,10 @@ const EN = {
   '低于 60%：0 币；60–69%：60 币；70–79%：70 币；80–89%：80 币；90–99%：90 币；100%：100 币。':
     'Below 60%: 0 coins; 60–69%: 60; 70–79%: 70; 80–89%: 80; 90–99%: 90; 100%: 100.',
   '05 · 购买、贴花与下一场景': '05 · Decal and next scene',
-  '本场景五关通过，余额达到 400 币，即可花 400 币购买贴画。点击选择贴画，再点击白瓷碗或“贴到碗上”。完成后进入下一场景，剩余硬币继续保留。':
-    'Clear this scene’s five levels and hold 400 coins to buy the decal. Pick it, then tap the bowl or “Apply to bowl”. The next scene opens and leftover coins carry over.',
-  '四站按地图顺序：古窑民俗博览区、中国陶瓷博物馆、御窑厂国家考古遗址公园、陶溪川文创街区。对应贴画依次为青花缠枝、玲珑白瓷、红金窑变、粉彩花瓣。点击顶部“地图”可查看路线或重播开场。每个场景五关，共二十关。四件成品全部收藏后完成旅程。':
-    'Four stops in map order: Ancient Kiln Folk Custom Park, China Ceramic Museum, Royal Kiln Factory Archaeological Site Park, Taoxichuan Creative District. Their decals: blue-and-white vine, linglong white, copper-red flambé, famille-rose petals. “Map” replays the route or the opening. Five levels per scene, twenty in all; collect all four pieces to finish.',
+  '本场景三关通过，余额达到 400 币，即可花 400 币购买贴画。点击选择贴画，再点击白瓷碗或“贴到碗上”。完成后进入下一场景，剩余硬币继续保留。':
+    'Clear this scene’s three levels and hold 400 coins to buy the decal. Pick it, then tap the bowl or “Apply to bowl”. The next scene opens and leftover coins carry over.',
+  '四站按地图顺序：古窑民俗博览区、中国陶瓷博物馆、御窑厂国家考古遗址公园、陶溪川文创街区。对应贴画依次为青花缠枝、玲珑白瓷、红金窑变、粉彩花瓣。点击顶部“地图”可查看路线或重播开场。每个场景三关，共十二关。四件成品全部收藏后完成旅程。':
+    'Four stops in map order: Ancient Kiln Folk Custom Park, China Ceramic Museum, Royal Kiln Factory Archaeological Site Park, Taoxichuan Creative District. Their decals: blue-and-white vine, linglong white, copper-red flambé, famille-rose petals. “Map” replays the route or the opening. Three levels per scene, twelve in all; collect all four pieces to finish.',
   '回到工坊': 'Back to the workshop',
 
   // ——— campaign data ———
@@ -177,8 +179,8 @@ const EN = {
   '遗址 · 拱券 · 流釉': 'Ruins · arches · flowing glaze',
   '转向御窑旧址，穿过红砖拱券，在窑火留下的颜色里寻找金与红。':
     'Turn to the old royal kiln, pass through red-brick arches and seek gold and red in the colours the kiln left behind.',
-  '砖拱与旧窑遗迹围起新的手作课堂。完成五份订单，收集一张红金窑变贴画。':
-    'Brick arches and old kiln ruins enclose a new workshop. Finish five orders and collect a copper-red decal.',
+  '砖拱与旧窑遗迹围起新的手作课堂。完成三份订单，收集一张红金窑变贴画。':
+    'Brick arches and old kiln ruins enclose a new workshop. Finish three orders and collect a copper-red decal.',
   '红砖拱券、残墙、考古探方与旧窑基座': 'Red-brick arches, broken walls, excavation pits and old kiln bases',
   '御色': 'Imperial colour',
   '陶溪川': 'Taoxichuan',
@@ -218,7 +220,7 @@ const EN = {
   '从古窑到陶溪川，把城市的故事': 'From the ancient kiln to Taoxichuan, turn the city’s stories',
   '做成你亲手收藏的四只瓷碗。': 'into four bowls you make and keep.',
   '↺ 重播': '↺ Replay',
-  '每站 5 关': '5 levels per stop',
+  '每站 3 单': '3 orders per stop',
   '400 币兑换贴画': '400 coins per decal',
   '景德镇 · 手作游历图': 'Jingdezhen · Handmade journey map',
   '探索路线 01—04': 'Route 01—04',
@@ -235,8 +237,8 @@ const EN = {
     'Game route drawn on the hand-painted Jingdezhen map · tap a pin to preview each stop',
   '已收藏': 'Collected',
   '待收集': 'Not yet',
-  '完成本站五关，购买并贴好贴画，才能开启下一站。':
-    'Clear five levels here, then buy and apply the decal to unlock the next stop.',
+  '完成本站三关，购买并贴好贴画，才能开启下一站。':
+    'Clear three levels here, then buy and apply the decal to unlock the next stop.',
   '这一站的景致': 'The look of this stop',
   '纪念贴画': 'Souvenir decal',
   '✓ 已收藏': '✓ Collected',
@@ -255,7 +257,7 @@ const EN = {
   '第 {} 关 · {} · 尝试 {}': 'Level {} · {} · attempt {}',
   '{} · 尝试 {}': '{} · attempt {}',
   '第 {} 关 · {}': 'Level {} · {}',
-  '第 {} 关 / 5': 'Level {} / 5',
+  '第 {} 关 / 3': 'Level {} / 3',
   '练习订单': 'Practice order',
   '80% 通关': '80% to pass',
   '60% 起奖励 · 最高 100 硬币': 'Rewards from 60% · up to 100 coins',
@@ -265,7 +267,7 @@ const EN = {
   '四件作品已集齐': 'All four pieces collected',
   '我的瓷器藏品': 'My porcelain collection',
   '80% 通关 · 60% 起奖励': '80% to pass · rewards from 60%',
-  '五关完成 · 制作场景成品': 'Five levels done · make the souvenir',
+  '三关完成 · 制作场景成品': 'Three levels done · make the souvenir',
   '塑形、雕刻、上色': 'Shape, carve and paint',
   '到取泥台领取瓷泥': 'Collect clay at the clay station',
   '点击右侧贴画，完成你的瓷碗': 'Tap the decal on the right to finish your bowl',
@@ -273,8 +275,8 @@ const EN = {
   '购买 → 选择贴画 → 贴到碗上 → 下一场景': 'Buy → pick a decal → apply → next scene',
   '进度自动保存。按 Esc 返回工坊。': 'Progress saves automatically. Press Esc to return.',
   '查看订单 ↗': 'View order ↗',
-  '五关已完成 ✓': 'Five levels cleared ✓',
-  '当前余额 {} 币 · 本场景 {}/5 关': 'Balance {} coins · {}/5 levels here',
+  '三关已完成 ✓': 'Three levels cleared ✓',
+  '当前余额 {} 币 · 本场景 {}/3 关': 'Balance {} coins · {}/3 levels here',
   '+{} 硬币': '+{} coins',
   '剩余 {} 硬币': '{} coins left',
 
@@ -323,15 +325,15 @@ const EN = {
   '达到 80% 通关': 'Reach 80% to pass',
   '未通过则重试本关，已获得硬币保留。': 'Below that you retry this level; earned coins are kept.',
   '累计 400 币购买贴画': 'Save 400 coins for the decal',
-  '完成五关后购买，贴到瓷碗上进入下一场景。':
-    'Buy after five levels and apply it to move to the next scene.',
+  '完成三关后购买，贴到瓷碗上进入下一场景。':
+    'Buy after three levels and apply it to move to the next scene.',
   '订单参考图': 'Order reference',
   '你正在制作的瓷泥': 'Your clay in progress',
   '初始瓷泥': 'Starting lump',
   '保留当前作品，继续完善。': 'Keep this piece and keep refining it.',
   '到取泥台领取一整块瓷泥。': 'Collect a full lump at the clay station.',
   '从一块瓷泥开始': 'Start with a lump of clay',
-  '领取瓷泥后，自由选择塑形、雕刻、上色的顺序。每个工作台使用自己的工具。':
+  '领取瓷泥后，依次塑形、雕刻、上色，再烧制交付。每个工作台使用自己的工具。':
     'Once you have clay, shape, carve and paint in any order. Each bench has its own tool.',
   '✓ 已通过': '✓ Passed',
   '当前订单': 'Current order',
@@ -401,13 +403,13 @@ const EN = {
   '场景 {} / 4 · 贴画工坊': 'Scene {} / 4 · decal workshop',
   '成品预览 · 拖动旋转': 'Finished preview · drag to rotate',
   '参考图 {} · 按上传顺序': 'Reference {} · upload order',
-  '完成本场景五关，用 400 硬币购买贴画；亲手贴到白瓷碗上，开启下一场景。':
-    'Clear this scene’s five levels, buy the decal for 400 coins, then apply it yourself to open the next scene.',
-  '五关通过': 'Five levels cleared',
+  '完成本场景三关，用 400 硬币购买贴画；亲手贴到白瓷碗上，开启下一场景。':
+    'Clear this scene’s three levels, buy the decal for 400 coins, then apply it yourself to open the next scene.',
+  '三关通过': 'Three levels cleared',
   '硬币余额': 'Coin balance',
   '购买贴画 · {} 币': 'Buy decal · {} coins',
   '余额不足，可以完成练习订单获得硬币。': 'Not enough coins — take a practice order.',
-  '先完成本场景的五个订单。': 'Finish this scene’s five orders first.',
+  '先完成本场景的三个订单。': 'Finish this scene’s three orders first.',
   '达到 400 币即可购买 · 贴好后进入下一场景 · 每个场景限购一次':
     '400 coins to buy · applying it opens the next scene · one per scene',
   '接一个练习订单': 'Take a practice order',
@@ -426,13 +428,13 @@ const EN = {
   '已贴好 · 拖动欣赏': 'Applied · drag to admire',
   '四方瓷韵，圆满收藏': 'Four stories, fully collected',
   '你的瓷器藏品': 'Your porcelain collection',
-  '四个场景、二十个订单，四张贴画都成为了你亲手完成的瓷碗。':
-    'Four scenes, twenty orders — four decals became bowls you made yourself.',
+  '四个场景、十二个订单，四张贴画都成为了你亲手完成的瓷碗。':
+    'Four scenes, twelve orders — four decals became bowls you made yourself.',
   '按参考图的顺序，走过四个工坊，收集四种瓷器。':
     'Follow the references through four workshops and collect four porcelains.',
   '待收藏': 'Locked',
   '✓ 已贴花 · 已收藏': '✓ Applied · collected',
-  '五关通关 + 400 硬币': 'Five levels + 400 coins',
+  '三关通关 + 400 硬币': 'Three levels + 400 coins',
   '我的藏品': 'My collection',
   '拖动旋转 · 查看环绕纹样': 'Drag to rotate · see the wrap pattern',
   '返回藏品': 'Back to collection',
@@ -441,8 +443,8 @@ const EN = {
   '景德镇 · 四站游历图': 'Jingdezhen · four-stop journey map',
   '循着地图，走向下一站': 'Follow the map to the next stop',
   '你的瓷都足迹': 'Your footprints in the porcelain capital',
-  '沿地图上的 1—4 号地点，完成五关、收集贴画，把每一站做成一件纪念。':
-    'Visit stops 1—4, clear five levels each, collect the decals, and turn every stop into a keepsake.',
+  '沿地图上的 1—4 号地点，完成三关、收集贴画，把每一站做成一件纪念。':
+    'Visit stops 1—4, clear three levels each, collect the decals, and turn every stop into a keepsake.',
   '游戏探索路线 · 当前关卡、硬币与瓷器进度自动保存':
     'Exploration route · levels, coins and porcelain progress save automatically',
   '瓷都游历手记': 'Notes from the porcelain capital',
@@ -504,8 +506,8 @@ const EN = {
 const EXTRA_RULES = [
   [/^继续旅程 · (.+)$/, (m) => `Continue · ${m[1]}`],
   [/^抵达 (.+)$/, (m) => `Arrive at ${m[1]}`],
-  [/^当前站 · (\d+)\/5 关$/, (m) => `Current stop · ${m[1]}/5 levels`],
-  [/^(\d+)\/5 关 · (\d+)\/400 币$/, (m) => `${m[1]}/5 levels · ${m[2]}/400 coins`],
+  [/^当前站 · (\d+)\/3 关$/, (m) => `Current stop · ${m[1]}/3 levels`],
+  [/^(\d+)\/3 关 · (\d+)\/400 币$/, (m) => `${m[1]}/3 levels · ${m[2]}/400 coins`],
   [/^(.+?)参考图$/, (m) => `${m[1]} reference`],
   [/^(.+?)贴画$/, (m) => `${m[1]} decal`],
   [/^(.+?)环绕贴图$/, (m) => `${m[1]} wrap texture`],
@@ -513,7 +515,7 @@ const EXTRA_RULES = [
   [/^待贴花的白瓷碗，拖动旋转$/, () => 'White bowl waiting for a decal · drag to rotate'],
   [/^已收藏瓷碗，可拖动旋转$/, () => 'Collected bowl · drag to rotate'],
   [/^用户提供的第 (\d+) 张陶瓷参考图$/, (m) => `Uploaded porcelain reference ${m[1]}`],
-  [/^第 (\d+) 关 \/ 5$/, (m) => `Level ${m[1]} / 5`],
+  [/^第 (\d+) 关 \/ 3$/, (m) => `Level ${m[1]} / 3`],
   [/^场景 (\d+) \/ 4$/, (m) => `Scene ${m[1]} / 4`],
   [/^(\d+) 秒$/, (m) => `${m[1]} s`],
   [/^\+(\d+) 硬币$/, (m) => `+${m[1]} coins`],

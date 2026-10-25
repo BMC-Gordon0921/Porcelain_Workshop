@@ -25,15 +25,15 @@ async function moveTo(x,z){
 async function interact(){await page.keyboard.press('f');await page.waitForTimeout(650);}
 try{
  await page.goto(url);await page.locator('#unfold-map').waitFor();await page.screenshot({path:fileURLToPath(new URL('01-welcome.png',out))});
- await page.locator('#unfold-map').click();await page.locator('#start-button').click();await page.locator('#brief-done').click();await interact();await page.locator('#fresh-clay').click();assert.equal((await read()).hasClay,true);
+ await page.locator('#unfold-map').click();await page.locator('#start-button').click();await page.locator('#brief-done').click();await page.evaluate(()=>{window.__terra.state.tutorial={status:'complete',step:null};});await interact();await page.locator('#fresh-clay').click();assert.equal((await read()).hasClay,true);
  await moveTo(.4,-2.05);await interact();await page.locator('#sculpt-canvas').waitFor();
  const board=await page.locator('#sculpt-canvas').boundingBox();await page.mouse.move(board.x+board.width*.2,board.y+board.height*.35);await page.mouse.down();await page.mouse.move(board.x+board.width*.3,board.y+board.height*.35,{steps:6});await page.mouse.up();await page.locator('#save-editor').click();assert.ok((await read()).edits>0);
  console.log('PASS: starting a game, collecting clay, walking and carving');
- const work=new SculptureChallenge();work.collectClay();work.shapeEdits=1;work.piece.pixels=work.target.slice();work.fire();work.tick(60);await seed(work);await page.locator('#brief-done').click();await moveTo(1.7,-2.05);await moveTo(1.7,0);await interact();await page.locator('#confirm-review').click();await page.locator('#result-next').waitFor();assert.equal((await read()).money,180);assert.equal((await read()).level,1);assert.deepEqual(await page.evaluate(()=>{let n=0;window.__terra.world.scene.traverse(o=>{if(o.name==='display-shelf-piece')n++;});return {pieces:n,shelf:window.__terra.state.shelf[0]};}),{pieces:0,shelf:1});await page.screenshot({path:fileURLToPath(new URL('02-scoring.png',out))});
+ const work=new SculptureChallenge({tutorial:false});work.collectClay();work.shapeEdits=1;work.piece.pixels=work.target.slice();work.fire();work.tick(60);await seed(work);await page.locator('#brief-done').click();await moveTo(1.7,-2.05);await moveTo(1.7,0);await interact();await page.locator('#confirm-review').click();await page.locator('#result-next').waitFor();assert.equal((await read()).money,180);assert.equal((await read()).level,1);assert.deepEqual(await page.evaluate(()=>{let n=0;window.__terra.world.scene.traverse(o=>{if(o.name==='display-shelf-piece')n++;});return {pieces:n,shelf:window.__terra.state.shelf[0]};}),{pieces:0,shelf:1});await page.screenshot({path:fileURLToPath(new URL('02-scoring.png',out))});
  console.log('PASS: submitting through the real counter awards 180 coins and advances');
- let c=new SculptureChallenge();
+ let c=new SculptureChallenge({tutorial:false});
  for(let scene=0;scene<4;scene++){
-  for(let i=0;i<5;i++)pass(c);c.money=400;
+  for(let i=0;i<3;i++)pass(c);c.money=400;
   await seed(c);assert.equal(await page.locator('#buy-decal').isEnabled(),true);
   await page.screenshot({path:fileURLToPath(new URL(`scene-${scene+1}-shop.png`,out))});
   await page.locator('#buy-decal').click();assert.equal((await read()).money,0);assert.equal((await read()).phase,'decal');assert.equal(await page.locator('#apply-decal').isDisabled(),true);
@@ -43,13 +43,13 @@ try{
   await page.locator('#next-scene').waitFor();assert.equal((await read()).collection.length,scene+1);
   await page.screenshot({path:fileURLToPath(new URL(`scene-${scene+1}-bowl.png`,out))});
   await page.reload();await page.locator('#unfold-map').click();await page.locator('#start-button').click();await page.locator('#next-scene').click();
-  const saved=await read();assert.equal(saved.phase,scene===3?'complete':'levels');assert.equal(saved.scene,Math.min(scene+1,3));assert.equal(saved.level,scene===3?4:0);
+  const saved=await read();assert.equal(saved.phase,scene===3?'complete':'levels');assert.equal(saved.scene,Math.min(scene+1,3));assert.equal(saved.level,scene===3?2:0);
   c=SculptureChallenge.restore(saved);console.log(`PASS: scene ${scene+1} exact-400 purchase, reload, application, collection and transition`);
  }
  await page.screenshot({path:fileURLToPath(new URL('07-final-collection.png',out))});assert.equal(await page.locator('.collection-card.owned').count(),4);
  await page.locator('[data-bowl="0"]').click();await page.locator('#bowl-preview').waitFor();await page.locator('#back-collection').click();
  // Confirm the narrow layout stays inside the viewport and the purchasing controls remain usable.
- await page.setViewportSize({width:390,height:844});c=new SculptureChallenge();for(let i=0;i<5;i++)pass(c);c.money=400;await seed(c);await page.screenshot({path:fileURLToPath(new URL('08-mobile-shop.png',out))});
+ await page.setViewportSize({width:390,height:844});c=new SculptureChallenge({tutorial:false});for(let i=0;i<3;i++)pass(c);c.money=400;await seed(c);await page.screenshot({path:fileURLToPath(new URL('08-mobile-shop.png',out))});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.locator('#buy-decal').click();await page.locator('#select-decal').click();await page.locator('#apply-decal').click();await page.locator('#next-scene').waitFor();
  console.log('PASS: mobile purchase and application');
  await page.setViewportSize({width:1440,height:1000});

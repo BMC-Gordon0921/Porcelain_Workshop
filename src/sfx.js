@@ -1,4 +1,4 @@
-// Procedural workshop foley. The game ships no external audio files.
+// Procedural workshop foley, layered with the journey's background music.
 const STEP = Math.PI;
 
 const TOOLS = {

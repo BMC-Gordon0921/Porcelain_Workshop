@@ -153,12 +153,14 @@ function workshopSign(parent,text,accent='#8aa78d'){
  const lamp=new THREE.PointLight(0xffb15f,.6,3.4);lamp.position.set(0,.3,.55);g.add(lamp);
  return g;
 }
-export function createWorld(canvas) {
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+export function createWorld(canvas,{preview=false}={}) {
+ let disposed=false;const removers=[];
+ const listen=(target,event,fn,options)=>{if(preview)return;target.addEventListener(event,fn,options);removers.push(()=>target.removeEventListener(event,fn,options));};
+ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,preview?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
  const scene=new THREE.Scene();
  /* Orbit camera. Dragging with the left button turns the workshop; the polar
     angle is clamped so the eye can rise overhead but never sink below the floor. */
- const TARGET=new THREE.Vector3(-.2,.7,-.7);
+ const TARGET=preview?new THREE.Vector3(0,1,-2):new THREE.Vector3(-.2,.7,-.7);
  const HOME_OFFSET=new THREE.Vector3(10,17,20).sub(TARGET);
  const orbit={azimuth:Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),polar:Math.acos(HOME_OFFSET.y/HOME_OFFSET.length()),radius:HOME_OFFSET.length(),zoom:1};
  let cameraTween=null;
@@ -172,8 +174,8 @@ export function createWorld(canvas) {
  const onOrbitMove=e=>{if(!interactionEnabled||!orbitDrag||e.pointerId!==orbitDrag.id)return;if(!(e.buttons&1)){onOrbitUp(e);return;}const dx=e.clientX-orbitDrag.x,dy=e.clientY-orbitDrag.y;orbitDrag.x=e.clientX;orbitDrag.y=e.clientY;orbit.azimuth-=dx*.0062;orbit.polar=THREE.MathUtils.clamp(orbit.polar+dy*.005,POLAR_MIN,POLAR_MAX);placeCamera();};
  const onOrbitUp=()=>{if(!orbitDrag)return;const id=orbitDrag.id;orbitDrag=null;canvas.classList.remove('is-orbiting');if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);};
  const onOrbitWheel=e=>{if(!interactionEnabled)return;e.preventDefault();stopTween();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*Math.exp(-delta*.0012),ZOOM_MIN,ZOOM_MAX);placeCamera();};
- canvas.addEventListener('pointerdown',onOrbitDown);window.addEventListener('pointermove',onOrbitMove);window.addEventListener('pointerup',onOrbitUp);window.addEventListener('pointercancel',onOrbitUp);
- canvas.addEventListener('wheel',onOrbitWheel,{passive:false});canvas.addEventListener('lostpointercapture',onOrbitUp);window.addEventListener('blur',onOrbitUp);document.addEventListener('visibilitychange',()=>{if(document.hidden)onOrbitUp();});
+ listen(canvas,'pointerdown',onOrbitDown);listen(window,'pointermove',onOrbitMove);listen(window,'pointerup',onOrbitUp);listen(window,'pointercancel',onOrbitUp);
+ listen(canvas,'wheel',onOrbitWheel,{passive:false});listen(canvas,'lostpointercapture',onOrbitUp);listen(window,'blur',onOrbitUp);listen(document,'visibilitychange',()=>{if(document.hidden)onOrbitUp();});
  function setInteractionEnabled(value){interactionEnabled=!!value;if(!interactionEnabled)onOrbitUp();}
  function resetView(){
   const toAz=Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),toPolar=Math.acos(HOME_OFFSET.y/HOME_OFFSET.length());
@@ -181,7 +183,7 @@ export function createWorld(canvas) {
   const delta=THREE.MathUtils.euclideanModulo(toAz-orbit.azimuth+Math.PI,Math.PI*2)-Math.PI;
   cameraTween={fromAz:orbit.azimuth,fromPolar:orbit.polar,fromZoom:orbit.zoom,toAz:orbit.azimuth+delta,toPolar,toZoom:1,start:performance.now(),duration:650};
  }
- scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
+ scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(preview?1024:2048,preview?1024:2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
  const root=group(scene);
  box(root,0,-.43,0,16.8,.65,11.65,0xa39169);box(root,0,-.11,0,16.6,.18,11.45,0xc5bb99);
  // One instanced mesh keeps the 17x12 flagstones at a single draw call.
@@ -279,7 +281,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
    chimneyAnchor=landmark.userData.chimney||null;if(chimneyAnchor){smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y+.09,chimneyAnchor.z);smokeField.points.visible=true;}else smokeField.points.visible=false;
    themeWalls.forEach(m=>m.material.color.setHex(theme.wall));floorMaterial.color.setHex(theme.floor);sun.color.setHex(theme.sun);
   }
-  gallery.traverse(m=>{if(m.isMesh){m.geometry.dispose();m.material.map?.dispose();m.material.dispose();}});gallery.clear();
+  disposeWorldTree(gallery);gallery.clear();
   box(gallery,4.7,1.53,-5.06,3.4,.13,.61,0x987343,false);
   for(const x of [3.15,6.25])box(gallery,x,.77,-5.06,.09,1.48,.45,0x957751,false);
   const texture=new THREE.CanvasTexture(decalCanvas(index));texture.colorSpace=THREE.SRGBColorSpace;
@@ -292,12 +294,13 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   if(sceneChanged)player.group.position.set(-4.55,0,-2.15);
  }
  let width=1,height=1,carry=null,carryKey='',moving=false,walking=0,stride=0;
- function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;renderer.setSize(width,height,false);let aspect=width/height;let vh=Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
+ function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(19,32/aspect):Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
  function canMove(x,z){const r=.37;if(x<-7.76||x>2.45||z<-4.9||z>5.13)return false;for(const s of STATIONS){if(x>s.x-s.w/2-r&&x<s.x+s.w/2+r&&z>s.z-s.d/2-r&&z<s.z+s.d/2+r)return false;}return true;}
  function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt,x0=p.x,z0=p.z;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);if((p.x-x0)**2+(p.z-z0)**2>1e-8){moving=true;walking+=dt*11;stride+=dt*11;}else moving=false;}
  function project(x,y,z){const p=new THREE.Vector3(x,y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
  function nearest(){let best=null,dist=Infinity;for(const s of STATIONS){const p=player.group.position;const dx=Math.max(Math.abs(p.x-s.x)-s.w/2,0),dz=Math.max(Math.abs(p.z-s.z)-s.d/2,0);const d=Math.hypot(dx,dz);if(d<1.04&&d<dist){best=s;dist=d;}}return best;}
  function update(dt,time,state,playing=true){
+  if(disposed)return;
   if(cameraTween){const p=Math.min(1,(performance.now()-cameraTween.start)/cameraTween.duration),e=p*p*(3-2*p);orbit.azimuth=THREE.MathUtils.lerp(cameraTween.fromAz,cameraTween.toAz,e);orbit.polar=THREE.MathUtils.lerp(cameraTween.fromPolar,cameraTween.toPolar,e);orbit.zoom=THREE.MathUtils.lerp(cameraTween.fromZoom,cameraTween.toZoom,e);placeCamera();if(p>=1)cameraTween=null;}
   player.body.position.y=moving?Math.abs(Math.sin(walking))*.04:Math.sin(time*2)*.015;
   player.feet.forEach((m,i)=>{m.position.z=.1+(moving?Math.sin(walking+i*PI)*.16:0);});
@@ -333,7 +336,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
    if(c.tail)c.tail.rotation.y=walking?0:Math.sin(time*1.35+seed)*.32;
    c.arms.forEach((arm,j)=>{arm.rotation.x=walking?Math.sin(time*8+j*2)*.18:Math.sin(time*1.5+seed+j*2.1)*.055;});
   });
-  for(let i=departing.length-1;i>=0;i--){const c=departing[i];c.group.position.x+=dt*1.9;c.group.position.z+=dt*.28;c.group.rotation.y=PI/2;c.body.position.y=Math.abs(Math.sin(time*10))*.08;if(c.group.position.x>8.5){root.remove(c.group);departing.splice(i,1);}}
+  for(let i=departing.length-1;i>=0;i--){const c=departing[i];c.group.position.x+=dt*1.9;c.group.position.z+=dt*.28;c.group.rotation.y=PI/2;c.body.position.y=Math.abs(Math.sin(time*10))*.08;if(c.group.position.x>8.5){root.remove(c.group);disposeWorldTree(c.group);departing.splice(i,1);}}
   if(state.hasClay)kilnModel.setPiece(state.piece.pixels,state.piece.revision);
   const heat=state.kiln?state.kiln.heat:0;
   kilnModel.update(state.kilnPaused?0:dt,{firing:!!state.kiln,heat,level:state.stationLevel('kiln'),reduced});
@@ -343,5 +346,21 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   dust.forEach((m,i)=>{m.position.y+=dt*.018;if(m.position.y>3.8)m.position.y=.7;m.position.x+=Math.sin(time*.3+i)*dt*.012;});renderer.render(scene,camera);
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
- resize();return {scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
+ function dispose(){if(disposed)return;disposed=true;onOrbitUp();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
+ resize();return {dispose,scene,camera,renderer,player,stations:STATIONS,move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
+}
+
+// Cache-owned primitives/materials are shared by the game and scene preview.
+// Dispose only resources owned by the departing world or subtree.
+function disposeWorldTree(root){
+ const sharedGeometry=new Set([rounded,sphereGeo,leafGeo]),sharedMaterials=new Set(mats.values());
+ const geometries=new Set(),materials=new Set(),textures=new Set();
+ root.traverse(object=>{
+  if(object.geometry&&!sharedGeometry.has(object.geometry))geometries.add(object.geometry);
+  for(const material of Array.isArray(object.material)?object.material:[object.material]){
+   if(!material||sharedMaterials.has(material))continue;materials.add(material);
+   for(const value of Object.values(material))if(value?.isTexture)textures.add(value);
+  }
+ });
+ geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());
 }

@@ -1,0 +1,18 @@
+.carousel-controls{position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:14px;padding:6px 12px;border:1px solid #d6cfba;border-radius:30px;background:#fcf8efed;box-shadow:0 4px 18px #4d554018}
+.carousel-controls button{display:grid;place-items:center;min-width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:#48645c;font-size:26px;cursor:pointer}
+.carousel-controls button:hover{background:#e5e7d9}.carousel-controls button:focus-visible{outline:2px solid #ad8546;outline-offset:2px}
+.carousel-dots{display:flex;gap:2px}.carousel-dots button{font-size:13px;min-width:34px;height:34px}.carousel-dots button[aria-pressed=true]{background:#416052;color:#fff8e7}
+.hero-carousel .hero-caption{bottom:64px}.hero-carousel .hero-hint{top:2%}
+.hero-carousel .hero-canvas{bottom:auto;height:calc(100% - 148px)}
+.opening-sound{flex-shrink:0;margin-left:auto;width:38px;height:38px;padding:8px}.opening-sound svg{width:22px;height:22px}
+.scene-carousel{position:relative;width:100%;height:clamp(330px,58vh,660px);border-radius:18px;background:radial-gradient(ellipse at center,#faf7e8,#e3e6d7);border:1px solid #d8d4bc;overflow:hidden}
+.scene-carousel canvas{display:block;width:100%;height:calc(100% - 60px);cursor:grab;touch-action:none;outline-offset:-4px}
+.scene-carousel .carousel-controls{bottom:8px}.scene-carousel .hero-hint{top:12px;right:12px}
+.opening-scene-section{width:100%;min-width:0}.opening-scene-section .opening-map-caption{line-height:1.7;letter-spacing:.5px}
+.opening-screen[data-opening-stage=map] .opening-layout{grid-template-columns:minmax(260px,.8fr) minmax(0,1.5fr)}
+.preset-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}
+.practice-choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+@media(max-width:760px){.prologue-porcelain{height:340px}.hero-carousel .hero-caption{bottom:58px}.carousel-controls{gap:7px;padding:4px 8px}.carousel-controls button{min-width:36px;height:36px}.carousel-dots button{min-width:30px;height:30px}.scene-carousel{height:360px}.opening-screen[data-opening-stage=map] .opening-layout{display:flex;flex-direction:column;gap:20px}.opening-scene-section{order:-1}.opening-header{gap:10px}.opening-sound{margin-left:0}}
+html[lang=en] .opening-copy>h1{font-size:clamp(32px,3.2vw,48px);overflow-wrap:normal;letter-spacing:0}
+html[lang=en] .opening-copy>h1>span{display:inline-block}
+@media(prefers-reduced-motion:reduce){.scene-carousel canvas,.hero-carousel canvas{transition:none}}
