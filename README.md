@@ -13,13 +13,15 @@ npm run dev
 
 打开 http://127.0.0.1:5174/ ；`npm run build` 生成生产版本；`npm run preview` 预览生产版本；`npm test` 运行游戏逻辑测试。
 
-## Windows 免安装运行包
+## Windows 免安装运行包（已归档）
 
-交付文件：`release/开窑啦-即开即玩-Windows.zip`。完整解压后，双击 **双击开始游戏.cmd**。游戏使用 Windows 自带 Edge 或默认浏览器打开；内置 Node.js、四个场景、音乐和字体，无需安装依赖或联网。游玩期间保留启动窗口，结束后关闭即可。
+原 `release/开窑啦-即开即玩-Windows.zip` 免安装包及配套打包链路（`tools/package-quick-windows.mjs`、`tools/package-windows.mjs`、`desktop/` 的 Electron 主进程与免 Node 启动器）已停止维护：Windows 产物将在迁移 Godot 后改用 engine 自带的 export preset 生成，继续养护一套 Electron + 内嵌 Node 的启动器没有长期价值。
 
-进度和设置保存在浏览器的 `http://127.0.0.1:49173/` 站点数据中，使用相同浏览器重新启动可继续。不要清除该站点数据。
+- 已有交付物已移至**仓库外**归档目录 `D:\ECNU\BOKE\Porcelain_Workshop_Archive\release\`（含免安装目录、ZIP 与 SHA-256）。
+- 打包脚本本身没有删除，仍在本地 `tools/` 与 `desktop/` 下，只是不再入库；需要时可从 `pre-cleanup-2026-10-26` 标签取回对应版本。
+- 该包把存档写在 `http://127.0.0.1:49173/` 的站点数据中；若要读取旧存档，请用同一浏览器启动同一端口，且不要清除该站点数据。
 
-`npm run build` 后执行 `npm run package:win` 可重新导出；`npm run test:desktop` 从 ZIP 解压并验证四站资源、音乐、游戏入口和存档恢复。Electron 实验封装保留为 `npm run package:electron`，当前交付使用已验证的浏览器启动版本。
+仓库边界与各目录的去留理由见 [docs/repo-layout.md](docs/repo-layout.md)。
 
 ## 开场、声音与地图
 
@@ -128,13 +130,15 @@ Ctrl/Cmd + Z 撤销本站最近一笔；Ctrl/Cmd + Shift + Z 重做；[ / ] 或�
 
 浏览器检查使用独立的 Microsoft Edge 无头上下文，不读取日常浏览器的游戏存档。可用 `GAME_URL` 指定服务地址、`CHROME_CHANNEL` 指定浏览器通道。截图输出在 `qa/journey-update/` 和 `qa/experience/`。
 
+> 浏览器 E2E 脚本（`tests/*browser*.mjs`）依赖 `playwright-core`，已移出版本库、只在本机保留，`npm test` 不会运行它们。需要时先 `npm i -D playwright-core` 再按上面的命令执行。仓库内长期保留的只有 6 个纯逻辑单测。
+
 ## GitHub Pages 部署
 
 线上地址：https://bmc-gordon0921.github.io/Porcelain_Workshop/
 
 推送到 `main` 后，GitHub Actions 自动安装依赖、运行逻辑测试、构建并部署 `dist/`。也可在 Actions 的 “Deploy to GitHub Pages” 流程中手动运行。仓库 Settings → Pages 使用 GitHub Actions 作为部署来源。
 
-Vite 使用相对资源路径，地图和参考图片也跟随构建基础路径，支持 GitHub Pages 的项目子目录。`qa/`、`shots/` 和 `dist/` 不提交到源码仓库。
+Vite 使用相对资源路径，地图和参考图片也跟随构建基础路径，支持 GitHub Pages 的项目子目录。`qa/`、`shots/`、`dist/`、`release/`、`deliverables/`、`tools/` 下的脚本与 `desktop/` 均不提交到源码仓库（明细见 `.gitignore` 与 `docs/repo-layout.md`）。
 
 
 ## Blender 场景与自由旅程（v9）

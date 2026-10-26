@@ -1,21 +1,27 @@
 # ────────────────────────────────────────────────────────────────────────────
 # Terra · 景德镇瓷器之旅 —— 仓库边界（repository boundary）
 #
-# 本仓库只跟踪两类内容：
+# 本仓库只跟踪三类内容：
 #
-#   A. 源码与工程配置
-#      index.html、src 下的 *.js / *.css、tests/、tools/、desktop/、.github/
-#      package.json、package-lock.json、vite.config.js、README.md、本文件
+#   A. 运行时源码与工程配置
+#      index.html、src/ 下的 *.js / *.css、vite.config.js、package.json、
+#      package-lock.json、.gitattributes、README.md、docs/、本文件
 #
 #   B. 运行游戏必需、且无法由代码生成的资源
-#      public/models/maps/*.glb + manifest.json    四站 3D 场景（GLTFLoader 动态加载）
-#      public/references/*                          订单参考图（运行时 <img> 展示）
-#      public/maps/jingdezhen.png                   地图底图（src/places.js:3）
-#      src/assets/**  (字体 / logo / 背景音乐)       被 src/*.js 直接 import 进构建
-#      src/scenes/*.blend                           四站 GLB 的 Blender 源文件
+#      public/models/maps/*.glb + manifest.json   四站 3D 场景（src/scene-environment.js 动态加载）
+#      public/references/*                        订单参考图（src/campaign.js:7-10、src/main.js:249）
+#      public/maps/jingdezhen.png                 地图底图（src/places.js:3）
+#      src/assets/**                              字体 / logo / 背景音乐，被 src/*.js 以 ?url 方式 import
+#      src/scenes/*.blend                         四站 GLB 的 Blender 母版（迁 Godot 时要带走）
 #
-# 其余内容一律视为「派生物 / 交付物 / 本地环境」，不入库；
-# 下面每个分组都写明了它为什么可以安全丢弃、以及如何重新生成。
+#   C. 可独立运行的验证与资产管线
+#      tests/*.test.js                            纯 node:test 单测，只 import ../src/*
+#      tools/export-blender-scenes.py             .blend → .glb 唯一的导出脚本
+#      .github/workflows/deploy-pages.yml         GitHub Pages 构建与部署
+#
+# 其余内容一律视为「派生物 / 交付物 / 本地环境 / 已弃用链路」，不入库。
+# 每个分组都写明它为什么可以安全丢弃、以及如何重新生成；
+# 完整四分类矩阵与归档位置见 docs/repo-layout.md。
 # ────────────────────────────────────────────────────────────────────────────
 
 # ── 1. 依赖与构建产物：npm ci + npm run build 可完整重建 ──────────────────
@@ -33,22 +39,18 @@ desktop.ini
 *.swp
 *.swo
 
-# ── 3. 交付物与打包产物：体积大（合计约 1.7 GB），随时可重新导出 ──────────
-#    release/         Windows 免安装包        —— npm run package:win
-#    deliverables/    课程展示资料包（93 文件） —— 由 PPT/截图导出
-#    路演/            路演材料（30 PNG + 2 页） —— 由截图与文档导出
-#    .desktop-build/  Electron 打包临时目录    —— npm run package:electron
-#
-#    注意：deliverables/terra-course/source/ 里有 12 个「生成器源码」
-#    （build.mjs / layout.mjs / presentation.mjs 等，77 KB）。它们随整个
-#    目录被移出版本库，但没有丢失——仍可从历史取回：
-#      git show 0a229fb:deliverables/terra-course/source/build.mjs
-#    如需长期保留，建议把它们移到 tools/course-deck/ 后再提交。
+# ── 3. 发布与交付：体积大（约 2.0 GB），非源码 ────────────────────────────
+#    release/         Windows 免安装包与 Electron 打包结果
+#    deliverables/    课程展示资料包
+#    路演/            路演材料
+#    .desktop-build/  Electron 打包临时目录
+#    打包链路已随桌面端一并弃用，这批内容已移至仓库外归档（见 docs/repo-layout.md）。
 release/
 deliverables/
+路演/
 .desktop-build/
 
-# ── 4. 质量验证产物：由 tests/*-browser.mjs 在运行时生成（合计约 1.4 GB） ──
+# ── 4. 质量验证产物：由 tests/*browser*.mjs 运行时生成（约 1.4 GB） ────────
 #    qa/ 与 shots/ 是 Playwright 截图与对比结果，不是源码。
 qa/
 shots/
@@ -58,18 +60,34 @@ playwright-report/
 src/scenes/*.blend1
 src/scenes/*.blend2
 
-# ── 5. 程序化纹样的导出版：由 src/decals.js 用 Canvas 重绘，可再生成 ──────
-#    运行时纹样来自 decalImage() 的 dataURL（src/main.js:37），这四个 PNG 不被加载。
-#    重新导出：node tests/browser-smoke.mjs（输出到 qa/）
+# ── 5. 已弃用的桌面端打包链路（后续 Windows 产物由 Godot export preset 生成） ─
+#    desktop/ 的 3 个文件（Electron 主进程 / terra:// 协议 / 免安装启动器）
+#    与 tools/ 下的打包脚本、一次性补丁、文案抽取器仍在本地，只是不再入库。
+#    ⚠ 注意此处用「文件级模式」而非 tests/ 或 tools/ 目录级排除：
+#      目录级排除会让 git 的 ! 反向包含失效，也会让将来新增的单测永远进不了库。
+desktop/
+tools/*.mjs
+tools/*.json
+tools/*.txt
+tools/make-logo.py
+
+# ── 6. 浏览器 E2E 脚本（产物是 qa/ 与 shots/，需要 playwright-core） ───────
+#    tests/*.test.js 单测仍在库内，不受本规则影响。
+tests/*browser*.mjs
+
+# ── 7. 程序化纹样的导出版：由 src/decals.js 用 Canvas 重绘，可再生成 ──────
+#    运行时纹样来自 decalImage() 的 dataURL（src/decals.js:124），这四个 PNG 不被加载。
+#    重新导出：node tests/browser-smoke.mjs（输出到 qa/）。
 public/decals/
 
-# ── 6. 源码目录中的孤儿文件：无任何引用，可删除 ───────────────────────────
+# ── 8. 源码目录中的孤儿文件：无任何引用，可删除 ───────────────────────────
 #    src/Logo.png        1.2 MB，与 src/assets/logo-mark.png 重复的旧版 logo
 #    src/img_v3_*.jpg    10.8 KB，聊天工具残留图片
+#    src/scenes/build.log  Blender 导出日志，随 *.log 一并忽略
 /src/Logo.png
 /src/img_v3_*.jpg
 
-# ── 8. 本地环境覆盖 ───────────────────────────────────────────────────────
+# ── 9. 本地环境覆盖 ───────────────────────────────────────────────────────
 .env
 .env.*
 *.local

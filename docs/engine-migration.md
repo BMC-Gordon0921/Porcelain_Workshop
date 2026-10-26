@@ -168,4 +168,37 @@
 - **要做，而且值得做**：核心玩法（像素制瓷 + 评分 + 火候）是**引擎无关的纯逻辑**，这在这个体量的项目里非常少见，等于已经把最难搬的部分搬完了。
 - **但要先做 §6 的解耦**，否则会花 2 周在目标引擎里重新发明 `localStorage`、`requestAnimationFrame` 和 CSS 布局。
 - **不要选 Unreal**；**Godot 4 是性价比最高的落脚点**，除非团队明确要求 TS 生态，那选 Cocos Creator。
-- **如果目标只是 Windows 单机发行**，现有 `release/开窑啦-即开即玩-Windows.zip` 已经解决了，迁移是纯粹的长期维护投资，不是交付必需。
+- **如果目标只是 Windows 单机发行**，迁移是纯粹的长期维护投资，不是交付必需：已有免安装包（现归档在仓库外 `D:\ECNU\BOKE\Porcelain_Workshop_Archive\release\`）在本机就能跑，没必要为了发行换引擎。
+
+---
+
+## 9. 仓库瘦身对迁移的影响（2026-10-26）
+
+上一轮已把仓库收敛到「源码 + 运行必需资源 + 可独立运行的单测」约 78 个文件（明细见 `docs/repo-layout.md`）。对迁移计划的净影响是**正面的**，但有三处必须提前注意：
+
+### 9.1 变好的部分
+
+| 变化 | 对迁移的意义 |
+|---|---|
+| `desktop/` 与 `tools/package-*.mjs` 移出版本库 | Web 版与 Electron 外壳彻底解耦，不会有人误以为「桌面端是产品形态」。Godot 的 export preset 直接替代这 3 个文件。 |
+| 6 个 devDependencies 删除（electron / @electron/* / playwright-core / png-to-ico） | Godot 侧不需要 Node 工具链；Web 版只剩 `three` + `vite`，移植时阅读 `package.json` 不会再被无关依赖干扰。 |
+| 浏览器 E2E（12 个 `tests/*browser*.mjs`）只留本机 | 这些脚本的价值是**行为规格文档**：32 万字符里写清了教学强制顺序、12 秒火候、双语切换、资源释放。迁移时应把它们当验收清单读，而不是当测试跑（Godot 里重写同样的用例，Godot 单测用 GUT 或 `--headless` 脚本）。 |
+| `qa/`、`shots/`、`.desktop-build/`、`release/` 清理 | 工作区从 3.4 GB 降到约 220 MB，迁移时把整个仓库拖进新工程目录的成本几乎为零。 |
+
+### 9.2 必须带走、且**没有**被 gitignore 的迁移输入
+
+这 4 类文件是迁移的原料，全部仍在版本库内，克隆即得：
+
+1. `src/scenes/*.blend` ×4（1.5 MB）—— 四站 GLB 的**唯一母版**。Godot 用 `glTF` 导入管线，仍需保留 .blend 以便将来改美术；若只想复用现成 GLB，可只带 `public/models/maps/*.glb`。
+2. `public/models/maps/*.glb` + `manifest.json` ×5 —— 265,072 三角面 / 119 材质 / 0 贴图 / 0 动画。Godot 可直接导入 glTF，但 `manifest.json` 里的锚点（工作台位置）需要在 Godot 里重建成 `Node3D` 标记点。
+3. `src/assets/pottery backround music.wav`（22 MB）+ `src/assets/fonts/`（含 OFL 许可文本，**迁移后仍须随字体分发**）。
+4. `src/*.js` 里的 A 级逻辑（`sculpture.js` 427 行纯 `Uint8Array`、`workshop.js` 65 行数值模型）—— 这是最该原样搬走的部分。
+
+### 9.3 迁移时**不要**带走的东西
+
+- `.git/` 历史（109 MB，含已删除的 91 MB deliverables 历史）：新引擎工程建议另起 git 仓库，或 `git filter-repo` 后再迁，避免把 Web 版历史拖过去。
+- `tests/*browser*.mjs`、`qa/`、`shots/`：Playwright 绑定 DOM，换成 Godot 后全部失效。
+- `src/*.css`（约 100 KB / 10 个文件）：CSS 布局在引擎里没有对等物，属于重写项。
+- `vite.config.js`、`index.html`、`.github/workflows/deploy-pages.yml`：Web 专属发布链路。
+
+> 一句话：**仓库瘦身把「迁移时要读的东西」从 5768 个文件压到 78 个，这是这次清理对迁移最大的实际收益。**
