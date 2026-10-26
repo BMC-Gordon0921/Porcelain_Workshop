@@ -11,7 +11,15 @@ npm ci
 npm run dev
 ```
 
-打开 http://127.0.0.1:5174/。`npm run build` 生成生产版本；`npm run preview` 预览生产版本；`npm test` 运行游戏逻辑测试。
+打开 http://127.0.0.1:5174/ ；`npm run build` 生成生产版本；`npm run preview` 预览生产版本；`npm test` 运行游戏逻辑测试。
+
+## Windows 免安装运行包
+
+交付文件：`release/开窑啦-即开即玩-Windows.zip`。完整解压后，双击 **双击开始游戏.cmd**。游戏使用 Windows 自带 Edge 或默认浏览器打开；内置 Node.js、四个场景、音乐和字体，无需安装依赖或联网。游玩期间保留启动窗口，结束后关闭即可。
+
+进度和设置保存在浏览器的 `http://127.0.0.1:49173/` 站点数据中，使用相同浏览器重新启动可继续。不要清除该站点数据。
+
+`npm run build` 后执行 `npm run package:win` 可重新导出；`npm run test:desktop` 从 ZIP 解压并验证四站资源、音乐、游戏入口和存档恢复。Electron 实验封装保留为 `npm run package:electron`，当前交付使用已验证的浏览器启动版本。
 
 ## 开场、声音与地图
 

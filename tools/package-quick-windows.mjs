@@ -1,0 +1,15 @@
+import {cp,mkdir,writeFile,readFile,stat} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const root=fileURLToPath(new URL('../',import.meta.url)),folder=path.join(root,'release/开窑啦-即开即玩'),zip=path.join(root,'release/开窑啦-即开即玩-Windows.zip');
+await mkdir(path.join(folder,'runtime'),{recursive:true});await cp(path.join(root,'dist'),path.join(folder,'game'),{recursive:true});
+await cp(process.execPath,path.join(folder,'runtime/node.exe'));await cp(path.join(root,'desktop/start-game.cjs'),path.join(folder,'start-game.cjs'));
+await writeFile(path.join(folder,'双击开始游戏.cmd'),'@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0"\r\n"%~dp0runtime\\node.exe" "%~dp0start-game.cjs"\r\nif errorlevel 1 pause\r\n','utf8');
+await writeFile(path.join(folder,'使用说明.txt'),'\ufeff开窑啦！ · Windows 即开即玩版\r\n\r\n1. 完整解压文件夹。\r\n2. 双击“ 双击开始游戏.cmd ”，游戏会在 Windows 自带 Edge 或默认浏览器中打开。\r\n3. 保留启动窗口，游玩结束后关闭启动窗口即可。\r\n\r\n已内置 Node.js 运行环境、四个场景、音乐和字体；无需 npm、Python、安装依赖或联网。请勿单独移动启动文件。\r\n\r\n存档自动保存在浏览器中，关闭后再启动可继续。请使用同一 Windows 用户和浏览器，不要清除该站点的数据。\r\nWASD / 方向键移动，F 操作，Esc 关闭面板；烧窑时按住空格鼓风。\r\n\r\n如果浏览器没有自动打开，请手动访问 http://127.0.0.1:49173/\r\n','utf8');
+await mkdir(path.join(folder,'Licenses'),{recursive:true});await cp(path.join(root,'node_modules/three/LICENSE'),path.join(folder,'Licenses/THREE.txt'));await cp(path.join(root,'src/assets/fonts/OFL-ZCOOL-KuaiLe.txt'),path.join(folder,'Licenses/ZCOOL-KuaiLe.txt'));
+await writeFile(path.join(folder,'Licenses/Node.js.txt'),'Node.js '+process.version+'\r\nLicense: https://github.com/nodejs/node/blob/'+process.version+'/LICENSE\r\n');
+const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command','$ErrorActionPreference = "Stop"; Compress-Archive -LiteralPath $env:TERRA_QUICK_FOLDER -DestinationPath $env:TERRA_QUICK_ZIP -CompressionLevel Fastest -Force'],{stdio:'inherit',windowsHide:true,env:{...process.env,TERRA_QUICK_FOLDER:folder,TERRA_QUICK_ZIP:zip}});
+if(result.status!==0)throw Error('ZIP failed');
+const hash=createHash('sha256').update(await readFile(zip)).digest('hex');await writeFile(zip+'.sha256',hash+'  '+path.basename(zip)+'\n');console.log(JSON.stringify({folder,zip,bytes:(await stat(zip)).size,sha256:hash},null,2));
