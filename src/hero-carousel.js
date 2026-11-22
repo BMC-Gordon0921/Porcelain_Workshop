@@ -1,3 +1,4 @@
+import {canvasSize} from './platform/canvas-metrics.js';
 import * as THREE from 'three';
 import {createRenderer} from './platform/renderer.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
@@ -45,7 +46,7 @@ export function createHeroCarousel(host){
   controls.update();
  }
  function resize(){
-  const {width,height}=canvas.getBoundingClientRect();if(!width||!height)return;
+  const {w:width,h:height}=canvasSize(canvas);if(!width||!height)return;
   renderer.setSize(width,height,false);camera.aspect=width/height;
   const distance=6.4/Math.min(1,camera.aspect/1.3);camera.position.set(0,distance*.29,distance);camera.lookAt(0,0,0);camera.updateProjectionMatrix();
  }

@@ -371,8 +371,14 @@ $('rotate-button').onclick=e=>{e.preventDefault();void toggleRotate();};
 onRotateChange(rotated=>{
  document.documentElement.dataset.input=inputMode;
  world.setDisplayRotation(rotated?90:0);
- requestAnimationFrame(()=>{world.resize();});
+ // 旋屏后 #app 的尺寸来自 CSS 变量，需要等两帧布局稳定再重算绘制缓冲；
+ // 再补一次 240ms 兜底，覆盖字体/图片回流导致的二次布局。
+ const relayout=()=>{world.resize();};
+ requestAnimationFrame(()=>{requestAnimationFrame(relayout);});
+ setTimeout(relayout,240);
 });
+// 画布自身的尺寸变化（旋屏、面板开合、软键盘）也要重算，避免缓冲与布局不一致。
+if(typeof ResizeObserver==='function'){const ro=new ResizeObserver(()=>{world.resize();});ro.observe($('world'));}
 $('touch-interact').onpointerdown=e=>{e.preventDefault();if(!started||activeTask||helpOpen)return;nearest=world.nearest();if(nearest)openStation(nearest.id);};
 function frame(ms){
  const t=ms/1000,elapsed=previousTime?Math.max(0,t-previousTime):0,dt=Math.min(.05,elapsed);previousTime=t;
@@ -393,7 +399,7 @@ opening=createOpening($('welcome'),{getState:()=>state,onStart:enterGame,onNewGa
 document.addEventListener('click',e=>{if(e.target.closest('[data-lang-toggle]'))toggleLang();});
 function refreshLang(){document.querySelectorAll('[data-lang-toggle]').forEach(b=>{b.textContent=langButtonLabel();b.setAttribute('aria-label',document.documentElement.lang==='en'?'切换到中文':'Switch to English');});}
 onLangChange(refreshLang);initI18n();refreshLang();
-if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame};
+if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame,toggleRotate:rot=>void toggleRotate(rot)};
 updateUI();requestAnimationFrame(frame);
 // 切后台/退出前把去抖中的存档落盘，容器里可能随时冻结页面
 window.addEventListener('pagehide',flushStorage);

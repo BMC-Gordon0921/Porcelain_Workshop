@@ -1,3 +1,4 @@
+import {canvasPoint} from './platform/canvas-metrics.js';
 import {SIZE,PALETTE,clayEdge} from './sculpture.js';
 function layer(pixels,flatColor){const c=document.createElement('canvas');c.width=c.height=SIZE;const ctx=c.getContext('2d'),img=ctx.createImageData(SIZE,SIZE);for(let i=0;i<pixels.length;i++){if(!pixels[i])continue;const color=flatColor||PALETTE[pixels[i]],n=parseInt(color.slice(1),16);img.data[i*4]=n>>16;img.data[i*4+1]=(n>>8)&255;img.data[i*4+2]=n&255;img.data[i*4+3]=255;}ctx.putImageData(img,0,0);return c;}
 export function drawSculpture(canvas,pixels,{cursor=null,grid=false,target=null,line=null}={}){
@@ -26,7 +27,7 @@ export function thumbnail(pixels,size=224){const c=document.createElement('canva
 export function attachEditor(canvas,challenge,{mode='cut',onChange=()=>{},onFinish=()=>{},onHint=()=>{},canInteract=()=>true}={}){
  const tool=mode;let color=2,radius=mode==='push'?18:mode==='paint'?5:4,dragging=false,last=null,origin=null,strokeBase=null,cursor=null,grab=null,pointerId=null;
  const options={guides:tool!=='paint',symmetric:true,protect:true,line:false,mirror:false};
- const pos=e=>{const r=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(SIZE,(e.clientX-r.left)/r.width*SIZE)),y:Math.max(0,Math.min(SIZE,(e.clientY-r.top)/r.height*SIZE))};};
+ const pos=e=>{const {x,y,w,h}=canvasPoint(canvas,e.clientX,e.clientY);return {x:Math.max(0,Math.min(SIZE,x/w*SIZE)),y:Math.max(0,Math.min(SIZE,y/h*SIZE))};};
  function render(){drawSculpture(canvas,challenge.piece.pixels,{cursor,grid:true,target:options.guides?challenge.target:null,line:dragging&&options.line?{from:origin,to:last}:null});canvas.dataset.edits=String(challenge.edits);canvas.dataset.guides=String(options.guides);}
  function apply(p){const from=tool==='push'||options.line?origin:last;if(challenge.stroke(from.x,from.y,p.x,p.y,radius,tool,color,(tool==='push'||options.line)?strokeBase:null,grab,options))onChange();last=p;}
  function hover(p){const edge=tool==='push'?(dragging?grab:clayEdge(challenge.piece.pixels,p.x,p.y,radius,5)):null;cursor={...p,radius,tool,edge};if(tool==='push')onHint(edge?(edge.horizontal?'沿水平方向推压或拉伸':'沿竖直方向推压或拉伸'):'请将手掌移到瓷泥边缘');}

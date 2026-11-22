@@ -182,6 +182,7 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | 订单栏内容越界压到底部信息条（iPad 214×58、PC 252×40） | 只给了固定 `top`，没给 `bottom`，`max-height:calc(100dvh - 185px)` 也没算 top inset | `[data-layout=wide] #app > .commissions{bottom:calc(74px+inset);max-height:none;overflow-y:auto}` |
 | 「当前目标」引导卡压住摇杆/操作键/交互卡 | 卡片沿用桌面左下角定位 | 平板/桌面预览挪到摇杆上方（`bottom:196px`、`max-width:46%`）；手机触屏直接 `display:none`（内容与教学徽标重复） |
 | 手机「操作」键压住底部信息条、`↺ 恢复视角` 与它重叠 | 两者都靠右下 | 操作键 `bottom:calc(52px+inset)`；恢复视角移到摇杆上方 `bottom:192px` |
+| 平板竖屏下「游历图」「贴画工坊」够不到（点不到、被底栏挡住） | 订单栏内容比可视高度多约 20px，按钮落到滚动区之外 | 触屏 + 宽屏收掉 `.efficiency-indicator`、把 `.reference-card>p` 收成两行（`-webkit-line-clamp:2`）、参考图限高 56px；订单栏保留 `overflow-y:auto` 兜底 |
 
 > 量化方式：`tools/minitool/audit_layout.mjs`（`W/H/IN_TOP/IN_SIDE` 环境变量）逐屏量 HUD 盒子、两两重叠、越界元素、文本截断与面板滚动；`tools/minitool/audit_panels.mjs` / `check_upgrade.mjs` 查面板内部（画布是否被 sticky 覆盖、子块是否横向越界）。三种视口跑完 `errors: []`，重叠项只剩「HUD 浮在 3D 画布之上」这种既有设计。
 
@@ -202,16 +203,26 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 **⑤ 横屏紧凑布局（`html[data-layout=ls]`，由 JS 判定：真机横屏且高 ≤520px，或用户手动旋屏）**：不是把界面旋转 90° 的假横屏，而是真正的响应式：
 
 - 顶栏 54px、底栏 38px，`#world-wrap` 四边重新让位（右侧留给 172px 宽的订单竖栏）；
-- 订单栏改成右侧窄栏，隐藏 `.scene-heading/.scene-path/.preset-path/.reference-card>img/>p/.reference-link/.efficiency-indicator/.section-heading/.goal-card`，只留「第几关 + 作品名 + 贴画目标」；
+- 订单栏改成右侧窄栏，隐藏 `.scene-heading/.scene-path/.preset-path/.reference-card>p/.reference-link/.efficiency-indicator/.section-heading/.goal-card`，只留「第几关 + 参考图（限高 62px）+ 作品名 + 贴画目标」——参考图是玩家判断这一关要做什么的主要线索，横屏也必须留着；
 - 弹层：`task-artboard 148px`、`kiln-view 150px`、`serve-art 140px`、`upgrade-detail canvas 150px`、确认条 static；
 - 开屏页：故事页（`[data-opening-stage=intro]`）压成双栏海报（标题 52px、瓷碗容器 240px、隐藏轮播控件与「暂停背景」）；轮播页（`[data-opening-stage=map]`）左栏瘦身（隐藏 `.opening-lead`、`.opening-chapter p`、`.opening-rules`），右栏场景卡限高 200px，时间轴压到一行；
 - 触屏方向键、操作键、恢复视角都按 `--mt-*inset` 定位，避开订单栏与底部信息条。
+
+**⑥ 画布尺寸与旋转坐标（横版渲染的隐藏坑）**：整页 `rotate(90deg)` 之后，`getBoundingClientRect()` 返回的是旋转后的**轴对齐包围盒**，宽高互换。凡是拿它当画布尺寸的地方都会坏：
+
+| 症状 | 根因 | 处理 |
+| --- | --- | --- |
+| 横版下 3D 场景被横向拉长、相机取景不对 | `src/world.js` 的 `resize()` 用 `rect.width/height` → `renderer.setSize(579,301)` 把 579×301 的布局塞进 301×579 的缓冲 | 改用 `canvas.clientWidth/clientHeight`（不受 transform 影响），并在旋屏回调里双 `rAF` + 240ms 兜底 + `ResizeObserver` 各重算一次 |
+| 升级面板工作台预览、贴画工坊、窑火视图的 3D 缩略图空白/变形 | `workbench-model.js` / `decals.js` / `kiln-view.js` / `hero-carousel.js` 各自用 `getBoundingClientRect()` 算尺寸 | 统一换成 `canvasSize(canvas)`（`src/platform/canvas-metrics.js`） |
+| 横版下在瓷泥上画/推压，笔触落点偏一大截 | `sculpture-view.js` 用 `(clientX - rect.left)/rect.width` 映射像素格 | 换成 `canvasPoint(canvas, clientX, clientY)`，旋屏时做 90° 逆变换（屏幕 X → 布局 V、屏幕 Y → 布局 U） |
+
+`src/platform/canvas-metrics.js` 只有三个导出：`isDisplayRotated()`（读 `html[data-rotate]`）、`canvasSize(canvas)`、`canvasPoint(canvas, clientX, clientY)`。它不 import `safe-area.js`，模块无副作用，所以能在 node 里单测：`tests/canvas-metrics.test.js` 用「本地点 → 屏幕点 → 反解」的往返性质覆盖四角、中心与任意点，并校验零尺寸画布不会退化成 0。
 
 > 踩坑备忘：`[data-opening-stage=map] > .city-prologue{display:none}` 的特异性低于 `html[data-platform] .opening-screen > .city-prologue`，横屏覆盖 `display` 时若不带上 `[data-opening-stage=intro]`，会让已经隐藏的故事页重新出现（表现为两套文案叠在一起）。
 
 > 关于「怎么才能看到横屏」：工作台本身只有 iPhone / iPad / 桌面三种预览设备、没有旋转按钮，但它也不需要——顶栏的 `⟳` 按钮就是产品内的横版入口（点一下，`#app` 变 852×393 再旋转，系统方向不动）。真机横握时 `data-layout` 也会自动落到 `ls`，两套路径共用同一批规则。
 
-**验证方式**：容器内 `tools/minitool/verify_touch_rotate.mjs` 覆盖「触屏档摇杆出现 → 推杆位移非零 → 换轴后仍能移动 → 点 `⟳` 变 852×393 且画布重排 → 再点还原 → 切桌面档自动变键盘方案」共 11 项断言（`qa/minitool/verify-touch-rotate.json`，当前全绿）；`tools/minitool/shots_devices.mjs` 按 iPhone / iPad / 桌面 / 旋屏四态截图（`qa/minitool/final/`）。`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
+**验证方式**：容器内 `tools/minitool/verify_touch_rotate.mjs` 覆盖「触屏档摇杆出现 → 推杆位移非零 → 换轴后仍能移动 → 点 `⟳` 变 852×393 且画布重排 → 再点还原 → 切桌面档自动变键盘方案」共 11 项断言（`qa/minitool/verify-touch-rotate.json`，当前全绿）；`tools/minitool/shots_devices.mjs` 按 iPhone / iPad / 桌面 / 旋屏四态截图（`qa/minitool/final/`）。`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。横版专项用 `tools/minitool/debug_landscape.mjs`（容器内逐态量画布**宽高比是否等于布局宽高比**，并把 HUD 里每个可点元素的中心点丢给 `elementFromPoint` 判「够不够得到」——这是「按钮被遮挡」唯一可量化的判据）、`debug_canvas_panels.mjs`（旋屏下打开升级/贴画面板，检查面板内画布）、`check_hero_canvas.mjs`（截图裁出开屏瓷碗区域，交给 Pillow 统计像素多样性，判断是否真的画出来了）。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
 
 ## 8. 后续待办
 
@@ -220,4 +231,4 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 3. 触屏手感调优（拖拽旋转、笔刷大小手势），以及低端机的动态降档（`renderer.__webglFlavor` 已就绪）。
 4. 若真机出现 WebGL 完全不可用，再补 2D 兜底视图（当前只有错误态）。
 5. 触屏文案还剩教学卡「按 WASD、方向键或屏幕方向按钮移动」（已含「屏幕方向按钮」，可接受）；其余桌面味文案（交互卡、触屏键、制作面板底部）已在本轮改掉。
-6. 横屏故事页的 3D 瓷碗在扁画布里会被相机压扁裁切，当前直接收起轮播、只留光晕与印章；若要在横屏也展示瓷碗，需要给 `hero-carousel` 加按画布比例取景的相机分支。
+6. 横屏故事页的 3D 瓷碗已改为 240px 高的紧凑取景框（画布尺寸修好后不再被压成一条线）；若真机上仍显拥挤，可再给 `hero-carousel` 加按画布比例自适应取景的相机分支。

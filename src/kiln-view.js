@@ -1,3 +1,4 @@
+import {canvasSize} from './platform/canvas-metrics.js';
 import * as THREE from 'three';
 import {createRenderer} from './platform/renderer.js';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -53,7 +54,7 @@ export function createKilnPreview(canvas,state){
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(37,1,.1,30);camera.position.set(3.1,2.85,6.7);camera.lookAt(0,1.5,0);
  scene.add(new THREE.HemisphereLight(0xfff0d7,0x8b7e6a,2.6));const sun=new THREE.DirectionalLight(0xffedd2,3.3);sun.position.set(-3,6,5);scene.add(sun);
  const kiln=createKilnModel();scene.add(kiln.group);const floor=new THREE.Mesh(new THREE.CylinderGeometry(1.65,1.7,.12,48),new THREE.MeshStandardMaterial({color:0xd5bea0,roughness:1}));floor.position.y=-.07;scene.add(floor);
- const resize=()=>{const r=canvas.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=Math.max(1,r.width)/Math.max(1,r.height);camera.updateProjectionMatrix();renderer.render(scene,camera);};
+ const resize=()=>{const {w,h}=canvasSize(canvas);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);};
  const observer=new ResizeObserver(resize);observer.observe(canvas);resize();let disposed=false;
  function update(dt,current,paused=false){if(disposed)return;kiln.setPiece(current.piece.pixels,current.piece.revision);kiln.update(paused?0:dt,{firing:!!current.kiln,heat:current.kiln?.heat||0,level:current.stationLevel('kiln'),reduced:matchMedia('(prefers-reduced-motion: reduce)').matches});renderer.render(scene,camera);canvas.dataset.heat=String(current.kiln?.heat||0);canvas.dataset.paused=String(paused);}
  update(0,state);

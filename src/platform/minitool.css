@@ -142,6 +142,25 @@ html[data-platform=minitool][data-layout=wide] #app > .commissions {
   padding-bottom: 6px;
 }
 
+/* 触屏 + 宽屏（平板竖屏 / 手机横置前的宽视口）：订单栏内容比可视高度多约 20px，
+   导致最下面的「游历图」「贴画工坊」要滚动才够得到。这里把冗长的说明收掉，
+   保证所有按钮一屏可见（滚动条只作为兜底）。 */
+html[data-platform=minitool][data-input=touch][data-layout=wide] .efficiency-indicator {
+  display: none;
+}
+
+html[data-platform=minitool][data-input=touch][data-layout=wide] .reference-card > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+html[data-platform=minitool][data-input=touch][data-layout=wide] .reference-card > img {
+  max-height: 56px;
+  object-fit: cover;
+}
+
 /* 宽屏（平板/桌面预览）里「操作」键原落在订单栏底下，挪到 3D 视口右下角 */
 @media (min-width: 761px) {
   html[data-platform=minitool] .touch-controls #touch-interact {
@@ -437,17 +456,19 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     top: calc(60px + var(--mt-top-inset));
     left: auto;
     right: calc(8px + var(--mt-right-inset));
-    bottom: auto;
+    bottom: calc(44px + var(--mt-bottom-inset));
     width: 156px;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
-  /* 竖排栏里只留「第几关 + 作品名 + 进价」，其余长文案收掉 */
+  /* 竖排栏里只留「第几关 + 参考图 + 作品名 + 进价」，其余长文案收掉 */
   html[data-platform=minitool][data-layout=ls] .scene-heading,
   html[data-platform=minitool][data-layout=ls] .scene-path,
   html[data-platform=minitool][data-layout=ls] .preset-path,
   html[data-platform=minitool][data-layout=ls] .section-heading,
   html[data-platform=minitool][data-layout=ls] .goal-card,
-  html[data-platform=minitool][data-layout=ls] .reference-card > img,
   html[data-platform=minitool][data-layout=ls] .reference-card > p,
   html[data-platform=minitool][data-layout=ls] .reference-card .reference-link,
   html[data-platform=minitool][data-layout=ls] .efficiency-indicator,
@@ -466,6 +487,16 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     display: flex;
     justify-content: space-between;
     font-size: 11px;
+  }
+
+  /* 参考图是玩家判断「这关要做什么」的主要线索，横屏也要留一张小图 */
+  html[data-platform=minitool][data-layout=ls] .reference-card > img {
+    display: block;
+    width: 100%;
+    max-height: 62px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin: 3px 0 2px;
   }
 
   html[data-platform=minitool][data-layout=ls] .reference-card h3 {
@@ -655,9 +686,18 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     object-fit: contain;
   }
 
-  /* 横屏里 3D 瓷碗取景会被压扁裁切，改为只留光晕与印章的极简版 */
+  /* 横屏里 3D 瓷碗改为紧凑方形取景（画布尺寸已经用 clientWidth/clientHeight，
+     不再被旋转包围盒污染，2.2:1 的扁画布才会把碗压扁，这里给足高度） */
   html[data-platform=minitool][data-layout=ls] .prologue-porcelain > .prologue-carousel {
-    display: none;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 240px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain > .prologue-carousel > canvas {
+    width: 100%;
+    height: 100%;
   }
 
   html[data-platform=minitool][data-layout=ls] .porcelain-halo {

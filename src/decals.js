@@ -1,3 +1,4 @@
+import {canvasSize} from './platform/canvas-metrics.js';
 import * as THREE from 'three';
 import {createRenderer} from './platform/renderer.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
@@ -149,7 +150,7 @@ export function createBowlPreview(canvas,{index=0,decorated=false,onApply=null,a
  scene.add(new THREE.HemisphereLight(0xf7faff,0x92979b,.85));const light=new THREE.DirectionalLight(0xffffff,1.6);light.position.set(-3,5,4);scene.add(light);
  let bowl=bowlModel(index,decorated);scene.add(bowl);let raf=0,disposed=false,drag=null,rotation=-.32,last=0;
  const disposeModel=model=>{const materials=new Set();model.traverse(m=>{if(m.isMesh){m.geometry.dispose();materials.add(m.material);}});materials.forEach(m=>m.dispose());};
- const resize=()=>{const r=canvas.getBoundingClientRect();const w=Math.max(1,r.width||640),h=Math.max(1,r.height||400);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
+ const resize=()=>{const {w,h}=canvasSize(canvas);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
  const observer=new ResizeObserver(resize);observer.observe(canvas);resize();
  function render(ms=0){if(disposed)return;const dt=Math.min(.05,(ms-last)/1000);last=ms;if(!drag)rotation+=dt*.16;bowl.rotation.y=rotation;renderer.render(scene,camera);if(animate)raf=requestAnimationFrame(render);}
  const down=e=>{drag={start:e.clientX,last:e.clientX,moved:false};canvas.setPointerCapture(e.pointerId);};
