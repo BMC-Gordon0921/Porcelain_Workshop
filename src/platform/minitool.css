@@ -1,0 +1,62 @@
+/* 小工具容器专属的版式修正：只在 html[data-platform=minitool] 下生效，桌面/原生构建零影响。
+   1. 让开状态栏、右侧胶囊按钮与底部 home 指示条；
+   2. 补 Chrome 61（安卓 WebView 基线）不认的 100dvh —— 用 100vh 兜底。 */
+
+html[data-platform=minitool] {
+  --mt-top-inset: 0px;
+  --mt-bottom-inset: 0px;
+}
+
+html[data-platform=minitool] #app {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* 全屏开屏页整体下移，避开状态栏与胶囊 */
+html[data-platform=minitool] .opening-screen {
+  top: var(--mt-top-inset);
+  right: 0;
+  bottom: var(--mt-bottom-inset);
+  left: 0;
+}
+
+html[data-platform=minitool] .topbar {
+  top: var(--mt-top-inset);
+}
+
+html[data-platform=minitool] #world-wrap {
+  top: calc(95px + var(--mt-top-inset));
+  bottom: calc(58px + var(--mt-bottom-inset));
+}
+
+html[data-platform=minitool] .bottom-bar {
+  bottom: var(--mt-bottom-inset);
+}
+
+/* 弹层让开外壳：容器里 .overlay 用 inset:0 铺满，标题会被状态栏/胶囊压住 */
+html[data-platform=minitool] .overlay {
+  padding-top: calc(14px + var(--mt-top-inset));
+  padding-right: 20px;
+  padding-bottom: calc(14px + var(--mt-bottom-inset));
+  padding-left: 20px;
+}
+
+html[data-platform=minitool] .overlay > * {
+  max-height: 100%;
+}
+
+@media (max-width: 760px) {
+  html[data-platform=minitool] .topbar {
+    height: 73px;
+  }
+
+  /* 手机竖屏下工坊视口本来就在订单条下方，顶部再让开胶囊 */
+  html[data-platform=minitool] #world-wrap {
+    top: calc(171px + var(--mt-top-inset));
+    bottom: calc(112px + var(--mt-bottom-inset));
+  }
+
+  html[data-platform=minitool] .opening-screen .city-prologue {
+    min-height: calc(100vh - 70px - var(--mt-top-inset));
+  }
+}

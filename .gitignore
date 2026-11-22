@@ -91,3 +91,16 @@ public/decals/
 .env
 .env.*
 *.local
+
+# ── 10. 小红书小工具移植（Redbook_transplant）────────────────────────────
+#    .skill/            随包下载的开发规范 Skill，不入库（来源与版本记在 docs/）
+#    dist-minitool/     minitool 构建产物（zip 另由 tools/minitool/pack.mjs 生成）
+#    minitool/gen/      资源转换中间产物（图片/音频/几何，可再生成）
+#    probe/assets/tone.*  探针音频夹具，由 gen-tone.mjs 生成
+.skill/
+dist-minitool/
+dist-minitool.zip
+dist-probe/
+minitool/gen/
+tools/minitool/probe/assets/tone.mp3
+tools/minitool/probe/assets/tone.wav

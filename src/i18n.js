@@ -3,6 +3,7 @@ import {EXPERIENCE_EN} from './experience-i18n.js';
 // Text is translated at the DOM level so every template keeps working untouched.
 import {WORKSHOP_EN} from './workshop-i18n.js';
 import {JOURNEY_EN} from './journey-i18n.js';
+import {readStorage, writeStorage} from './platform/storage.js';
 const STORAGE_KEY = 'terra-lang';
 const CJK = /[\u4e00-\u9fa5]/;
 
@@ -679,7 +680,7 @@ export function setLang(next, {silent = false} = {}) {
   lang = next === 'en' ? 'en' : 'zh';
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
   try {
-    localStorage.setItem(STORAGE_KEY, lang);
+    writeStorage(STORAGE_KEY, lang);
   } catch {}
   if (lang === 'en') startObserver();
   else if (observer) {
@@ -708,7 +709,7 @@ export function langButtonLabel() {
 export function initI18n() {
   let stored = null;
   try {
-    stored = localStorage.getItem(STORAGE_KEY);
+    stored = readStorage(STORAGE_KEY);
   } catch {}
   const target = stored === 'en' || stored === 'zh' ? stored : 'zh';
   setLang(target, {silent: true});

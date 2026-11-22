@@ -1,3 +1,4 @@
+import './platform/three-compat.js';
 import './style.css';
 import './challenge.css';
 import './journey.css';
@@ -8,6 +9,7 @@ import './tutorial.css';
 import './carousel.css';
 import './experience.css';
 import './opening-home.css';
+import './platform/minitool.css';
 import {createUpgradesView} from './upgrades-view.js';
 import {createGuidance} from './guidance.js';
 import {WORKBENCHES,WORKBENCH_IDS,UPGRADE_COSTS,fireBand,fireRatio,fireGrade,FIRE_DURATION,formatElapsed,clockPolicy} from './workshop.js';
@@ -26,9 +28,17 @@ import {createSfx} from './sfx.js';
 import {createMusic} from './music.js';
 import {TUTORIAL_STEPS} from './tutorial.js';
 import logoMark from './assets/logo-mark.png';
+import {initStorage, readStorage, writeStorage, flushStorage} from './platform/storage.js';
+import {initPlatformChrome} from './platform/safe-area.js';
 const $=id=>document.getElementById(id);
 let saved=null;
-try{saved=JSON.parse(localStorage.getItem(SAVE_KEY)||sessionStorage.getItem(SAVE_KEY)||localStorage.getItem('terra-porcelain-journey-v5')||sessionStorage.getItem('terra-porcelain-journey-v5')||sessionStorage.getItem('terra-porcelain-challenge-v4')||'null');}catch{}
+async function boot(){
+// 小工具容器：先拿到状态栏/胶囊/home 条的让位尺寸，再渲染首帧，避免顶部被盖住。
+await initPlatformChrome();
+// 小工具容器里 Storage 是异步的：先把已知 key 读进内存，再照常同步读取，
+// 否则首帧会读到空档，随后的自动存档会把真实进度覆盖掉。
+await initStorage([SAVE_KEY,'terra-porcelain-journey-v5','terra-porcelain-challenge-v4','terra-sound-enabled','terra-lang']);
+try{saved=JSON.parse(readStorage(SAVE_KEY)||readStorage('terra-porcelain-journey-v5')||readStorage('terra-porcelain-challenge-v4')||'null');}catch{}
 let state=SculptureChallenge.restore(saved);
 const world=createWorld($('world'));
 const guidance=createGuidance($('world-wrap'),world);
@@ -40,11 +50,11 @@ let clockAt=performance.now(),efficiencyRunning=false,kilnRunning=false,focused=
 const keys=new Set();let opening=null;
 const sfx=createSfx(),music=createMusic();
 let soundEnabled=true;
-try{soundEnabled=localStorage.getItem('terra-sound-enabled')!=='false';}catch{}
+try{soundEnabled=readStorage('terra-sound-enabled')!=='false';}catch{}
 if(!soundEnabled)sfx.setEnabled(false);music.setEnabled(soundEnabled);
 window.addEventListener('pointerdown',()=>{sfx.unlock();music.unlock();},{capture:true});
 window.addEventListener('keydown',()=>{sfx.unlock();music.unlock();},{capture:true});
-function save(){const value=JSON.stringify(state.serialize());try{sessionStorage.setItem(SAVE_KEY,value);}catch{}try{localStorage.setItem(SAVE_KEY,value);}catch{}}
+function save(){writeStorage(SAVE_KEY,JSON.stringify(state.serialize()));}
 function sound(kind,detail){sfx.play(kind,detail);}
 function uiButton(target){const button=target?.closest?.('button, [role="button"]');if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return null;return button;}
 let hoveredButton=null,pressedButton=null;
@@ -56,7 +66,7 @@ function toast(message){clearTimeout(toastTimeout);$('toast').textContent=messag
 $('brand-mark').innerHTML=`<img src="${logoMark}" alt="terra little clay workshop"/>`;$('coin-icon').innerHTML=icon('coin');
 $('sound-button').dataset.soundToggle='';
 function updateSoundButtons(){document.querySelectorAll('[data-sound-toggle]').forEach(button=>{button.innerHTML=icon(soundEnabled?'sound':'muted');button.title=soundEnabled?'关闭声音':'开启声音';button.setAttribute('aria-label',button.title);button.setAttribute('aria-pressed',String(soundEnabled));});}
-document.addEventListener('click',e=>{if(!e.target.closest('[data-sound-toggle]'))return;soundEnabled=!soundEnabled;sfx.setEnabled(soundEnabled);music.setEnabled(soundEnabled);try{localStorage.setItem('terra-sound-enabled',String(soundEnabled));}catch{}updateSoundButtons();if(soundEnabled)sound('tap');});
+document.addEventListener('click',e=>{if(!e.target.closest('[data-sound-toggle]'))return;soundEnabled=!soundEnabled;sfx.setEnabled(soundEnabled);music.setEnabled(soundEnabled);try{writeStorage('terra-sound-enabled',String(soundEnabled));}catch{}updateSoundButtons();if(soundEnabled)sound('tap');});
 updateSoundButtons();
 const stokeInputs=new Set();
 function changeStoke(source,on){syncClocks();if(on&&state.kiln&&!helpOpen&&!document.hidden&&focused)stokeInputs.add(source);else stokeInputs.delete(source);state.setStoking(stokeInputs.size>0);updateKiln();}
@@ -332,3 +342,8 @@ function refreshLang(){document.querySelectorAll('[data-lang-toggle]').forEach(b
 onLangChange(refreshLang);initI18n();refreshLang();
 if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame};
 updateUI();requestAnimationFrame(frame);
+// 切后台/退出前把去抖中的存档落盘，容器里可能随时冻结页面
+window.addEventListener('pagehide',flushStorage);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flushStorage();});
+}
+boot();

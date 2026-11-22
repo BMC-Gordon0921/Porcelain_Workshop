@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {reliefSculpture} from './relief-model.js';
 
@@ -48,7 +49,7 @@ export function createKilnModel(){
 }
 
 export function createKilnPreview(canvas,state){
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ const renderer=createRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(37,1,.1,30);camera.position.set(3.1,2.85,6.7);camera.lookAt(0,1.5,0);
  scene.add(new THREE.HemisphereLight(0xfff0d7,0x8b7e6a,2.6));const sun=new THREE.DirectionalLight(0xffedd2,3.3);sun.position.set(-3,6,5);scene.add(sun);
  const kiln=createKilnModel();scene.add(kiln.group);const floor=new THREE.Mesh(new THREE.CylinderGeometry(1.65,1.7,.12,48),new THREE.MeshStandardMaterial({color:0xd5bea0,roughness:1}));floor.position.y=-.07;scene.add(floor);

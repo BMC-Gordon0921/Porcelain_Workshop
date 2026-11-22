@@ -1,4 +1,6 @@
 import {defineConfig} from 'vite';
 
-// Relative URLs support both local previews and GitHub Pages project paths.
-export default defineConfig({base:'./'});
+export default defineConfig({
+  base: './',
+  define: {__MINITOOL__: 'false'}
+});

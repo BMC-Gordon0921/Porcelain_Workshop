@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {PLACES} from './places.js';
 import {loadSceneEnvironment} from './scene-environment.js';
 import {createWorkbenchModel} from './workbench-model.js';
@@ -157,7 +158,7 @@ function workshopSign(parent,text,accent='#8aa78d'){
 export function createWorld(canvas,{preview=false}={}) {
  let disposed=false;const removers=[];
  const listen=(target,event,fn,options)=>{if(preview)return;target.addEventListener(event,fn,options);removers.push(()=>target.removeEventListener(event,fn,options));};
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,preview?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+ const renderer=createRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,preview?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
  const scene=new THREE.Scene();
  /* Orbit camera. Dragging with the left button turns the workshop; the polar
     angle is clamped so the eye can rise overhead but never sink below the floor. */

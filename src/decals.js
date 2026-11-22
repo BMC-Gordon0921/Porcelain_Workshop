@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {SCENES} from './campaign.js';
 
@@ -142,7 +143,7 @@ export function bowlModel(index,decorated){
  group.position.y=-.66;return group;
 }
 export function createBowlPreview(canvas,{index=0,decorated=false,onApply=null,animate=true}={}){
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;
+ const renderer=createRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(33,1,.1,20);camera.position.set(0,1.35,5.0);camera.lookAt(0,.1,0);
  const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment(),environment=pmrem.fromScene(room,.04);scene.environment=environment.texture;scene.environmentIntensity=.65;room.dispose();pmrem.dispose();
  scene.add(new THREE.HemisphereLight(0xf7faff,0x92979b,.85));const light=new THREE.DirectionalLight(0xffffff,1.6);light.position.set(-3,5,4);scene.add(light);

@@ -12,5 +12,9 @@
   "dependencies": {
     "three": "^0.186.1",
     "vite": "^8.3.5"
+  },
+  "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
+    "three-legacy": "npm:three@^0.150.1"
   }
 }

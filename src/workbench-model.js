@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {createKilnModel} from './kiln-view.js';
 import {disposeSceneTree} from './scene-environment.js';
@@ -49,7 +50,7 @@ export function createWorkbenchModel({id,level=1}){
 }
 
 export function createWorkbenchPreview(canvas){
- const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ const renderer=createRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.1,50);camera.position.set(6,5.2,10);camera.lookAt(0,1.2,0);scene.add(new THREE.HemisphereLight(0xfff5df,0x687a72,3));const light=new THREE.DirectionalLight(0xffe4b8,3);light.position.set(-3,7,6);scene.add(light);
  let models=[],current=1,disposed=false;
  function draw(){const width=canvas.clientWidth,height=canvas.clientHeight;if(!width||!height)return;renderer.setScissorTest(true);models.forEach((model,i)=>{models.forEach(m=>m.group.visible=m===model);renderer.setViewport(i*width/2,0,width/2,height);renderer.setScissor(i*width/2,0,width/2,height);renderer.render(scene,camera);});renderer.setScissorTest(false);}
