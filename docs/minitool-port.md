@@ -298,3 +298,20 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 4. 若真机出现 WebGL 完全不可用，再补 2D 兜底视图（当前只有错误态）。
 5. 触屏文案还剩教学卡「按 WASD、方向键或屏幕方向按钮移动」（已含「屏幕方向按钮」，可接受）；其余桌面味文案（交互卡、触屏键、制作面板底部）已在本轮改掉。
 6. 横屏故事页的 3D 瓷碗已改为 240px 高的紧凑取景框（画布尺寸修好后不再被压成一条线）；若真机上仍显拥挤，可再给 `hero-carousel` 加按画布比例自适应取景的相机分支。
+
+## 9. 本地验证环境（单独启动）
+
+三种环境都可以独立启动，互不依赖：
+
+| 环境 | 命令 | 地址 | 用途 |
+| --- | --- | --- | --- |
+| 容器模拟器（最接近线上） | `npm run sim:minitool` | http://127.0.0.1:1166/ | 带小红书外壳、真实 `getWindowInfo` 安全区、可切 iPhone/iPad/桌面预览 |
+| 产物静态预览 | `npm run preview:minitool` | http://127.0.0.1:4173/ | 直接看 `dist-minitool/` 构建结果（无外壳，inset 全 0） |
+| 源码热更新 | `npm run dev:minitool` | http://localhost:5175/ | 改源码即时生效；无外壳，需手动注入 `data-platform` 与 `--mt-*` |
+| 重新打包 | `npm run build:minitool` | — | 生成 `dist-minitool/` 与 `dist-minitool.zip` |
+
+注意：
+- `npm run sim:minitool` 需要 redapp CLI，脚本里已写死安装路径 `C:/Users/17038/.dsh/dsh-ops/npm-global/redapp.cmd`；换机器改成自己的路径。
+- 模拟器端口由 redapp 分配，**不固定**，以启动日志里 `小工具调试工作台：http://127.0.0.1:xxxx/` 为准；要自动开浏览器就去掉 package.json 里脚本末尾的 `--no-open`。
+- `dev:minitool` 的 vite 只监听 IPv6 回环（`[::1]`），浏览器必须用 `localhost`，用 `127.0.0.1` 会 `ERR_CONNECTION_REFUSED`。
+- 模拟器里的 `pointer` 是 `fine`、`maxTouchPoints` 为 0，所以触屏控件靠 `__MINITOOL__` 兜底显示；真机才是真正的 `pointer: coarse`。
