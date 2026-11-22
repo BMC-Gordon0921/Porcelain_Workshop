@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "minitool" / "gen" / "img"
 # (源目录, 需要处理的条目, 输出子目录)——logo 在小工具包里跟 app.js 同级放 assets/
 SOURCES = [
-    (ROOT / "public", ("references", "maps", "decals"), ""),
+    (ROOT / "public", ("references", "decals"), ""),
     (ROOT / "src" / "assets", ("logo-mark.png", "logo-lockup.png"), "assets"),
 ]
 QUALITY = 88
@@ -66,6 +66,20 @@ def main() -> int:
                 record = convert(src, OUT, Path(prefix) / src.relative_to(base))
                 if record:
                     records.append(record)
+    map_source = ROOT / "public" / "maps" / "jingdezhen.png"
+    map_target = OUT / "maps" / "jingdezhen.png"
+    map_target.parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(map_source) as image:
+        resized = image.convert("RGB").resize((896, 896), Image.Resampling.LANCZOS)
+        resized.quantize(colors=256).save(map_target, optimize=True)
+        records.append({
+            "source": map_source.relative_to(ROOT).as_posix(),
+            "output": map_target.relative_to(OUT).as_posix(),
+            "srcBytes": map_source.stat().st_size,
+            "outBytes": map_target.stat().st_size,
+            "srcSize": list(image.size),
+            "outSize": [896, 896],
+        })
     total_in = sum(r["srcBytes"] for r in records)
     total_out = sum(r["outBytes"] for r in records)
     (ROOT / "minitool" / "gen" / "img-manifest.json").write_text(

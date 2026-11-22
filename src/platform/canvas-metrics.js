@@ -25,9 +25,9 @@ export function canvasPoint(canvas, clientX, clientY) {
   const {w, h} = canvasSize(canvas);
   const r = canvas.getBoundingClientRect();
   if (!isDisplayRotated()) return {x: clientX - r.left, y: clientY - r.top, w, h};
-  // 绕中心顺时针 90°：(u,v) → (v - h/2, -(u - w/2))，其中 u,v 是画布本地坐标，w,h 是布局尺寸。
-  // 反解：u = w/2 - (sy - cy)，v = h/2 + (sx - cx)。
+  // 绕中心顺时针 90°：(u,v) → (-(v - h/2), u - w/2)，其中 u,v 是画布本地坐标，w,h 是布局尺寸。
+  // 反解：u = w/2 + (sy - cy)，v = h/2 - (sx - cx)。
   const cx = r.left + r.width / 2;
   const cy = r.top + r.height / 2;
-  return {x: w / 2 - (clientY - cy), y: h / 2 + (clientX - cx), w, h};
+  return {x: w / 2 + (clientY - cy), y: h / 2 - (clientX - cx), w, h};
 }

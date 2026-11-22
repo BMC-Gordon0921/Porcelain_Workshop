@@ -1,3 +1,4 @@
+import {canvasPoint} from './platform/canvas-metrics.js';
 import './platform/three-compat.js';
 import './style.css';
 import './challenge.css';
@@ -197,7 +198,7 @@ if(saveEditorBtn&&$('task-footer')){$('task-footer').prepend(saveEditorBtn);}
 syncPanelOpen();
  const editor=attachEditor($('sculpt-canvas'),state,{mode:setup.mode,canInteract:()=>focused&&!document.hidden&&!helpOpen,onHint:message=>{if($('tool-hint').textContent!==message)$('tool-hint').textContent=message;},onChange:()=>{$('work-status').textContent='正在制作…';sfx.shape(setup.mode);},onFinish:()=>{$('work-status').textContent='已保存';sfx.shape(null);save();}});activeTask.editor=editor;activeTask.station=station;editor.setRadius(setup.size);
  document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{editor.setColor(b.dataset.color);document.querySelectorAll('[data-color]').forEach(c=>c.classList.toggle('selected',c===b));$('color-name').textContent=COLOR_NAMES[b.dataset.color];});
- $('brush-size').oninput=e=>{editor.setRadius(e.target.value);$('brush-size-value').textContent=e.target.value;};$('undo-stroke').onclick=()=>editor.undo();$('redo-stroke').onclick=()=>editor.redo();$('save-editor').onclick=closeTask;
+ bindBrushSize($('brush-size'),editor);$('undo-stroke').onclick=()=>editor.undo();$('redo-stroke').onclick=()=>editor.redo();$('save-editor').onclick=closeTask;
  const toggles=document.createElement('div');toggles.className='editor-assists';const settings=[['guides','参考线',setup.mode!=='paint',true],...(station==='wheel'?[['symmetric','左右对称',true,true]]:[]),...(station==='carve'?[['protect','轮廓保护',true,state.stationLevel('carve')>=2]]:[]),...(station==='paint'?[['line','直线笔',false,state.stationLevel('paint')>=2],['mirror','镜像绘制',false,state.stationLevel('paint')>=3]]:[])];
  toggles.innerHTML=settings.map(([name,label,checked,enabled])=>`<label><input type="checkbox" data-assist="${name}" ${checked?'checked':''} ${enabled?'':'disabled'}/> ${label}${enabled?'':' · 升级解锁'}</label>`).join('');document.querySelector('.work-area').append(toggles);toggles.querySelectorAll('input').forEach(input=>input.onchange=()=>editor.setOption(input.dataset.assist,input.checked));mountStationInfo(station);
 }
@@ -210,7 +211,7 @@ function openKiln(){
  if(!state.hasClay){toast('请先到取泥台领取瓷泥。');return;}
  if(!state.hasShape){toast('先到塑形台完成制胚，再来烧窑。');return;}
  if(!state.hasPaint){toast('先到上色台完成彩绘，再来烧窑。');return;}
- taskShell('kiln','提交前必经 · 瓷器窑炉','守住窑火，烧出好瓷','固定 12 秒连续烧制：按住空格或按钮鼓风升温，松开降温。让指针留在漂移的火候带内——完美与成功区间累计越久，金币倍率越高。', '<div class="kiln-layout"><div class="kiln-stage"><canvas id="kiln-canvas" aria-label="窑炉与实际作品的烧制特写"></canvas><span class="kiln-stage-caption">窑火 · 亲手烧制</span></div><section class="kiln-control"><div class="kiln-head"><span class="kiln-timer" id="kiln-timer">12.0<small>s</small></span><span class="kiln-band-label" id="kiln-band-label">火候带漂移中</span></div><div class="kiln-gauge-wrap"><svg class="kiln-gauge" viewBox="0 0 220 214" role="img" aria-label="火候判定扇环"><path class="kiln-track" d="'+kilnArc(-120,120,93,65)+'"/><path id="kiln-good-zone" class="kiln-good"/><path id="kiln-perfect-zone" class="kiln-perfect"/><g id="kiln-center"><line x1="110" y1="21" x2="110" y2="36"/></g><g id="kiln-needle"><line x1="110" y1="30" x2="110" y2="62"/><circle cx="110" cy="26" r="4"/></g></svg><div class="kiln-readout"><strong id="kiln-percent">0<small>%</small></strong><span id="kiln-grade" role="status" aria-live="polite">等待烧制</span></div></div><div class="kiln-legend" id="kiln-legend"></div><div class="kiln-times" id="kiln-times"><div class="kiln-time grade-perfect"><span>完美</span><i><em id="kiln-fill-perfect"></em></i><b id="kiln-time-perfect">0.0s</b></div><div class="kiln-time grade-good"><span>成功</span><i><em id="kiln-fill-good"></em></i><b id="kiln-time-good">0.0s</b></div><div class="kiln-time grade-plain"><span>一般</span><i><em id="kiln-fill-fair"></em></i><b id="kiln-time-fair">0.0s</b></div></div><p class="kiln-caption" id="kiln-caption"></p><div class="task-action-row"><button class="primary-button" id="fire-button">开始烧制</button><button class="secondary-button" id="stoke-button" disabled>按住鼓风 · 空格</button></div></section></div>', '按住空格或按钮鼓风 · 松开降温 · 退出面板会暂停烧制');
+ taskShell('kiln','提交前必经 · 瓷器窑炉','守住窑火，烧出好瓷','固定 12 秒连续烧制：按住空格或按钮鼓风升温，松开降温。让指针留在漂移的火候带内——完美与成功区间累计越久，金币倍率越高。', '<div class="kiln-layout"><div class="kiln-stage"><canvas id="kiln-canvas" aria-label="窑炉与实际作品的烧制特写"></canvas><span class="kiln-stage-caption">窑火 · 亲手烧制</span></div><section class="kiln-control"><div class="kiln-head"><span class="kiln-timer" id="kiln-timer">12.0<small>s</small></span><span class="kiln-band-label" id="kiln-band-label">火候带漂移中</span></div><div class="kiln-gauge-wrap"><svg class="kiln-gauge" viewBox="0 0 220 214" role="img" aria-label="火候判定扇环"><path class="kiln-track" d="'+kilnArc(-120,120,93,65)+'"/><path id="kiln-good-zone" class="kiln-good"/><path id="kiln-perfect-zone" class="kiln-perfect"/><g id="kiln-center"><line x1="110" y1="21" x2="110" y2="36"/></g><g id="kiln-needle"><line x1="110" y1="30" x2="110" y2="62"/><circle cx="110" cy="26" r="4"/></g></svg><div class="kiln-readout"><strong id="kiln-percent">0<small>%</small></strong><span id="kiln-grade" role="status" aria-live="polite">等待烧制</span></div></div><div class="task-action-row"><button class="primary-button" id="fire-button">开始烧制</button><button class="secondary-button" id="stoke-button" disabled>按住鼓风 · 空格</button></div><div class="kiln-legend" id="kiln-legend"></div><div class="kiln-times" id="kiln-times"><div class="kiln-time grade-perfect"><span>完美</span><i><em id="kiln-fill-perfect"></em></i><b id="kiln-time-perfect">0.0s</b></div><div class="kiln-time grade-good"><span>成功</span><i><em id="kiln-fill-good"></em></i><b id="kiln-time-good">0.0s</b></div><div class="kiln-time grade-plain"><span>一般</span><i><em id="kiln-fill-fair"></em></i><b id="kiln-time-fair">0.0s</b></div></div><p class="kiln-caption" id="kiln-caption"></p></section></div>', '按住空格或按钮鼓风 · 松开降温 · 退出面板会暂停烧制');
  activeTask.preview=createKilnPreview($('kiln-canvas'),state);
  $('fire-button').onclick=()=>{syncClocks();if(state.kilnResult){closeTask();return;}if(state.fire()){releaseStoke();sound('fire');save();updateKiln();$('stoke-button').focus({preventScroll:true});}};
  const stoke=$('stoke-button');
@@ -254,7 +255,7 @@ function updateKiln(){
  $('stoke-button').disabled=!k;
  $('stoke-button').classList.toggle('active',!!k?.stoking);
  $('stoke-button').textContent=k?.stoking?'鼓风中… · 松开':'按住鼓风 · 空格';
- const fire=$('fire-button');fire.disabled=!!k;fire.textContent=result?'完成 · 返回工坊':k?'烧制中…':'开始烧制';
+ const fire=$('fire-button');$('stoke-button').hidden=!k;fire.hidden=!!k;fire.disabled=!!k;fire.textContent=result?'完成 · 返回工坊':k?'烧制中…':'开始烧制';
  if(result)fire.focus();
 }
 function openReview(){if(!tutorialGate('serve'))return;
@@ -331,6 +332,35 @@ function requestNewGame(){
 }
 function confetti(){for(let i=0;i<25;i++){const e=document.createElement('div');e.className='confetti';e.style.cssText=`left:60%;top:40%;background:${['#315fa9','#e1bc76','#d5a0ba'][i%3]};--dx:${Math.cos(i*2.4)*(100+i*7)}px;--dy:${140+Math.sin(i*7)*140}px;animation-delay:${i*.02}s`;$('app').append(e);setTimeout(()=>e.remove(),3000);}}
 function stationMessage(id){return {clay:'领取完整瓷泥',wheel:'推压瓷泥，调整形状',carve:'用刻刀去除多余瓷泥',paint:state.fired?'烧成后补绘青花':'选择颜色，亲手绘制',kiln:state.kilnResult?'查看火候结果':state.kiln?'继续烧制瓷器':'烧制瓷器 · 按住空格鼓风',serve:state.canWork?'提交作品并评分':'购买贴画与制作成品'}[id];}
+function bindBrushSize(slider, editor) {
+ slider.oninput=()=>{
+  editor.setRadius(slider.value);
+  $('brush-size-value').textContent=slider.value;
+ };
+ let pointerId=null;
+ const setFromPointer=event=>{
+  const {x,w}=canvasPoint(slider,event.clientX,event.clientY);
+  const min=Number(slider.min), max=Number(slider.max), step=Number(slider.step)||1;
+  const fraction=Math.max(0,Math.min(1,(x-9)/(w-18)));
+  slider.value=String(min+Math.round(fraction*(max-min)/step)*step);
+  slider.oninput();
+ };
+ slider.onpointerdown=event=>{
+  if(!isRotated()||!event.isPrimary||event.button!==0||pointerId!==null)return;
+  event.preventDefault();
+  slider.focus({preventScroll:true});
+  slider.setPointerCapture(event.pointerId);
+  pointerId=event.pointerId;
+  setFromPointer(event);
+ };
+ slider.onpointermove=event=>{
+  if(event.pointerId===pointerId&&isRotated())setFromPointer(event);
+ };
+ slider.onpointerup=slider.onpointercancel=slider.onlostpointercapture=event=>{
+  if(event.pointerId===pointerId)pointerId=null;
+ };
+}
+
 function openStation(id){if(activeTask||helpOpen||!started)return;const access=state.stationAccess(id);if(!access.allowed){guidance.deny(access);toast(access.reason);return;}sound();if(!state.canWork){openJourney();return;}({clay:openSupply,wheel:()=>openEditor('wheel'),carve:()=>openEditor('carve'),paint:()=>openEditor('paint'),kiln:openKiln,serve:openReview})[id]();}
 window.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
@@ -338,7 +368,7 @@ window.addEventListener('keydown',e=>{
  if(key==='escape'){e.preventDefault();if(helpOpen)hideHelp();else if(activeTask)closeTask();return;}
  if(key===' '&&activeTask?.kind==='kiln'&&!helpOpen){e.preventDefault();if(e.repeat||document.hidden||!focused)return;changeStoke('space',true);return;}
  if(helpOpen||document.hidden||!focused)return;
- if(activeTask?.editor){if((e.metaKey||e.ctrlKey)&&key==='z'){e.preventDefault();e.shiftKey?activeTask.editor.redo():activeTask.editor.undo();return;}if(key==='['||key===']'){e.preventDefault();const slider=$('brush-size');slider.value=Math.max(Number(slider.min),Math.min(Number(slider.max),Number(slider.value)+(key===']'?1:-1)));activeTask.editor.setRadius(slider.value);$('brush-size-value').textContent=slider.value;return;}return;}
+ if(activeTask?.editor){if((e.metaKey||e.ctrlKey)&&key==='z'){e.preventDefault();e.shiftKey?activeTask.editor.redo():activeTask.editor.undo();return;}if(key==='['||key===']'){e.preventDefault();const slider=$('brush-size');slider.value=Math.max(Number(slider.min),Math.min(Number(slider.max),Number(slider.value)+(key===']'?1:-1)));slider.oninput();return;}return;}
  if(activeTask||helpOpen)return;
  if(e.target.matches('input,textarea,[contenteditable=true]'))return;
  if(key==='f'){e.preventDefault();if(e.repeat)return;nearest=world.nearest();if(nearest){sound('click');openStation(nearest.id);}return;}

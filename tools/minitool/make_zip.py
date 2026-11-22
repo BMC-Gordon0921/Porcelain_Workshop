@@ -17,6 +17,11 @@ def main() -> int:
     if not (src / "index.html").is_file():
         print(f"missing index.html in {src}", file=sys.stderr)
         return 1
+    map_path = "maps/jingdezhen.png"
+    app_path = src / "assets" / "app.js"
+    if not (src / map_path).is_file() or f"./{map_path}" not in app_path.read_text(encoding="utf-8"):
+        print(f"missing bundled map or app reference: {map_path}", file=sys.stderr)
+        return 1
     files = sorted(p for p in src.rglob("*") if p.is_file())
     out.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

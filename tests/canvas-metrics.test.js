@@ -28,8 +28,8 @@ test('旋屏 90°：四角与中心都能反解回原位', () => {
 
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  // 顺时针 90°：(u,v) → 屏幕 (v - h/2 + cx, cy - (u - w/2))
-  const toScreen = (u, v) => ({sx: cx + (v - h / 2), sy: cy - (u - w / 2)});
+  // 顺时针 90°：(u,v) → 屏幕 (cx - (v - h/2), cy + (u - w/2))
+  const toScreen = (u, v) => ({sx: cx - (v - h / 2), sy: cy + (u - w / 2)});
 
   const points = [
     [0, 0], [w, 0], [0, h], [w, h], [w / 2, h / 2], [SAMPLE_X, SAMPLE_Y],

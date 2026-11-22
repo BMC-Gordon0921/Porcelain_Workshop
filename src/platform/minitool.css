@@ -1436,3 +1436,66 @@ html[data-platform=minitool][data-rotate=on] .opening-background {
 html[data-platform=minitool][data-rotate=on] #rotate-button {
   display: grid;
 }
+
+/* The opening page scrolls as one surface when its content exceeds the safe area. */
+html[data-platform=minitool] .opening-screen[data-opening-stage=map] .opening-map-phase {
+  flex: 1 0 auto;
+}
+html[data-platform=minitool] .opening-screen[data-opening-stage=map] .opening-layout {
+  flex: 1 0 auto;
+}
+html[data-platform=minitool] .opening-screen[data-opening-stage=map] > .opening-header {
+  position: sticky;
+  top: 0;
+  background: #f2ead7;
+}
+html[data-platform=minitool] .opening-actions,
+html[data-platform=minitool] .opening-rules {
+  flex-wrap: wrap;
+}
+
+html[data-platform=minitool] #toast {
+  left: calc(50% + (var(--mt-left-inset) - var(--mt-right-inset)) / 2);
+  bottom: calc(116px + var(--mt-bottom-inset));
+  width: max-content;
+  max-width: 65%;
+  max-width: min(440px, calc(100% - var(--mt-left-inset) - var(--mt-right-inset) - 32px));
+  overflow-wrap: break-word;
+}
+
+html[data-platform=minitool] .kiln-control .task-action-row {
+  flex-direction: row;
+  justify-content: center;
+}
+html[data-platform=minitool] .kiln-control .task-action-row button {
+  width: auto;
+  min-height: 44px;
+}
+html[data-platform=minitool][data-layout=ls] .kiln-control .kiln-times {
+  display: none;
+}
+html[data-platform=minitool][data-layout=ls] .kiln-control .kiln-gauge-wrap {
+  max-width: 136px;
+}
+html[data-platform=minitool][data-layout=ls] .kiln-control .kiln-caption {
+  min-height: 0;
+}
+
+html[data-platform=minitool] {
+  --mt-layout-height: var(--mt-height, 100vh);
+}
+html[data-platform=minitool][data-rotate=on] {
+  --mt-layout-height: var(--mt-width, 100vw);
+}
+html[data-platform=minitool][data-layout=ls] .atlas-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+html[data-platform=minitool][data-layout=ls] .atlas-map-column {
+  max-width: calc(var(--mt-layout-height) - var(--mt-top-inset) - var(--mt-bottom-inset) - 128px);
+}
+html[data-platform=minitool][data-layout=ls] .atlas-layout .city-map-art {
+  width: 100%;
+  height: auto;
+}

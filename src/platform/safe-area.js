@@ -36,10 +36,15 @@ function computeInsets(info) {
   const safeLeft = num(area.left, 0);
   const safeRightGap = Math.max(0, winW - num(area.right, winW));
   // 状态栏 + 胶囊需要额外头部空间（实测 safeArea.top 44 → 需要 80px）
-  const headTop = safeTop + 36;
+  const buttons = info?.menuButtons;
+  const visibleButtons = [buttons?.capsule].some(button => button?.width > 0 && button?.height > 0)
+    ? [buttons.capsule] : [buttons?.back, buttons?.me, buttons?.share];
+  const buttonBottoms = visibleButtons.filter(button => button?.width > 0 && button?.height > 0)
+    .map(button => num(button.bottom, safeTop));
+  const headTop = buttonBottoms.length ? Math.max(safeTop, ...buttonBottoms) : safeTop + 36;
 
   if (root().dataset[ROTATE_ATTR] === ROTATE_ON) {
-    // 画面顺时针转 90°：屏幕右→视觉上、屏幕下→视觉左
+    // 画面顺时针转 90°：屏幕右→布局上、屏幕下→布局右
     return {top: safeLeft, bottom: safeRightGap, left: safeBottomGap, right: headTop,
       landscape: true, rotated: true, winW, winH};
   }
