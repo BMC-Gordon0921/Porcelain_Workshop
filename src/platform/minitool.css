@@ -198,6 +198,13 @@ html[data-platform=minitool][data-input=touch][data-layout=wide] .reference-card
   }
 }
 
+html[data-platform=minitool] #carry-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 html[data-platform=minitool] .bottom-bar {
   bottom: var(--mt-bottom-inset);
   left: var(--mt-left-inset);
@@ -420,12 +427,12 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
 
 /* 紧凑横屏：真机横屏（高≤520）或用户手动旋屏（data-rotate=on）时由 JS 打上 data-layout=ls */
   html[data-platform=minitool][data-layout=ls] .topbar {
-    height: 54px;
-    padding: 0 12px;
+    height: 46px;
+    padding: 0 8px;
   }
 
   html[data-platform=minitool][data-layout=ls] .brand h1 {
-    font-size: 25px;
+    font-size: 22px;
   }
 
   html[data-platform=minitool][data-layout=ls] .brand-mark {
@@ -447,8 +454,18 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 
   html[data-platform=minitool][data-layout=ls] .icon-button {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+
+  /* 侧边条里省掉「当前货币」小字，只留图标 + 数字 */
+  html[data-platform=minitool][data-layout=ls] .wallet small {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .wallet {
+    margin-right: 0;
   }
 
   /* 订单改成右侧竖排窄栏，横向空间够用，纵向最省 */
@@ -456,7 +473,8 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     top: calc(60px + var(--mt-top-inset));
     left: auto;
     right: calc(8px + var(--mt-right-inset));
-    bottom: calc(44px + var(--mt-bottom-inset));
+    /* 底部留出「操作」键的位置，否则订单卡会压在按键上 */
+    bottom: calc(72px + var(--mt-bottom-inset));
     width: 156px;
     max-height: none;
     overflow-y: auto;
@@ -513,11 +531,16 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 
   html[data-platform=minitool][data-layout=ls] .decal-goal > img {
-    width: 24px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
   }
 
-  html[data-platform=minitool][data-layout=ls] .decal-goal small,
+  /* 横屏订单栏高度有限：「本场景贴画」说明行让位给贴画缩略图 */
+  html[data-platform=minitool][data-layout=ls] .decal-goal small {
+    display: none;
+  }
+
   html[data-platform=minitool][data-layout=ls] .decal-goal div > span {
     font-size: 10px;
     line-height: 1.4;
@@ -528,16 +551,83 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     margin: 2px 0;
   }
 
+  /* 旋屏/横屏时视口仍只有 393 宽，≤760 的竖屏排布会同时命中并与 ls 布局打架：
+     这里把订单栏恢复成单列、卡片按横屏尺寸重新定宽，避免参考图被网格挤成 0 高 */
+  html[data-platform=minitool][data-layout=ls] #app > .commissions {
+    display: block;
+    padding: 0 4px 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-card {
+    display: block;
+    height: auto;
+    padding: 7px 8px;
+    margin-bottom: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-card > img {
+    display: block;
+    width: 100%;
+    height: 52px;
+    object-fit: contain;
+    background: #eee6d3;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal {
+    display: flex;
+    height: auto;
+    margin-top: 6px;
+    padding: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal > img {
+    width: 24px;
+    height: 32px;
+  }
+
+  /* 携带中的瓷泥卡：放到左下角与「操作」键、摇杆都不重叠的位置 */
+  html[data-platform=minitool][data-layout=ls] .carrying {
+    top: auto;
+    right: auto;
+    left: calc(200px + var(--mt-left-inset));
+    bottom: calc(44px + var(--mt-bottom-inset));
+    transform: none;
+    min-width: 0;
+    max-width: 236px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .touch-controls #touch-interact {
+    right: calc(8px + var(--mt-right-inset));
+    bottom: calc(4px + var(--mt-bottom-inset));
+    width: 64px;
+    height: 64px;
+    font-size: 13px;
+    z-index: 8;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reset-view {
+    top: auto;
+    left: auto;
+    right: calc(10px + var(--mt-right-inset));
+    bottom: calc(44px + var(--mt-bottom-inset));
+  }
+
+  html[data-platform=minitool][data-layout=ls] .touch-controls .joystick {
+    left: calc(48px + var(--mt-left-inset));
+    bottom: calc(42px + var(--mt-bottom-inset));
+  }
+
   html[data-platform=minitool][data-layout=ls] #world-wrap {
-    top: calc(54px + var(--mt-top-inset));
+    top: calc(46px + var(--mt-top-inset));
     bottom: calc(38px + var(--mt-bottom-inset));
     left: var(--mt-left-inset);
     right: calc(172px + var(--mt-right-inset));
   }
 
+  /* 旋屏后底栏变成一条 38px 的侧边窄条，内容（原型角标 + 键位提示）在横屏没有价值，
+     直接收起，把左下角让给「操作」键 */
   html[data-platform=minitool][data-layout=ls] .bottom-bar {
-    height: 38px;
-    padding: 0 12px;
+    display: none;
   }
 
   html[data-platform=minitool][data-layout=ls] .bottom-bar .controls {
@@ -801,25 +891,7 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     padding-bottom: 6px;
   }
 
-/* 横屏：方向键贴左下（让开底部信息条），操作键贴右下并避开订单栏 */
-/* 紧凑横屏：真机横屏（高≤520）或用户手动旋屏（data-rotate=on）时由 JS 打上 data-layout=ls */
-  html[data-platform=minitool][data-layout=ls] .touch-controls {
-    left: calc(8px + var(--mt-left-inset));
-    bottom: calc(42px + var(--mt-bottom-inset));
-  }
-
-  html[data-platform=minitool][data-layout=ls] .touch-controls #touch-interact {
-    right: calc(180px + var(--mt-right-inset));
-    bottom: calc(50px + var(--mt-bottom-inset));
-    width: 50px;
-    height: 50px;
-  }
-
-  html[data-platform=minitool][data-layout=ls] .reset-view {
-    top: auto;
-    right: calc(10px + var(--mt-right-inset));
-    bottom: calc(44px + var(--mt-bottom-inset));
-  }
+/* 横屏触屏控件的位置统一由上方 ls 块维护，这里不再重复定义（重复会按源码顺序反向覆盖） */
 
 /* 品牌字标不换行（窄屏上 ® 会顶出字框，但不会被裁切，只需禁止折行） */
 html[data-platform=minitool] .brand h1 {

@@ -222,6 +222,16 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 > 关于「怎么才能看到横屏」：工作台本身只有 iPhone / iPad / 桌面三种预览设备、没有旋转按钮，但它也不需要——顶栏的 `⟳` 按钮就是产品内的横版入口（点一下，`#app` 变 852×393 再旋转，系统方向不动）。真机横握时 `data-layout` 也会自动落到 `ls`，两套路径共用同一批规则。
 
+**⑦ 旋转态下的 HUD 再排布（用户截图反馈后补齐）**：⑥/④ 生效之后，旋转态的「屏幕」其实是 852×393 的横版盒子，但**视口宽度仍是 393**，于是 `@media (max-width:760px)` 的竖屏规则会和 `[data-layout=ls]` 同时命中。踩到的三处：
+
+| 症状 | 根因 | 处理 |
+| --- | --- | --- |
+| 订单卡顶部参考图变成一个空白小方块，看起来像「图片没加载」 | 竖屏规则把 `.commissions` 变成 `display:grid;grid-template-columns:minmax(0,1fr) 128px`，参考图被压进 18px 高的网格单元 | `ls` 下强制 `.commissions{display:block}`，`.reference-card{display:block;height:auto}`、`>img{width:100%;height:52px;object-fit:contain;background:#eee6d3}`（`cover` 会把瓷罐裁成一条） |
+| 携带卡里的作品缩略图撑破 32×34 的框 | `#carry-art` 内是 `<img src=data:...>`，而样式只写了 `.carrying svg{width:100%;height:100%}` | 补 `html[data-platform=minitool] #carry-art img{width:100%;height:100%;object-fit:contain}` |
+| 右下「操作」绿键压住携带卡与订单栏；顶栏在旋转后变成一条 46px 的宽侧栏 | 触屏键与订单栏都落在屏幕左下/右下同一片区域 | 顶栏 54→46px、`.icon-button` 26px、`.carry`/`.carrying` 移到屏幕左中段空带、订单栏 `bottom:calc(72px+inset)` 让出角、`#touch-interact{right:8px;bottom:4px;64px}`、`ls` 下直接 `display:none` 收起底栏（旋转后它只是 38px 宽的侧条，内容只有原型角标与键位提示） |
+
+> 踩坑备忘（两次都浪费了一轮截图）：①同一个 `minitool.css` 里先写的 `[data-layout=ls]` 规则会被**后面**追加的同类块按源码顺序覆盖——ls 规则只保留一处；②`#touch-interact` 的基础规则是 `html[data-platform=minitool] .touch-controls #touch-interact`（0,3,1），想覆盖必须带 `.touch-controls` 前缀，否则特异性不够、静默失效。
+
 **验证方式**：容器内 `tools/minitool/verify_touch_rotate.mjs` 覆盖「触屏档摇杆出现 → 推杆位移非零 → 换轴后仍能移动 → 点 `⟳` 变 852×393 且画布重排 → 再点还原 → 切桌面档自动变键盘方案」共 11 项断言（`qa/minitool/verify-touch-rotate.json`，当前全绿）；`tools/minitool/shots_devices.mjs` 按 iPhone / iPad / 桌面 / 旋屏四态截图（`qa/minitool/final/`）。`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。横版专项用 `tools/minitool/debug_landscape.mjs`（容器内逐态量画布**宽高比是否等于布局宽高比**，并把 HUD 里每个可点元素的中心点丢给 `elementFromPoint` 判「够不够得到」——这是「按钮被遮挡」唯一可量化的判据）、`debug_canvas_panels.mjs`（旋屏下打开升级/贴画面板，检查面板内画布）、`check_hero_canvas.mjs`（截图裁出开屏瓷碗区域，交给 Pillow 统计像素多样性，判断是否真的画出来了）。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
 
 ## 8. 后续待办
