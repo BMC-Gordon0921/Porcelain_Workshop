@@ -293,6 +293,21 @@ html[data-platform=minitool] .task-header p {
   overflow: hidden;
 }
 
+/* 效率提示原本 sticky 在面板顶部，滚动时会盖住瓷泥画布 */
+html[data-platform=minitool] .task-efficiency {
+  position: static;
+}
+
+/* 「保存并离开」由脚本搬进面板页脚（常驻可见），正文里的说明行冗余故隐藏 */
+html[data-platform=minitool] [data-panel=editor] .editor-bottom {
+  display: none;
+}
+
+html[data-platform=minitool] .task-footer .primary-button {
+  padding: 9px 14px;
+  font-size: 12px;
+}
+
 html[data-platform=minitool] #task-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -795,8 +810,9 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     padding: 0;
   }
 
-  html[data-platform=minitool][data-layout=ls] .atlas-panel {
-    width: auto;
+  html[data-platform=minitool] .task-panel.atlas-panel {
+    inset: 0;
+    width: 100%;
     max-width: none;
   }
 
@@ -886,12 +902,44 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 
   /* 工作台左列：画布吃满剩余高度（grid 行 1fr），工具行贴底，避免 flex + aspect-ratio 互压成 39px */
+  /* 画布独占左侧整列；工具/笔刷收进 132px 侧栏，靠拇指、也给画布更多高度 */
   html[data-platform=minitool][data-layout=ls] [data-panel=editor] .work-area {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto auto;
-    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) 132px;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: 'canvas tools' 'canvas brush';
+    gap: 6px 8px;
     min-height: 0;
     min-width: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row {
+    grid-area: tools;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 4px;
+    align-self: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    grid-area: brush;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    gap: 2px 4px;
+    align-self: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row input[type=range] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row > label,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row > output {
+    font-size: 10px;
+    white-space: nowrap;
   }
 
   html[data-platform=minitool][data-layout=ls] [data-panel=editor] .board-top {
@@ -899,12 +947,15 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 
   html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap {
-    width: auto;
-    height: 100%;
+    grid-area: canvas;
+    width: 100%;
+    height: auto;
     max-width: 100%;
+    max-height: 100%;
     min-height: 0;
     margin: 0;
     aspect-ratio: 1;
+    align-self: center;
     justify-self: center;
   }
 
@@ -937,20 +988,31 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     background: transparent;
   }
 
+  /* 「保存并离开」也提到标题栏，工作区因此只承载画布 + 工具行 */
   html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom {
-    padding: 4px 0 0;
+    position: absolute;
+    top: 2px;
+    right: 108px;
+    left: auto;
+    bottom: auto;
+    z-index: 6;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
-  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom .primary-button {
-    padding: 8px 14px;
-  }
-
-  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer > span {
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom > span {
     display: none;
   }
 
   html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom .primary-button {
-    padding: 9px 14px;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer > span {
+    display: none;
   }
 
   html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
@@ -1334,6 +1396,13 @@ html[data-platform=minitool][data-input=touch][data-layout=sm] .touch-controls #
 /* 手动旋屏按钮只在触屏出现 */
 html[data-platform=minitool] #rotate-button {
   display: none;
+}
+
+/* 平板与桌面已有足够宽度，旋屏只会让界面侧躺，故不提供入口 */
+@media (min-width: 761px), (min-height: 761px) {
+  html[data-platform=minitool] #rotate-button {
+    display: none;
+  }
 }
 
 html[data-platform=minitool][data-input=touch] #rotate-button {

@@ -280,7 +280,15 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | iPad 旋屏后两栏把画布压成竖条 | 旋屏后 iPad 逻辑尺寸近乎正方（852×834），仍命中横版两栏 | `safe-area.js` 增加 `flatEnough = effW/effH >= 1.2`，只有真的够扁才启用 `data-layout=ls`；iPad 旋屏退回 `wide` 单栏 |
 | 全局「正在制作」悬浮卡 | `index.html` 的 `.carrying` + `main.js` 更新逻辑 | 整卡删除（`#carrying`、`#carry-art`、`#discard-button` 及相关样式/监听） |
 
-实测（`tools/minitool/verify_rotate_real.mjs`，真实旋转路径、`offsetWidth` 量尺寸）：phone 816×393 下 editor 画布 **212×212（1.000）**、两栏 453.5/328.5；kiln 452×216、journey 452×258、upgrades 440×179；iPad 走 `wide`，editor 画布 356×356。7 个面板的 `×` 全部 `closeHit: true`，面板关闭后 HUD 恢复正常。
+| 「保存并离开」被长面板推到折叠线以下 | 按钮在滚动区里，订单参考图一长就看不到 | `taskShell('editor')` 之后把 `#save-editor` 搬进面板页脚（常驻），正文里的说明行隐藏 |
+| 效率提示 sticky 时盖住瓷泥画布 | `.task-efficiency` 是 `position: sticky` | minitool 下改 `position: static` |
+| 工具栏/滑杆挤在画布下方、离拇指远 | 原来 `.work-area` 是纵向堆叠 | ls 下 `.work-area` 改两列网格：画布独占左列，`工具行 + 笔刷行`收进 132px 右侧栏 |
+
+实测（`tools/minitool/verify_rotate_real.mjs`，真实旋转路径、`offsetWidth` 量尺寸）：
+- phone 816×393：editor 画布 **312×312（1.000）**（原 37×37）、两栏 453.5/328.5；kiln 452×216、journey 452×258、upgrades 440×179；7 个面板 `panel` 全部 816×393、`×` 全部 `closeHit: true`，关闭后 HUD 恢复 `block`。
+- iPad 816×834：`data-layout=wide` 单栏，editor 画布 356×356，7 个面板同样 816×834。
+- 竖屏 393×852：editor 面板 393×751、画布 363×363、页脚常驻「保存并离开」。
+- `×` 在 iPad 上隐身旋屏入口：`@media (min-width:761px),(min-height:761px)` 下 `#rotate-button{display:none}`（平板宽度足够，旋屏只会让界面侧躺）。
 
 ## 8. 后续待办
 

@@ -67,6 +67,12 @@ const measure = () => {
   })();
   return {
     panel: `${panel.offsetWidth}x${panel.offsetHeight}`,
+    diag: {
+      cls: panel.className,
+      layout: document.documentElement.getAttribute('data-layout'),
+      maxW: getComputedStyle(panel).maxWidth,
+      overlayW: document.querySelector('.overlay:not(.hidden)')?.offsetWidth
+    },
     closeHit: !!hitEl && (hitEl === close || close.contains(hitEl)),
     closeInside: cr.left >= pr.left - 1 && cr.right <= pr.right + 1 && cr.top >= pr.top - 1 && cr.bottom <= pr.bottom + 1,
     overflow, canvases, cols,
