@@ -212,12 +212,153 @@ html[data-platform=minitool] .bottom-bar {
   width: auto;
 }
 
-/* 弹层让开外壳：容器里 .overlay 用 inset:0 铺满，标题会被状态栏/胶囊压住 */
+/* 弹层外壳：贴安全区四边；面板拆成「固定顶栏 + 只滚 body + 固定底栏」，
+   关闭按钮因此常驻可见，不需要滚回顶部（手机横版尤其明显）。 */
 html[data-platform=minitool] .overlay {
-  padding-top: calc(14px + var(--mt-top-inset));
-  padding-right: calc(20px + var(--mt-right-inset));
-  padding-bottom: calc(14px + var(--mt-bottom-inset));
-  padding-left: calc(20px + var(--mt-left-inset));
+  top: var(--mt-top-inset);
+  right: var(--mt-right-inset);
+  bottom: var(--mt-bottom-inset);
+  left: var(--mt-left-inset);
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+html[data-platform=minitool] .task-panel,
+html[data-platform=minitool] .help-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #f9f4e7;
+}
+
+html[data-platform=minitool] .task-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+html[data-platform=minitool] .task-header {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 9px 54px 8px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e2dccb;
+  background: #f9f4e7;
+  z-index: 2;
+}
+
+html[data-platform=minitool] .task-header .eyebrow {
+  grid-column: 1;
+  font-size: 10px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+html[data-platform=minitool] .task-header h2 {
+  grid-column: 2;
+  min-width: 0;
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-platform=minitool] .task-header p {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: none;
+  font-size: 11px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+html[data-platform=minitool] #task-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 14px 12px;
+}
+
+html[data-platform=minitool] .task-footer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 12px;
+  gap: 8px;
+  border-top: 1px solid #e2dccb;
+  background: #f6f1e2;
+  flex-wrap: wrap;
+}
+
+html[data-platform=minitool] .close-button {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  background: #f2ecdb;
+  border-color: #d8d5c2;
+  z-index: 6;
+}
+
+html[data-platform=minitool] .help-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 20px;
+}
+
+html[data-platform=minitool] .help-panel .close-button {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: -6px -6px 4px 0;
+}
+
+/* 面板里的图片必须有稳定盒子，否则细栏/横版下会被压成 0 高（看起来像没加载） */
+html[data-platform=minitool] .brief-pair img,
+html[data-platform=minitool] .review-pair img {
+  min-height: 120px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .target-preview {
+  min-height: 84px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .reference-texture img,
+html[data-platform=minitool] .decal-picker img {
+  min-height: 72px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .preset-gallery-card img,
+html[data-platform=minitool] .collection-card img {
+  min-height: 68px;
+  object-fit: contain;
 }
 
 html[data-platform=minitool] .overlay > * {
@@ -646,57 +787,224 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 
   html[data-platform=minitool][data-layout=ls] .overlay {
-    padding-top: calc(8px + var(--mt-top-inset));
-    padding-right: calc(14px + var(--mt-right-inset));
-    padding-bottom: calc(8px + var(--mt-bottom-inset));
-    padding-left: calc(14px + var(--mt-left-inset));
+    padding: 0;
   }
 
   html[data-platform=minitool][data-layout=ls] .task-panel,
   html[data-platform=minitool][data-layout=ls] .help-panel {
-    padding: 16px 20px 12px;
-    max-height: 100%;
+    border-radius: 0;
+    padding: 0;
   }
 
   html[data-platform=minitool][data-layout=ls] .task-header {
-    padding: 0 34px;
-    margin-bottom: 10px;
+    padding: 6px 52px 6px 12px;
   }
 
-  /* 「古窑民俗博览区 · 第 1 关 / 3 · 尝试 1」在窄屏会折行并把闭包按钮挤到一起 */
   html[data-platform=minitool][data-layout=ls] .task-header .eyebrow {
-    display: block;
     font-size: 10px;
-    letter-spacing: 1px;
+    letter-spacing: .6px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   html[data-platform=minitool][data-layout=ls] .task-header h2 {
-    font-size: 22px;
-    margin: 4px 0 5px;
+    margin: 0;
+    font-size: 17px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-header p {
+    display: none;
   }
 
   html[data-platform=minitool][data-layout=ls] .task-artboard {
-    height: 148px;
+    height: 100%;
+    min-height: 120px;
   }
 
   html[data-platform=minitool][data-layout=ls] .kiln-view {
-    height: 150px;
+    height: 140px;
   }
 
   html[data-platform=minitool][data-layout=ls] .serve-art {
     height: 140px;
   }
 
-  html[data-platform=minitool][data-layout=ls] .upgrade-detail canvas {
-    height: 150px;
-  }
-
   html[data-platform=minitool][data-layout=ls] .upgrade-confirmation {
     position: static;
-    padding: 10px 0 2px;
+    padding: 6px 0 0;
+  }
+
+  /* ---------- 横版两栏：工作台 / 升级 / 窑炉 / 贴画（左预览 58% + 右控件 42%） ---------- */
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] #task-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+    padding: 8px 12px 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom,
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .efficiency-indicator {
+    flex: 0 0 auto;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom {
+    margin: 0;
+    padding: 6px 0 0;
+    border-top: 1px solid #e2dccb;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .journey-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .journey-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .journey-layout {
+    display: grid;
+    grid-template-columns: 58fr 42fr;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 10px;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .work-area,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .bowl-stage,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .bowl-stage,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .bowl-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap {
+    flex: 1 1 auto;
+    width: auto;
+    min-height: 0;
+    max-width: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .bowl-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .bowl-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .bowl-stage canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-reference,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-control,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .decal-details,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .decal-details,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .decal-details {
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    margin-top: 6px;
+  }
+
+  /* 升级面板：左预览、右卡片列表、底部确认条 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] #upgrade-content {
+    display: grid;
+    grid-template-columns: 58fr 42fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'wallet wallet'
+      'detail cards'
+      'detail confirm';
+    gap: 6px 10px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-wallet {
+    grid-area: wallet;
+    margin: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-detail {
+    grid-area: detail;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    margin: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-detail canvas {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .workbench-grid {
+    grid-area: cards;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    align-content: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-confirmation {
+    grid-area: confirm;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-confirmation p {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-confirmation button {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 9px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* 地图面板：横版把地图按可用高度收住，图例压一行 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=citymap] .city-map-art,
+  html[data-platform=minitool][data-layout=ls] [data-panel=travel] .city-map-art {
+    width: auto;
+    height: calc(100% - 6px);
+    max-height: none;
+    margin: 0 auto;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .city-map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 
   /* 开屏页横屏时内容比屏幕高，允许滚动而不是被裁掉 */

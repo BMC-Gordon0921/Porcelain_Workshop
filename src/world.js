@@ -238,20 +238,36 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   if(disposed)return false;
   if(index===requestedScene&&!force)return loadPromise;
   requestedScene=index;const ticket=++loadTicket;loading=true;loadError=null;canvas.dataset.loading='true';
+  const commit=next=>{
+   if(environment){scene.remove(environment.group);environment.dispose();}
+   environment=next;scene.add(next.group);activeScene=index;root.position.y=next.groundY;
+   chimneyAnchor=next.chimney;
+   if(chimneyAnchor)smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y-root.position.y,chimneyAnchor.z);
+   smokeField.points.visible=!!chimneyAnchor;
+   disposeWorldTree(gallery);gallery.clear();
+   workshopSign(gallery,PLACES[index].workshop,SCENES[index].accent);
+   resetCustomers();if(!preview)player.group.position.set(-4.55,0,-2.15);
+   canvas.dataset.landmark=PLACES[index].id;loading=false;canvas.dataset.loading='false';resize();return true;
+  };
   loadPromise=(async()=>{
    try{
     const next=await loadSceneEnvironment(PLACES[index].id);
     if(disposed||ticket!==loadTicket){next.dispose();return false;}
-    if(environment){scene.remove(environment.group);environment.dispose();}
-    environment=next;scene.add(next.group);activeScene=index;root.position.y=next.groundY;
-    chimneyAnchor=next.chimney;
-    if(chimneyAnchor)smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y-root.position.y,chimneyAnchor.z);
-    smokeField.points.visible=!!chimneyAnchor;
-    disposeWorldTree(gallery);gallery.clear();
-    workshopSign(gallery,PLACES[index].workshop,SCENES[index].accent);
-    resetCustomers();if(!preview)player.group.position.set(-4.55,0,-2.15);
-    canvas.dataset.landmark=PLACES[index].id;loading=false;canvas.dataset.loading='false';resize();return true;
-   }catch(error){if(ticket===loadTicket){loading=false;loadError=error;canvas.dataset.loading='error';}return false;}
+    return commit(next);
+   }catch(error){
+    if(disposed||ticket!==loadTicket)return false;
+    // 分块脚本偶发失败（并发注入或资源紧张）时自动重试一次，仍失败才落到错误态。
+    await new Promise(resolve=>setTimeout(resolve,300));
+    if(disposed||ticket!==loadTicket)return false;
+    try{
+     const retry=await loadSceneEnvironment(PLACES[index].id);
+     if(disposed||ticket!==loadTicket){retry.dispose();return false;}
+     return commit(retry);
+    }catch(retryError){
+     if(ticket===loadTicket){loading=false;loadError=retryError;canvas.dataset.loading='error';}
+     return false;
+    }
+   }
   })();return loadPromise;
  }
  let demo=null;

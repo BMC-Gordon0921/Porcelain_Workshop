@@ -30,6 +30,7 @@ import {TUTORIAL_STEPS} from './tutorial.js';
 import logoMark from './assets/logo-mark.png';
 import {initStorage, readStorage, writeStorage, flushStorage} from './platform/storage.js';
 import {initPlatformChrome, onRotateChange, toggleRotate, isRotated} from './platform/safe-area.js';
+import {isPackedSceneMode, preloadSites} from './platform/model-source.js';
 const $=id=>document.getElementById(id);
 // 输入方式判定：真实触屏 / 小工具容器里的小屏 => 摇杆；大屏（桌面预览、PC 浏览器）=> 键盘。
 // 容器的 WebView 在模拟器与部分安卓平板上都把 pointer 报成 fine，所以不能只看 (pointer: coarse)。
@@ -147,6 +148,7 @@ function updateTutorial(){
 function cleanupTask(){releaseStoke();activeTask?.editor?.finish();activeTask?.preview?.dispose();activeTask?.cityMap?.dispose();activeTask?.upgrades?.dispose();}
 function taskShell(kind,eyebrow,title,description,body,footer='进度自动保存。按 Esc 返回工坊。'){
  syncClocks();cleanupTask();activeTask={kind};world.setInteractionEnabled(false);keys.clear();clearTimeout(toastTimeout);$('toast').classList.remove('show');$('task-overlay').classList.remove('hidden');document.querySelector('.task-panel').classList.toggle('atlas-panel',kind==='citymap'||kind==='travel');document.querySelector('.task-panel').classList.toggle('wide-panel',['editor','kiln','upgrades','result','brief','journey','decal','crafted','collection','citymap','travel'].includes(kind));
+ document.querySelector('.task-panel').dataset.panel=kind;
  $('task-eyebrow').textContent=eyebrow;$('task-title').textContent=title;$('task-description').textContent=description;$('task-body').innerHTML=body;tutorialKey='';$('task-footer').innerHTML=footer+'<button type="button" id="task-help" class="secondary-button">玩法说明</button>';$('task-help').onclick=showHelp;document.querySelector('.task-panel').scrollTop=0;$('close-task').focus({preventScroll:true});syncClocks();updateEfficiency();save();
 }
 function closeTask(){syncClocks();releaseStoke();cleanupTask();state.endStation();activeTask=null;keys.clear();$('task-overlay').classList.add('hidden');syncClocks();updateUI();}
@@ -161,7 +163,15 @@ async function prepareScene(index){
  if(traveling||!state.canSelectScene(index))return false;traveling=true;syncClocks();releaseStoke();
  try{if(!await world.setScene(index,{force:!!world.loadError})){toast('场景加载失败，请重试。');return false;}if(!state.selectScene(index))return false;updateUI();save();return true;}finally{traveling=false;syncClocks();}
 }
-async function enterGame(index=state.scene){if(!await prepareScene(index))return false;heroCarousel?.pause();started=true;world.resize();routeTask();return true;}
+async function enterGame(index=state.scene){if(!await prepareScene(index))return false;heroCarousel?.pause();started=true;world.resize();schedulePreload(state.scene);routeTask();return true;}
+// 首站进入后串行补齐其余站点的几何分块：切站时不再等下载，也避免多站并发注入。
+let preloaded=false;
+function schedulePreload(activeIndex){
+ if(preloaded||!isPackedSceneMode())return;preloaded=true;
+ const ids=PLACES.map((place,i)=>i===activeIndex?'':place.id).filter(Boolean);
+ const run=()=>{void preloadSites(ids);};
+ if(typeof requestIdleCallback==='function')requestIdleCallback(run,{timeout:2500});else setTimeout(run,900);
+}
 
 $('map-button').onclick=()=>openCityMap();
 $('reset-view').onclick=()=>{if(started&&!activeTask&&!helpOpen)world.resetView();};
@@ -399,7 +409,7 @@ opening=createOpening($('welcome'),{getState:()=>state,onStart:enterGame,onNewGa
 document.addEventListener('click',e=>{if(e.target.closest('[data-lang-toggle]'))toggleLang();});
 function refreshLang(){document.querySelectorAll('[data-lang-toggle]').forEach(b=>{b.textContent=langButtonLabel();b.setAttribute('aria-label',document.documentElement.lang==='en'?'切换到中文':'Switch to English');});}
 onLangChange(refreshLang);initI18n();refreshLang();
-if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame,toggleRotate:rot=>void toggleRotate(rot)};
+if(import.meta.env.DEV)window.__terra={get state(){return state;},stations:STATIONS.map(s=>({id:s.id,x:s.x,z:s.z,w:s.w,d:s.d})),teleport:id=>{const s=STATIONS.find(v=>v.id===id);if(!s)return false;world.player.group.position.x=s.x;world.player.group.position.z=s.z+s.d/2+0.62;return true;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame,toggleRotate:rot=>void toggleRotate(rot)};
 updateUI();requestAnimationFrame(frame);
 // 切后台/退出前把去抖中的存档落盘，容器里可能随时冻结页面
 window.addEventListener('pagehide',flushStorage);

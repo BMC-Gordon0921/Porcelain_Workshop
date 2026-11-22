@@ -234,6 +234,42 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 **验证方式**：容器内 `tools/minitool/verify_touch_rotate.mjs` 覆盖「触屏档摇杆出现 → 推杆位移非零 → 换轴后仍能移动 → 点 `⟳` 变 852×393 且画布重排 → 再点还原 → 切桌面档自动变键盘方案」共 11 项断言（`qa/minitool/verify-touch-rotate.json`，当前全绿）；`tools/minitool/shots_devices.mjs` 按 iPhone / iPad / 桌面 / 旋屏四态截图（`qa/minitool/final/`）。`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。横版专项用 `tools/minitool/debug_landscape.mjs`（容器内逐态量画布**宽高比是否等于布局宽高比**，并把 HUD 里每个可点元素的中心点丢给 `elementFromPoint` 判「够不够得到」——这是「按钮被遮挡」唯一可量化的判据）、`debug_canvas_panels.mjs`（旋屏下打开升级/贴画面板，检查面板内画布）、`check_hero_canvas.mjs`（截图裁出开屏瓷碗区域，交给 Pillow 统计像素多样性，判断是否真的画出来了）。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
 
+
+**⑧ 面板外壳统一（用户反馈「卡片顶上要常驻关闭按钮」）**：原来 `.task-panel` 是 `overflow:auto` 的整块滚动容器，`×` 是 `position:absolute`，内容一长就必须滚回顶部才能关。现在把它改成三段式：
+
+```
+.task-panel            display:flex; flex-direction:column; overflow:hidden; position:absolute; inset:0（贴外壳内沿，圆角归零）
+.task-header           flex:0 0 auto；sticky 语义由布局保证，标题单行省略、说明两行 clamp，右侧留 54px 给 ×
+#task-body             flex:1 1 auto; min-height:0; overflow-y:auto（只有它滚）
+.task-footer           flex:0 0 auto
+.close-button          position:absolute; top:8px; right:10px; 34×34
+```
+
+帮助面板结构不同（不是三段式），用 `.help-panel{overflow-y:auto}` + `.close-button{position:sticky;top:0;float:right}` 达到同样效果。
+
+**⑨ 横版两栏（用户要求「工作台/升级做成两栏，参考宽屏布局」）**：`taskShell()` 在 `.task-panel` 上写 `dataset.panel=kind`，横版规则按 kind 分流，左预览 / 右控件固定 **58 / 42**：
+
+| 面板 kind | 左侧 | 右侧 |
+| --- | --- | --- |
+| `editor` | `.work-area`（`sculpt-canvas-wrap` flex 撑满，画布 100%） | `.editor-reference`（参考图 / 色板 / 提示，可滚） |
+| `kiln` | `.kiln-stage` | `.kiln-control`（温度计、判定条、按钮） |
+| `journey` / `decal` / `crafted` | `.bowl-stage` | `.decal-details` |
+| `upgrades` | `.upgrade-detail`（3D 工作台预览） | `.workbench-grid`（卡片单列可滚）+ `.upgrade-confirmation`（贴底一行） |
+| `citymap` / `travel` | 地图按可用高度 `object-fit:contain` 收住（单栏） | — |
+
+`#task-body` 在横版下改成 `display:flex;flex-direction:column`，让两栏容器 `flex:1 1 auto; min-height:0` 真正吃满剩余高度（`height:100%` 在有兄弟节点如 `.editor-bottom` 时会溢出）。
+
+**⑩ 图片「有没有真的画出来」的量化口径**：`tools/minitool/audit_media.mjs` 逐屏收集可见的 `<img>/<canvas>/background-image`，把 `naturalWidth=0`（真失败）、渲染高度 <8px（视觉上等于没加载）、画布 <4px 判为异常。竖屏与横版两档当前均为 `problems: []`、`failedRequests: []`。
+
+**⑪ 几何分块加载（用户反馈「除第一站外都没加载」）**：`src/platform/model-source.js` 增加 single-flight + 一次性预载：
+
+- `chunkInflight`（键 `` `${id}#${i}` ``）保证同一分块脚本只注入一次——此前开屏轮播的预览 world 与主 world 会各自注入一遍 `guyao.p0..p2`，一次进 7 个 ~700 KB 的 `<script>`；
+- `preloadSites(ids)` 在主场景就绪后用 `requestIdleCallback`（回退 `setTimeout 900ms`）**串行**预载其余三站，每块之间 `setTimeout 0` 让出主线程，单站失败只 `console.warn` 不打断；
+- `world.setScene()` 失败时先等 300ms 再自动重试一次，仍失败才进错误态；
+- 错误态文案带上原因（`工坊加载失败 · 古窑民俗博览区` + `guyao · 第 2/3 块加载失败（…）`），便于用户在真机上直接报给我们。
+
+容器内 `tools/minitool/verify_models.mjs` 逐章切换开屏轮播四站并进入工坊，断言每站 `canvas.dataset.loading==='false'`、无 `scene-load` 提示、`document` 里 12 个模型脚本各出现一次（`qa/minitool/verify-models.json`，当前 4/4 站通过、`errors: []`、`failedRequests: []`）。
+
 ## 8. 后续待办
 
 1. 上传到创服平台并走一遍真机（Android 10+ / iOS 18.4+）验收；确认上传侧接受 `.mp3`。

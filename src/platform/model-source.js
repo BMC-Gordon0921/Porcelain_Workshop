@@ -86,6 +86,33 @@ function buildGroup(bytes, id) {
   return group;
 }
 
+// 同块脚本只注入一次：开屏轮播与主世界会同时请求同一站点，
+// 没有 single-flight 时 guyao 的三块各被注入两次（一次 7 个 <script>，每块约 700 KB）。
+const chunkInflight = new Map();
+// 解码结果只缓存最近一站，避免四站 BufferGeometry 同时驻留。
+const decodeCache = new Map();
+
+function chunkReady(id, index) {
+  const store = modelStore()[id];
+  return Boolean(store && typeof store[index] === 'string');
+}
+
+function loadChunk(id, index, total) {
+  const key = `${id}#${index}`;
+  const inflight = chunkInflight.get(key);
+  if (inflight) return inflight;
+  if (chunkReady(id, index)) return Promise.resolve();
+  const task = loadScript(`./models/${id}.p${index}.js`).then(
+    () => undefined,
+    (error) => {
+      chunkInflight.delete(key);
+      throw new Error(`${id} · 第 ${index + 1}/${total} 块加载失败（${error.message}）`);
+    }
+  );
+  chunkInflight.set(key, task);
+  return task;
+}
+
 /**
  * 取站点配置 + 几何。分块 <script> 按需注入，注入过的站点再次进入不会重复下载。
  * 返回 {config, group}，与 scene-environment.js 的 fetch 版本对齐。
@@ -95,14 +122,49 @@ export async function loadPackedEnvironment(id) {
   const config = manifest && manifest[id];
   if (!config) throw new Error(`未知场景: ${id}`);
   const total = config.chunks || 0;
-  let store = modelStore()[id];
-  for (let i = 0; i < total; i++) {
-    if (store && typeof store[i] === 'string') continue;
-    await loadScript(`./models/${id}.p${i}.js`);
-    store = modelStore()[id];
-  }
+  for (let i = 0; i < total; i++) await loadChunk(id, i, total);
   const chunks = modelStore()[id] || [];
-  if (chunks.length < total) throw new Error(`几何分块不完整: ${id} ${chunks.length}/${total}`);
-  const text = chunks.slice(0, total).join('');
-  return {config, group: buildGroup(decodeBase64(text), id)};
+  if (chunks.length < total) throw new Error(`${id} · 几何分块不完整（${chunks.length}/${total}）`);
+  const cached = decodeCache.get(id);
+  let bytes = cached && cached.bytes;
+  if (!bytes) {
+    bytes = decodeBase64(chunks.slice(0, total).join(''));
+    decodeCache.clear();
+    decodeCache.set(id, {bytes});
+  }
+  return {config, group: buildGroup(bytes, id)};
+}
+
+/**
+ * 后台串行预载站点几何（只注入脚本，不建几何），用于首站进入后补齐其余三站。
+ * 单站失败只告警不抛出，避免影响当前操作。
+ */
+export async function preloadSites(ids, {onProgress} = {}) {
+  const manifest = manifestGlobal() || {};
+  const failed = [];
+  let done = 0;
+  for (const id of ids) {
+    const config = manifest[id];
+    if (!config) {
+      failed.push(id);
+      continue;
+    }
+    const total = config.chunks || 0;
+    for (let i = 0; i < total; i++) {
+      if (!chunkReady(id, i)) {
+        try {
+          await loadChunk(id, i, total);
+        } catch (error) {
+          console.warn('[模型]', id, error);
+          failed.push(id);
+          break;
+        }
+        // 让出主线程，避免预载把逐帧渲染拖慢。
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+      done += 1;
+      if (onProgress) onProgress({id, index: i, total, done});
+    }
+  }
+  return {failed};
 }
