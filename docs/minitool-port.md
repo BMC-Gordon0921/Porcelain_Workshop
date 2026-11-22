@@ -50,7 +50,7 @@
 
 ## 2. 只有真机/上传才能验证的项
 
-1. **zip 内 `.mp3` 是否被上传侧扩展名白名单接受**：线上文档 §2.6 / `device-capabilities.md` 明确「`<video>`/`<audio>` 媒体文件须打包在内」，但 `references/zip-artifact-spec.md` 的允许扩展名列表里没有音频扩展名——文档自身不一致。模拟器已证明能播（`duration 120.02`，`error: null`）；上传侧是否放行未知。
+1. **上传侧不接受任何音频扩展名（已实测确认）**：上传接口报 `代码包中包含不支持的文件类型："assets/bgm.mp3"`，白名单为 jpg/css/gif/svg/png/js/jpeg/json/html/woff2/webp/woff。现改为把 MP3 以 base64 存进 `assets/bgm.js`（`tools/minitool/embed_audio.mjs`），运行时注入脚本后 `AudioContext.decodeAudioData` 解码循环播放（`src/music.js` 的 `createBufferMusic`）；音轨本身不变，扩展名合规。
 2. 真机 WebView 61 的 ES2017 与 CSS 基线表现、帧率、内存。
 3. 真机是否存在 WebGL2 / WebGL1（桌面模拟器不能代表）。
 4. 真机容器对运行时 `<script>` 注入的额外限制（模拟器已通过）。
@@ -58,7 +58,7 @@
 ## 3. 技术决定
 
 - **D1 资源加载不使用 `fetch`/XHR**：几何等大数据以经典脚本（`<script>` 注入）注册到 `window` 上的命名空间；媒体用包内相对路径 `<audio>`。
-- **D2 BGM 转 MP3**：23.0 MB WAV → MP3（`tools/minitool/encode_audio.mjs`，lamejs 纯 JS 编码，本机无 ffmpeg）。
+- **D2 BGM 转 MP3 再转 base64**：23.0 MB WAV → 96 kbps MP3（`tools/minitool/encode_audio.mjs`，lamejs 纯 JS 编码，本机无 ffmpeg）→ `assets/bgm.js`（base64，1.83 MiB）。平台白名单无音频扩展名，故不能直接放 `.mp3`。
 - **D3 弃用 GLB/GLTFLoader**：`.glb` 不在允许扩展名内，且加载只能靠 `fetch`。构建期把 GLB 量化重打包为二进制（位置 int16 + 法线 int8 + 索引 uint16），base64 分块写入 `.js`；运行时直接构 `THREE.BufferGeometry`。
 - **D4 存储统一走容器 API**：`src/platform/storage.js` 封装 `window.xhs.miniTool` storage，失败即报错，**不设任何本地回退**。
 - **D5 three 降到 r150 + WebGL1 兜底**：three r186 只支持 WebGL2（文档 §7.4），而安卓 WebView 61 不保证 WebGL2。用 npm 别名 `three-legacy`（`npm:three@0.150.1`）只给小工具构建用，桌面/原生构建继续 r186，两边共用同一份源码；`src/platform/three-compat.js` 把 `texture.colorSpace` / `renderer.outputColorSpace` / legacy 光照对齐到 r150 的 `encoding` 语义，`src/platform/renderer.js` 的 `createRenderer()` 在 WebGLRenderer 构造失败时显式退回 `WebGL1Renderer`。
@@ -73,7 +73,7 @@
 | JS | r186 `vite build` 857.62 kB | `assets/app.js` 681.18 kB（gzip 201.89 kB） | r150 IIFE，含 three + 全部业务逻辑 |
 | 几何 | 4 个 GLB 合计 9.8 MB | 11 个分块 `.js` 共 6,914 KiB | 量化二进制 + base64（`tools/minitool/pack_models.mjs`） |
 | 图片 | 13 张位图 8.42 MiB | 11 张 WebP 共 888 KiB | WebP q88 + 最长边 1536（`tools/minitool/prepare_assets.py`） |
-| 音频 | WAV 23.0 MiB | `assets/bgm.mp3` 1,875 KiB | 120 s / 48 kHz / 立体声 / 128 kbps |
+| 音频 | WAV 23.0 MiB | `assets/bgm.js` 1,876 KiB（base64） | 96 kbps MP3 120 s / 48 kHz / 立体声，解码后 120.06 s |
 | CSS | 98.39 kB | `assets/style.css` 97 KiB | 含 Chrome 61 基线兜底 |
 | 字体/HTML | — | 1 KiB + 7 KiB | `zcool-kuaile-title.woff2`、`index.html` |
 | **解压合计** | — | **9.55 MiB / 28 文件** | 硬限 10 MiB |
@@ -85,7 +85,7 @@
 | --- | --- | --- |
 | R1 | 文本合计 6.85 MiB（几何 base64）触发官方审计 WARN | 已按块拆分（单块 ≈683 KB 字符、单条 base64 解码 ≈512 KiB）；这是 3D 资源本体，不是塞进代码的数据集，交付摘要中显式说明 |
 | R2 | 单文件最大 `taoxichuan.p0.js` ≈2.2 MiB > 2 MiB 提示线 | 该站是最大场景（93,130 三角）；如需压到提示线以内，可把分块上限调到 350 KB 字符，代价是请求数从 11 增到 ~20 |
-| R3 | mp3 扩展名白名单文档不一致 | 先按 mp3 交付；若上传被拒，改用「音效程序化合成 + 无 BGM」或与平台确认扩展名 |
+| R3 | mp3 扩展名被上传侧拒绝 | 已按实情处理：base64 进 `.js` + WebAudio 解码，平台侧零音频文件；兜底是退回纯程序化音效 |
 | R4 | 真机无 WebGL2 | `createRenderer()` 退回 `WebGL1Renderer`；**完全无 WebGL 的设备没有 2D 兜底**，会停在「工坊加载失败 / 重新加载」错误态 |
 | R5 | 模拟器内核比真机新 | 构建期 `chrome61` 目标 + 语法探针 + CSS 基线后处理；真机仍需验收 |
 | R6 | `aspect-ratio` / `color-mix()` / `backdrop-filter` / flex `gap` 在 WebView 61 上缺效果 | 属优雅降级（`color-mix` 只用于 box-shadow、`backdrop-filter` 只用于毛玻璃）；`dvh`、`inset` 已由 `tools/minitool/css_legacy.mjs` 补兜底 |
@@ -144,7 +144,7 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | 进入工坊 | ✅ `openingDismissed = true`、`worldGeometry = true`、`worldLoading = "false"` |
 | 自带几何 | ✅ `hasManifest: true`、4 个站点齐全、`guyao` 3 块 / 1,713,180 字符、7 个 `models/*.js` 已注入 |
 | WebGL | ✅ `webgl2`、`drawingBuffer 393×468`、`WEBGL_lose_context` 可用 |
-| 音频 | ✅ `./assets/bgm.mp3` 加载成功，`duration 120.02`、`error: null` |
+| 音频 | ✅ `./assets/bgm.js` 注入后解码成功：2 声道 / 48 kHz / 120.06 s / `error: null`；手势后应用确实请求该脚本 |
 | 存档 | ✅ 走容器 Storage：`available: true`、`usedBytes 51,562`、`limitBytes 10,485,760`，`localStorage` 里 `terra*` 键为 `[]` |
 
 截图：`qa/minitool/01-opening.png`（开屏已避开状态栏与胶囊）、`qa/minitool/02-workshop.png`（进入工坊后的关卡说明弹层已让开外壳）。
@@ -292,7 +292,7 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 ## 8. 后续待办
 
-1. 上传到创服平台并走一遍真机（Android 10+ / iOS 18.4+）验收；确认上传侧接受 `.mp3`。
+1. 上传到创服平台并走一遍真机（Android 10+ / iOS 18.4+）验收。
 2. 若要压到审计的 2 MiB 建议线以内，去掉 BGM 或改程序化音效（几何 base64 是体积主体）。
 3. 触屏手感调优（拖拽旋转、笔刷大小手势），以及低端机的动态降档（`renderer.__webglFlavor` 已就绪）。
 4. 若真机出现 WebGL 完全不可用，再补 2D 兜底视图（当前只有错误态）。

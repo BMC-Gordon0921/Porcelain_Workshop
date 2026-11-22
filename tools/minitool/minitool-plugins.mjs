@@ -3,7 +3,8 @@
 
 const LOGO_MAP = {'logo-mark.png': './assets/logo-mark.webp', 'logo-lockup.png': './assets/logo-lockup.webp'};
 
-// 桌面版把 BGM 作为 23 MB WAV 打进包；小工具包换成 128 kbps MP3（1.92 MB）。
+// 桌面版把 BGM 作为 23 MB WAV 打进包；小工具包不允许音频扩展名，
+// 所以这里把 WAV 的 URL 置空，BGM 改由 assets/bgm.js 的 base64 + WebAudio 播放。
 export function audioShim() {
   return {
     name: 'minitool-audio-shim',
@@ -12,7 +13,7 @@ export function audioShim() {
       return source.split('?')[0].endsWith('.wav') ? '\0minitool-audio' : null;
     },
     load(id) {
-      return id === '\0minitool-audio' ? "export default './assets/bgm.mp3';\n" : null;
+      return id === '\0minitool-audio' ? "export default '';\n" : null;
     }
   };
 }

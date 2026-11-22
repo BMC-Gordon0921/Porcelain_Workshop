@@ -3,6 +3,7 @@
 // 用法：node tools/minitool/build_minitool.mjs [--skip-audit]
 import {spawnSync} from 'node:child_process';
 import {copyFile, mkdir, readdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import {dirname, join, relative, resolve} from 'node:path';
 import {legacyCss} from './css_legacy.mjs';
 
@@ -47,15 +48,23 @@ async function main() {
   console.log('[1/6] 预处理资源（WebP 位图、模型打包、BGM 编码按需）');
   run('prepare_assets', process.env.PYTHON || 'C:/Python314/python.exe', [join(ROOT, 'tools', 'minitool', 'prepare_assets.py')]);
   run('pack_models', process.execPath, [join(ROOT, 'tools', 'minitool', 'pack_models.mjs')]);
+  const bgm96 = join(GEN, 'audio', 'bgm-96.mp3');
+  if (!existsSync(bgm96)) {
+    console.log('      编码 BGM（96 kbps）：minitool/gen/audio/bgm-96.mp3');
+    run('encode_audio', process.execPath, [join(ROOT, 'tools', 'minitool', 'encode_audio.mjs'),
+      '--kbps', '96', '--out', bgm96]);
+  }
 
   console.log('[2/6] vite 构建（three r150 / chrome61 / iife）');
   const viteBin = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
   run('vite build', process.execPath, [viteBin, 'build', '--config', join(ROOT, 'vite.minitool.config.js')]);
 
-  console.log('[3/6] 灌入自带几何、WebP 位图与 MP3');
+  console.log('[3/6] 灌入自带几何、WebP 位图与 BGM（base64 进 .js，平台不允许音频扩展名）');
   const models = await copyInto(join(GEN, 'models'), join(DIST, 'models'), name => name.endsWith('.js'));
   const images = await copyInto(join(GEN, 'img'), DIST);
-  await copyFile(join(GEN, 'audio', 'bgm-128.mp3'), join(DIST, 'assets', 'bgm.mp3'));
+  run('embed_audio', process.execPath, [join(ROOT, 'tools', 'minitool', 'embed_audio.mjs'),
+    '--src', join(GEN, 'audio', 'bgm-96.mp3'),
+    '--out', join(DIST, 'assets', 'bgm.js')]);
 
   console.log('[4/6] 后处理 index.html');
   const htmlPath = join(DIST, 'index.html');
@@ -78,7 +87,8 @@ async function main() {
   console.log(`      CSS 基线兜底：dvh ${(css.match(/dvh(?![a-z])/g) || []).length} 处、inset ${(css.match(/inset\s*:/g) || []).length} 处`);
 
   console.log('[5/6] 扩展名与体积自检');
-  const allowed = new Set(['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff', '.woff2', '.json', '.mp3']);
+  // 平台白名单：jpg css gif svg png js jpeg json html woff2 webp woff（无音频扩展名）
+  const allowed = new Set(['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff', '.woff2', '.json']);
   const files = await walk(DIST);
   const bad = files.filter(file => !allowed.has(file.slice(file.lastIndexOf('.')).toLowerCase()));
   const total = (await Promise.all(files.map(async file => (await stat(file)).size))).reduce((a, b) => a + b, 0);

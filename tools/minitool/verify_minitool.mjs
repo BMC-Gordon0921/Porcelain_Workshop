@@ -109,22 +109,39 @@ summary.webglFlavor = await frame.evaluate(() => {
   return {api: isV2 ? 'webgl2' : 'webgl1', hasLoseContext: !!lose, drawingBuffer: [gl.drawingBufferWidth, gl.drawingBufferHeight], dpr: window.devicePixelRatio};
 });
 
-// 3.5 音频：BGM 必须来自包内 mp3（<audio> + 相对路径）
-// 应用里的 BGM 是 new Audio(url) 的游离对象，不在 DOM 里，所以这里另起一个元素验证包内 mp3 可加载
+// 3.5 音频：平台不允许音频扩展名，BGM 以 base64 存在 assets/bgm.js，运行时注入后交给 WebAudio 解码
 summary.audio = await frame.evaluate(() => new Promise((resolve) => {
-  const node = document.createElement('audio');
   const done = (payload) => resolve(payload);
-  const timer = setTimeout(() => done({src: './assets/bgm.mp3', timeout: true, readyState: node.readyState}), 8000);
-  node.addEventListener('loadedmetadata', () => {
-    clearTimeout(timer);
-    done({src: './assets/bgm.mp3', resolved: node.currentSrc, readyState: node.readyState, duration: Math.round(node.duration * 100) / 100, error: null});
-  });
-  node.addEventListener('error', () => {
-    clearTimeout(timer);
-    done({src: './assets/bgm.mp3', resolved: node.currentSrc, readyState: node.readyState, error: node.error ? node.error.code : 'unknown'});
-  });
-  node.src = './assets/bgm.mp3';
+  const timer = setTimeout(() => done({src: './assets/bgm.js', timeout: true}), 15000);
+  const script = document.createElement('script');
+  script.src = './assets/bgm.js';
+  script.onerror = () => { clearTimeout(timer); done({src: './assets/bgm.js', error: 'script load failed'}); };
+  script.onload = async () => {
+    try {
+      const base64 = window.__TERRA_BGM || '';
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      const ctx = new Ctor();
+      const buffer = await ctx.decodeAudioData(bytes.buffer);
+      clearTimeout(timer);
+      done({src: './assets/bgm.js', base64Chars: base64.length, bytes: bytes.length, channels: buffer.numberOfChannels, sampleRate: buffer.sampleRate, duration: Math.round(buffer.duration * 100) / 100, error: null});
+      ctx.close();
+    } catch (error) {
+      clearTimeout(timer);
+      done({src: './assets/bgm.js', error: String(error && error.message || error)});
+    }
+  };
+  document.head.appendChild(script);
 }));
+
+// 3.6 BGM 播放链路：用户手势后应用应懒加载 assets/bgm.js（资源计时里能查到）
+await page.waitForTimeout(1200);
+summary.bgmRequest = await frame.evaluate(() => {
+  const hit = performance.getEntriesByType('resource').filter(entry => entry.name.includes('/assets/bgm.js'));
+  return {requested: hit.length > 0, url: hit.length ? hit[0].name : null, transferBytes: hit.length ? hit[0].transferSize : 0};
+});
 
 // 4. 容器 Storage：点一下声音开关触发一次写，再读回确认走的是 miniTool Storage
 await frame.locator('[data-sound-toggle]').first().click({timeout: 10000}).catch(() => {});
