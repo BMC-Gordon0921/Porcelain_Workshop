@@ -121,7 +121,6 @@ function updateUI(){
  document.querySelector('.day-pill small').textContent=`场景 ${state.scene+1} / 4 · ${theme.decal}`;
  document.querySelector('.commissions').innerHTML=`<div class="scene-heading"><span>瓷器之旅 · ${state.scene+1} / 4</span><h2 title="${theme.name}">${PLACES[state.scene].shortName}</h2></div><div class="scene-path">${SCENES.map((s,i)=>`<span class="${i===state.scene?'current':''} ${state.isCollected(i)?'done':''}" title="${s.name}">${state.isCollected(i)?'✓':String(i+1).padStart(2,'0')}</span>`).join('')}</div><button class="reference-card" id="view-brief"><div class="reference-heading"><span>${state.phase==='practice'?'练习订单':`第 ${state.level+1} 关 / ${ORDERS_PER_SCENE}`}</span><span>80% 通关</span></div><img src="${presetImages[p.id]}" alt="${p.name}参考图"/><h3>${p.name}</h3><p>60% 起奖励 · 首次通关 +60 币</p><div class="efficiency-indicator" data-efficiency></div><span class="reference-link">${state.canWork?'查看订单 ↗':'三关已完成 ✓'}</span></button><div class="preset-path">${CAMPAIGN_PRESETS.map((d,i)=>`<div class="preset-step ${i===state.level?'current':''} ${state.sceneResults.some(r=>r.level===i+1)?'passed':''}" title="第 ${i+1} 关：${d.name}"><img src="${presetImages[d.id]}" alt="${d.name}"/><span>${state.sceneResults.some(r=>r.level===i+1)?'✓':i+1}</span></div>`).join('')}</div><button class="decal-goal" id="open-journey"><img src="${decalImages[state.scene]}" alt="${theme.decal}贴画"/><div><small>本场景贴画 · 400 币</small><b>${theme.decal}</b><span>${state.phase==='decal'?'已购买 · 点击贴花':state.phase==='crafted'?'已制成 · 进入下一场景':state.completed?'四件作品已集齐':`${state.scenePassed}/${ORDERS_PER_SCENE} 关 · ${state.money}/400 币`}</span></div><span>↗</span></button><button class="collection-link" id="view-collection">我的瓷器藏品 <b>${state.collection.length} / 4</b></button>`;
  $('view-brief').onclick=routeTask;$('open-journey').onclick=openJourney;$('view-collection').onclick=openCollection;
- $('carrying').classList.toggle('hidden',!state.hasClay);$('carry-art').innerHTML=`<img src="${thumbnail(state.piece.pixels,112)}" alt="当前瓷泥"/>`;$('carry-name').textContent=p.name;$('carry-stage').textContent=`第 ${state.level+1} 关 · 第 ${state.attempt} 次尝试`;
  $('guide-number').textContent=String(state.scene+1).padStart(2,'0');$('guide-kicker').textContent=state.canWork?'制胚 → 彩绘 → 烧成 · 80% 通关':'三关完成 · 制作场景成品';$('guide-title').textContent=state.canWork?(state.hasClay?(state.fired?'作品已烧成 · 前往交付台':state.hasPaint?'去窑炉烧成，再交付作品':state.hasShape?'到上色台完成彩绘':'到塑形台制作胚体'):'到取泥台领取瓷泥'):'点击右侧贴画，完成你的瓷碗';$('guide-copy').textContent=state.canWork?'按顺序完成制胚、彩绘、烧成；走近工作台按 F 操作。':'购买 → 选择贴画 → 贴到碗上 → 下一场景';
  for(const station of STATIONS){const el=labels[station.id];el.querySelector('.station-level')?.remove();const badge=document.createElement('span');badge.className='station-level';badge.textContent=`Lv.${state.stationLevel(station.id)}`;el.append(badge);}
  tutorialKey='';updateTutorial();updateEfficiency();$('app').dataset.scene=String(state.scene+1);$('app').dataset.phase=state.phase;save();
@@ -146,12 +145,17 @@ function updateTutorial(){
  }
 }
 function cleanupTask(){releaseStoke();activeTask?.editor?.finish();activeTask?.preview?.dispose();activeTask?.cityMap?.dispose();activeTask?.upgrades?.dispose();}
+function syncPanelOpen(){
+ const open=!$('task-overlay').classList.contains('hidden')||!$('help-overlay').classList.contains('hidden');
+ const root=document.documentElement;
+ if(open)root.dataset.panelOpen='1';else root.removeAttribute('data-panel-open');
+}
 function taskShell(kind,eyebrow,title,description,body,footer='进度自动保存。按 Esc 返回工坊。'){
  syncClocks();cleanupTask();activeTask={kind};world.setInteractionEnabled(false);keys.clear();clearTimeout(toastTimeout);$('toast').classList.remove('show');$('task-overlay').classList.remove('hidden');document.querySelector('.task-panel').classList.toggle('atlas-panel',kind==='citymap'||kind==='travel');document.querySelector('.task-panel').classList.toggle('wide-panel',['editor','kiln','upgrades','result','brief','journey','decal','crafted','collection','citymap','travel'].includes(kind));
  document.querySelector('.task-panel').dataset.panel=kind;
- $('task-eyebrow').textContent=eyebrow;$('task-title').textContent=title;$('task-description').textContent=description;$('task-body').innerHTML=body;tutorialKey='';$('task-footer').innerHTML=footer+'<button type="button" id="task-help" class="secondary-button">玩法说明</button>';$('task-help').onclick=showHelp;document.querySelector('.task-panel').scrollTop=0;$('close-task').focus({preventScroll:true});syncClocks();updateEfficiency();save();
+ $('task-eyebrow').textContent=eyebrow;$('task-title').textContent=title;$('task-description').textContent=description;$('task-body').innerHTML=body;tutorialKey='';$('task-footer').innerHTML=footer+'<button type="button" id="task-help" class="secondary-button">玩法说明</button>';$('task-help').onclick=showHelp;document.querySelector('.task-panel').scrollTop=0;$('close-task').focus({preventScroll:true});syncPanelOpen();syncClocks();updateEfficiency();save();
 }
-function closeTask(){syncClocks();releaseStoke();cleanupTask();state.endStation();activeTask=null;keys.clear();$('task-overlay').classList.add('hidden');syncClocks();updateUI();}
+function closeTask(){syncClocks();releaseStoke();cleanupTask();state.endStation();activeTask=null;keys.clear();$('task-overlay').classList.add('hidden');syncPanelOpen();syncClocks();updateUI();}
 $('close-task').onclick=closeTask;
 function routeTask(){if(state.canWork)openBrief();else if(state.completed)openCollection();else openJourney();}
 function openBrief(){
@@ -175,8 +179,8 @@ function schedulePreload(activeIndex){
 
 $('map-button').onclick=()=>openCityMap();
 $('reset-view').onclick=()=>{if(started&&!activeTask&&!helpOpen)world.resetView();};
-function showHelp(){syncClocks();releaseStoke();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();$('help-overlay').classList.remove('hidden');$('help-done').focus();syncClocks();updateEfficiency();save();}
-function hideHelp(){syncClocks();helpOpen=false;$('help-overlay').classList.add('hidden');keys.clear();syncClocks();updateEfficiency();}
+function showHelp(){syncClocks();releaseStoke();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();$('help-overlay').classList.remove('hidden');$('help-done').focus();syncPanelOpen();syncClocks();updateEfficiency();save();}
+function hideHelp(){syncClocks();helpOpen=false;$('help-overlay').classList.add('hidden');syncPanelOpen();keys.clear();syncClocks();updateEfficiency();}
 $('help-button').onclick=showHelp;$('close-help').onclick=hideHelp;$('help-done').onclick=hideHelp;
 function openEditor(station){
  if(!state.canWork){openJourney();return;}
@@ -275,7 +279,6 @@ function openRestart(){
  taskShell('restart','重新制作','换一块新瓷泥？','当前作品会重置，已通过的关卡、藏品与硬币会保留。',`<div class="task-action-row"><button class="secondary-button" id="cancel-restart">保留作品</button><button class="primary-button" id="confirm-restart">领取新瓷泥 <span>↺</span></button></div>`);
  $('cancel-restart').onclick=closeTask;$('confirm-restart').onclick=()=>{syncClocks();state.restart();if(state.collectClay())sound('clay');closeTask();};
 }
-$('discard-button').onclick=()=>toast('走到取泥台，可以换一块新瓷泥。');$('discard-button').title='到取泥台更换瓷泥';
 function openJourney(){
  if(state.phase==='decal'||state.isCollected()){openDecal();return;}
  if(state.completed){openCollection();return;}

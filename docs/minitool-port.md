@@ -270,6 +270,18 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 容器内 `tools/minitool/verify_models.mjs` 逐章切换开屏轮播四站并进入工坊，断言每站 `canvas.dataset.loading==='false'`、无 `scene-load` 提示、`document` 里 12 个模型脚本各出现一次（`qa/minitool/verify-models.json`，当前 4/4 站通过、`errors: []`、`failedRequests: []`）。
 
+### ⑦ 竖屏点 ⟳ 后的可用性（真实 `rotate(90deg)` 路径）
+
+| 症状 | 根因 | 处理 |
+| --- | --- | --- |
+| 工作台看不到操作区，画布塌成 37px | `.work-area` 是 flex 列，画布 `flex:1 1 auto` + `aspect-ratio:1` 与固定行（工具/笔刷/说明，共 68px）互压；`.editor-layout` 只分到 161px 高度 | ls 下 `.work-area` 改 `display:grid;grid-template-rows:minmax(0,1fr) auto auto`，画布 `height:100%`，隐藏 `board-top`/`editor-assists`/`station-upgrade-entry`/`task-efficiency` 占位，`.task-footer` 脱离文档流移到标题栏右侧 |
+| 操作键压在面板上且被裁 | 触屏控件是 `#app` 内绝对定位，面板全屏覆盖后仍在原位 | 面板打开时 `html[data-panel-open]`：`.touch-controls`、`.reset-view` 直接 `display:none`（`syncPanelOpen()` 在 `taskShell`/`closeTask`/`showHelp`/`hideHelp` 四处同步） |
+| 图鉴面板只有 361 宽 | `.atlas-panel{width:1100px;max-width:calc(100vw - 32px)}`，旋屏后 `100vw` 仍是 393 | ls 下 `.atlas-panel{width:auto;max-width:none}` |
+| iPad 旋屏后两栏把画布压成竖条 | 旋屏后 iPad 逻辑尺寸近乎正方（852×834），仍命中横版两栏 | `safe-area.js` 增加 `flatEnough = effW/effH >= 1.2`，只有真的够扁才启用 `data-layout=ls`；iPad 旋屏退回 `wide` 单栏 |
+| 全局「正在制作」悬浮卡 | `index.html` 的 `.carrying` + `main.js` 更新逻辑 | 整卡删除（`#carrying`、`#carry-art`、`#discard-button` 及相关样式/监听） |
+
+实测（`tools/minitool/verify_rotate_real.mjs`，真实旋转路径、`offsetWidth` 量尺寸）：phone 816×393 下 editor 画布 **212×212（1.000）**、两栏 453.5/328.5；kiln 452×216、journey 452×258、upgrades 440×179；iPad 走 `wide`，editor 画布 356×356。7 个面板的 `×` 全部 `closeHit: true`，面板关闭后 HUD 恢复正常。
+
 ## 8. 后续待办
 
 1. 上传到创服平台并走一遍真机（Android 10+ / iOS 18.4+）验收；确认上传侧接受 `.mp3`。

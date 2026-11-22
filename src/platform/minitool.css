@@ -786,8 +786,18 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     bottom: 8px;
   }
 
+  html[data-platform=minitool][data-panel-open] .touch-controls,
+  html[data-platform=minitool][data-panel-open] .reset-view {
+    display: none;
+  }
+
   html[data-platform=minitool][data-layout=ls] .overlay {
     padding: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .atlas-panel {
+    width: auto;
+    max-width: none;
   }
 
   html[data-platform=minitool][data-layout=ls] .task-panel,
@@ -875,7 +885,29 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     min-height: 0;
   }
 
-  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .work-area,
+  /* 工作台左列：画布吃满剩余高度（grid 行 1fr），工具行贴底，避免 flex + aspect-ratio 互压成 39px */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .work-area {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    gap: 4px;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .board-top {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
+
   html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage,
   html[data-platform=minitool][data-layout=ls] [data-panel=journey] .bowl-stage,
   html[data-platform=minitool][data-layout=ls] [data-panel=decal] .bowl-stage,
@@ -886,14 +918,82 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     min-width: 0;
   }
 
-  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap {
-    flex: 1 1 auto;
-    width: auto;
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
     min-height: 0;
-    max-width: none;
+    aspect-ratio: 1;
   }
 
-  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap canvas,
+  /* 横版工作台：把页脚（玩法说明）提到标题栏右侧，页脚脱离文档流，高度全给画布 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer {
+    position: absolute;
+    top: 3px;
+    right: 50px;
+    z-index: 6;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom {
+    padding: 4px 0 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom .primary-button {
+    padding: 8px 14px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer > span {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom .primary-button {
+    padding: 9px 14px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    margin-top: 0;
+  }
+
+  /* 横版工作台：拿掉占位的升级入口与辅助说明，工具行压成单行，把高度全部让给画布 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .station-upgrade-entry,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-assists,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .station-only,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-efficiency {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-switch button {
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row .small-tool {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row .guide-toggle {
+    width: auto;
+    margin: 0 0 0 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer .secondary-button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage canvas,
   html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage canvas,
   html[data-platform=minitool][data-layout=ls] [data-panel=journey] .bowl-stage canvas,
   html[data-platform=minitool][data-layout=ls] [data-panel=decal] .bowl-stage canvas,

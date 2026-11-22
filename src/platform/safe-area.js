@@ -49,7 +49,11 @@ function computeInsets(info) {
 
 function applyLayout(insets) {
   const el = root();
-  const compactLandscape = insets.rotated || (insets.landscape && insets.winH <= 520);
+  // 只在「真的够扁」时启用横版紧凑/两栏：旋屏后 iPad 近乎正方（852×834），套 58/42 会把画布挤成竖条
+  const effW = insets.rotated ? insets.winH : insets.winW;
+  const effH = insets.rotated ? insets.winW : insets.winH;
+  const flatEnough = effW / effH >= 1.2;
+  const compactLandscape = flatEnough && (insets.rotated || (insets.landscape && insets.winH <= 520));
   el.dataset.layout = compactLandscape ? 'ls' : (insets.winW >= 761 ? 'wide' : 'sm');
   el.style.setProperty('--mt-left-inset', `${Math.round(insets.left)}px`);
   el.style.setProperty('--mt-right-inset', `${Math.round(insets.right)}px`);
