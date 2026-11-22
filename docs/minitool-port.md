@@ -166,7 +166,7 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | 任务面板小标题被关闭按钮压 | `.task-header` 居中文本延伸到右上 × | `.task-header{padding:0 34px}` |
 | 升级面板 3D 预览整块不见 | `.upgrade-confirmation{position:sticky;bottom:-22px}` 盖住画布，而画布本身有 240px 高 | 确认条改 `position:static`，画布压到 190px |
 | 底部还有桌面键位提示（F / Esc） | 桌面文案 | 隐藏 `.bottom-bar .controls`、`.task-footer kbd`、`#interaction .interact-key` |
-| 屏幕方向键与「操作」键整组不显示 | `#touch-controls` 只在 `@media(pointer:coarse)` 下出现，而小工具 WebView 在模拟器/部分安卓平板上 `pointer` 报 `fine`、`maxTouchPoints` 为 0 | 改按**容器身份**判定：`html[data-platform=minitool] .touch-controls{display:block}`，并按 `--mt-*inset` 定位；`src/main.js` 里 `TOUCH_UI` 同时认 `(pointer:coarse)` 与 `__MINITOOL__` |
+| 触屏操控控件整组不显示 | `#touch-controls` 只在 `@media(pointer:coarse)` 下出现，而小工具 WebView 在模拟器/部分安卓平板上 `pointer` 报 `fine`、`maxTouchPoints` 为 0 | 改按**输入模式**判定（见 ③）：`html[data-input=touch] .touch-controls{display:block}`，位置用 `--mt-*inset` 让位 |
 | 交互卡写「按 F 开始操作」「操作 F」 | 键盘语义 | `#interact-sub` 触屏改「点按右下「操作」开始」；`index.html` 的触屏键文案改为「操作」；制作面板底部提示改成「用下方滑杆调整笔刷大小 / 点保存并离开」（`EDITOR_HINTS`） |
 | 升级卡文案「悬停预览 · 点击选定」 | 触屏没有悬停 | `src/upgrades-view.js` 按 `matchMedia('(pointer:coarse)')` 输出「点选预览 · 确认升级」，词条同步进 `src/experience-i18n.js` |
 
@@ -179,10 +179,27 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | 升级面板 3D 预览底边被 sticky 确认条盖住 76px | `.upgrade-confirmation{position:sticky;bottom:-22px}` 常态悬浮 | 宽屏同样改 `position:static`（手机端此前已改） |
 | 开屏轮播页左侧文案列比网格行高 15–23px，压到页脚 | 桌面字号在 834 宽下把 `.opening-copy` 撑高 | 宽屏收紧：`h1 34px`、`.opening-lead 13px`、`.opening-chapter{min-height:0}`、`.opening-rules` 上边距收窄 |
 | 品牌字标 `terra®` 在窄屏折行 | `.brand h1` 未禁折行 | `white-space:nowrap` |
+| 订单栏内容越界压到底部信息条（iPad 214×58、PC 252×40） | 只给了固定 `top`，没给 `bottom`，`max-height:calc(100dvh - 185px)` 也没算 top inset | `[data-layout=wide] #app > .commissions{bottom:calc(74px+inset);max-height:none;overflow-y:auto}` |
+| 「当前目标」引导卡压住摇杆/操作键/交互卡 | 卡片沿用桌面左下角定位 | 平板/桌面预览挪到摇杆上方（`bottom:196px`、`max-width:46%`）；手机触屏直接 `display:none`（内容与教学徽标重复） |
+| 手机「操作」键压住底部信息条、`↺ 恢复视角` 与它重叠 | 两者都靠右下 | 操作键 `bottom:calc(52px+inset)`；恢复视角移到摇杆上方 `bottom:192px` |
 
 > 量化方式：`tools/minitool/audit_layout.mjs`（`W/H/IN_TOP/IN_SIDE` 环境变量）逐屏量 HUD 盒子、两两重叠、越界元素、文本截断与面板滚动；`tools/minitool/audit_panels.mjs` / `check_upgrade.mjs` 查面板内部（画布是否被 sticky 覆盖、子块是否横向越界）。三种视口跑完 `errors: []`，重叠项只剩「HUD 浮在 3D 画布之上」这种既有设计。
 
-**③ 横屏布局（`@media (orientation:landscape) and (max-height:520px)`）**：不是把界面旋转 90° 的假横屏，而是真正的响应式：
+**③ 虚拟摇杆与输入模式**：四个方向键换成左下角摇杆，右下角「操作」键放大到 78px（横屏 50px）。
+
+- `#joystick` 是 118px 圆盘 + 虚线圈 + 54px 球，`pointerdown/move/up/cancel` 全程 `setPointerCapture`（拿不到捕获时也不影响拖动，已 try/catch）；输出 `stick.x/stick.y ∈ [-1,1]`，`joyVector()` 按「到圆心距离 / JOY_TRAVEL(34)」算推力，半径外限幅到 1；
+- 帧循环里摇杆与键盘**相加后再夹到 ±1**：`dx = clamp(keyX + stick.x)`，`world.move()` 再按模长缩放速度（`thrust = min(1, hypot(dx,dz))`），所以轻推=慢走、推满=全速，不是二值开关；
+- 输入模式由 `detectInputMode()` 决定：`(pointer:coarse)` → `touch`；否则宽度 ≥900 且横屏 → `keyboard`；小工具里宽度 <900 → `touch`；其余 → `keyboard`。结果写到 `html[data-input]`，`resize` 时重算；
+- 桌面预览（1280×852）自动落到 `keyboard`：摇杆与触屏文案全部收起，底栏恢复 `WASD / F` 键位提示——同一个包两种输入形态。
+
+**④ 手动横版渲染（系统方向不变）**：容器没有锁屏方向 API，所以给顶栏加了一枚 `⟳` 按钮（只在触屏显示），点一下就把整页按「旋转 90° 后的屏幕」重排：
+
+- `toggleRotate()` 切 `html[data-rotate=on]`，`applyLayout()` 把安全区**换轴**映射（旋转后 top ← 横屏 left、bottom ← right、left ← 竖屏 bottom、right ← 状态栏 headTop），并写 `--mt-width/--mt-height`；
+- 几何上不是把界面转 90° 了事：`html[data-rotate=on] #app{position:fixed;top:50%;left:50%;width:var(--mt-height);height:var(--mt-width);transform:translate(-50%,-50%) rotate(90deg)}`——`#app` 先换成 852×393 的横版盒子再整体旋转，所以内部所有响应式规则（含 `data-layout=ls` 的紧凑横屏）按横版尺寸生效，画面与图标都是「排好再转」，不是拉伸；
+- 旋转后 `world.setDisplayRotation(90)` 把相机拖拽的 x/y 互换（否则手指方向与场景转动方向会错位），摇杆的 `joyVector()` 同样做坐标换轴；
+- 系统方向始终不变（不调 `screen.orientation`，也不请求全屏），因此不依赖任何容器权限。
+
+**⑤ 横屏紧凑布局（`html[data-layout=ls]`，由 JS 判定：真机横屏且高 ≤520px，或用户手动旋屏）**：不是把界面旋转 90° 的假横屏，而是真正的响应式：
 
 - 顶栏 54px、底栏 38px，`#world-wrap` 四边重新让位（右侧留给 172px 宽的订单竖栏）；
 - 订单栏改成右侧窄栏，隐藏 `.scene-heading/.scene-path/.preset-path/.reference-card>img/>p/.reference-link/.efficiency-indicator/.section-heading/.goal-card`，只留「第几关 + 作品名 + 贴画目标」；
@@ -192,9 +209,9 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 > 踩坑备忘：`[data-opening-stage=map] > .city-prologue{display:none}` 的特异性低于 `html[data-platform] .opening-screen > .city-prologue`，横屏覆盖 `display` 时若不带上 `[data-opening-stage=intro]`，会让已经隐藏的故事页重新出现（表现为两套文案叠在一起）。
 
-> 关于「怎么才能看到横屏」：容器本身不提供锁定屏幕方向的 API，页面只能做「竖屏优先 + 横屏响应式」。`redapp dev` 的本地工作台只有 iPhone / iPad / 桌面三种预览设备、**没有旋转按钮**（iPhone 预览固定 393×852，逻辑视口写在诊断面板里），所以在工作台里永远看不到横屏；要看横屏必须用真机横握，或用 `tools/minitool/shots_mobile.mjs`（`W=852 H=393`）注入外壳让位尺寸后截图，产物见 `qa/minitool/landscape2/`。
+> 关于「怎么才能看到横屏」：工作台本身只有 iPhone / iPad / 桌面三种预览设备、没有旋转按钮，但它也不需要——顶栏的 `⟳` 按钮就是产品内的横版入口（点一下，`#app` 变 852×393 再旋转，系统方向不动）。真机横握时 `data-layout` 也会自动落到 `ls`，两套路径共用同一批规则。
 
-**验证方式**：`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
+**验证方式**：容器内 `tools/minitool/verify_touch_rotate.mjs` 覆盖「触屏档摇杆出现 → 推杆位移非零 → 换轴后仍能移动 → 点 `⟳` 变 852×393 且画布重排 → 再点还原 → 切桌面档自动变键盘方案」共 11 项断言（`qa/minitool/verify-touch-rotate.json`，当前全绿）；`tools/minitool/shots_devices.mjs` 按 iPhone / iPad / 桌面 / 旋屏四态截图（`qa/minitool/final/`）。`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
 
 ## 8. 后续待办
 

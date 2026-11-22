@@ -104,14 +104,21 @@ const record = async (name) => { results[name] = await measure(); await shot(nam
 
 await page.goto(url);
 await page.waitForFunction(() => !!window.__terra);
-await page.evaluate(({top, side, bottom}) => {
-  const root = document.documentElement;
-  root.dataset.platform = 'minitool';
-  root.style.setProperty('--mt-top-inset', `${top}px`);
-  root.style.setProperty('--mt-bottom-inset', `${bottom}px`);
-  root.style.setProperty('--mt-left-inset', `${side}px`);
-  root.style.setProperty('--mt-right-inset', `${side}px`);
-}, {top: TOP, side: SIDE, bottom: BOTTOM});
+  const input = process.env.INPUT || ((W < 900) ? 'touch' : 'keyboard');
+  const layout = (process.env.ROTATE === '1' || (H <= 520 && W > H)) ? 'ls' : (W >= 761 ? 'wide' : 'sm');
+  await page.evaluate(({top, side, bottom, input, layout, rotate, width, height}) => {
+    const r = document.documentElement;
+    r.dataset.platform = 'minitool';
+    if (rotate) r.dataset.rotate = 'on';
+    r.dataset.input = input;
+    r.dataset.layout = layout;
+    r.style.setProperty('--mt-top-inset', top + 'px');
+    r.style.setProperty('--mt-bottom-inset', bottom + 'px');
+    r.style.setProperty('--mt-left-inset', side + 'px');
+    r.style.setProperty('--mt-right-inset', side + 'px');
+    r.style.setProperty('--mt-width', (rotate ? height : width) + 'px');
+    r.style.setProperty('--mt-height', (rotate ? width : height) + 'px');
+  }, {top: TOP, side: SIDE, bottom: BOTTOM, input, layout, rotate: process.env.ROTATE === '1', width: W, height: H});
 await page.evaluate(() => document.fonts.ready);
 await page.waitForFunction(() => document.querySelector('#opening-background canvas')?.dataset.loading === 'false');
 await page.waitForTimeout(1600);

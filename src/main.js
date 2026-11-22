@@ -29,13 +29,20 @@ import {createMusic} from './music.js';
 import {TUTORIAL_STEPS} from './tutorial.js';
 import logoMark from './assets/logo-mark.png';
 import {initStorage, readStorage, writeStorage, flushStorage} from './platform/storage.js';
-import {initPlatformChrome} from './platform/safe-area.js';
+import {initPlatformChrome, onRotateChange, toggleRotate, isRotated} from './platform/safe-area.js';
 const $=id=>document.getElementById(id);
-// 触屏 UI 判定：真实触屏设备，或小工具容器。小工具的 WebView 里 pointer 仍可能报 fine
-// （模拟器复用桌面内核），只按 (pointer: coarse) 判会变成"既没键盘也没屏幕按钮"。
-const TOUCH_UI=(typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches)||(typeof __MINITOOL__!=='undefined'&&__MINITOOL__);
+// 输入方式判定：真实触屏 / 小工具容器里的小屏 => 摇杆；大屏（桌面预览、PC 浏览器）=> 键盘。
+// 容器的 WebView 在模拟器与部分安卓平板上都把 pointer 报成 fine，所以不能只看 (pointer: coarse)。
+const detectInputMode=()=>{
+ if(typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches)return 'touch';
+ if(innerWidth>=900&&innerWidth>innerHeight)return 'keyboard';
+ if(typeof __MINITOOL__!=='undefined'&&__MINITOOL__)return innerWidth>=900?'keyboard':'touch';
+ return 'keyboard';
+};
+let inputMode=detectInputMode();
+const touchUI=()=>inputMode==='touch';
 // 制作面板底部的操作提示：触屏没有 Esc / Ctrl+Z / [ ] 键盘，换成滑杆说法，避免给出按不到的键位。
-const EDITOR_HINTS=TOUCH_UI
+const editorHints=()=>touchUI()
 ?'<span>拖动操作</span><span>用下方滑杆调整笔刷大小</span><span>点「保存并离开」结束本次制作</span>'
 :'<span>拖动操作</span><span><kbd>⌘ / Ctrl Z</kbd> 撤销本次操作</span><span><kbd>[</kbd><kbd>]</kbd> 工具大小</span><span><kbd>Esc</kbd> 保存并关闭</span>';
 let saved=null;
@@ -170,7 +177,7 @@ function openEditor(station){
  if(!state.startStation(station))return;
  const setup={wheel:{mode:'push',name:'粗塑成形',title:'用双手推压瓷泥',description:'沿参考轮廓推压或拉伸瓷泥。默认左右对称，接近轮廓时轻微辅助；可关闭参考线或对称操作。',tool:'✋ 推压瓷泥 · 宽手掌',min:14,max:26,size:18,note:'这里只能推压塑形，现有颜色会随瓷泥一起移动。雕刻和上色请去对应工作台。'},carve:{mode:'cut',name:'细节雕刻',title:'刻去多余的瓷泥',description:'拖动刻刀去除多余瓷泥，对照右侧图片修整轮廓。刻多了可以撤销。',tool:'✂ 雕刻 · 刻刀',min:1,max:14,size:4,note:'这里只能去除瓷泥。推压造型请去塑形台，绘制颜色请去上色台。'},paint:{mode:'paint',name:'手绘上色',title:'画上你的青花',description:'选择颜色，在瓷器表面拖动画笔。上色只改变颜色，不改变轮廓。',tool:'● 上色 · 画笔',min:1,max:16,size:5,note:'这里只能绘画。切去瓷泥请去雕刻台，改变造型请去塑形台。'}}[station];
  const p=state.preset;
- taskShell('editor',`第 ${state.level+1} 关 · ${setup.name} · 尝试 ${state.attempt}`,setup.title,setup.description,`<div class="editor-layout"><section class="work-area"><div class="board-top"><span class="board-label">你的瓷泥 · 正面</span><span id="work-status">已保存</span></div><div class="sculpt-canvas-wrap"><canvas id="sculpt-canvas" width="560" height="560" tabindex="0" aria-label="${setup.name}. Drag to ${setup.mode==='push'?'push clay':setup.mode==='cut'?'cut clay':'paint clay'}. Compare with the separate reference picture."></canvas><span class="canvas-corner">亲手制作</span></div><div class="tool-row"><span class="station-tool" data-station-tool="${setup.mode}">${setup.tool}</span><button class="small-tool" id="undo-stroke" title="Undo this station's last stroke (Ctrl/Cmd Z)" aria-label="Undo stroke">↶</button><button class="small-tool" id="redo-stroke" title="Redo stroke" aria-label="Redo stroke">↷</button></div><div class="brush-row"><label for="brush-size">${setup.mode==='push'?'手掌宽度':'工具大小'}</label><input type="range" id="brush-size" min="${setup.min}" max="${setup.max}" value="${setup.size}"/><output id="brush-size-value">${setup.size}</output><span class="station-only">${setup.mode==='push'?'仅用于粗塑':'本站专用工具'}</span></div></section><aside class="editor-reference"><span class="board-label">订单参考图</span><img class="target-preview" src="${presetImages[p.id]}" alt="Target ${p.name}"/><h3>${p.name}</h3><p>${p.task}</p>${setup.mode==='paint'?`<div class="palette-label">选择颜色</div><div class="paint-colors">${PALETTE.slice(1).map((c,i)=>`<button class="paint-color ${i===1?'selected':''}" data-color="${i+1}" style="--paint:${c}" title="${COLOR_NAMES[i+1]}" aria-label="${COLOR_NAMES[i+1]} paint"><span></span></button>`).join('')}</div><span class="color-name" id="color-name">钴蓝</span>`:''}<div class="maker-tip station-note"><b>${setup.name}</b><p>${setup.note}</p></div><p class="guide-note" id="tool-hint">对照参考图，观察形状与花纹。</p></aside></div><div class="editor-bottom"><button class="primary-button" id="save-editor">保存并离开 <span>→</span></button><span>完成制作后先到窑炉烧制，再到交付台评分。</span></div>`, EDITOR_HINTS);
+ taskShell('editor',`第 ${state.level+1} 关 · ${setup.name} · 尝试 ${state.attempt}`,setup.title,setup.description,`<div class="editor-layout"><section class="work-area"><div class="board-top"><span class="board-label">你的瓷泥 · 正面</span><span id="work-status">已保存</span></div><div class="sculpt-canvas-wrap"><canvas id="sculpt-canvas" width="560" height="560" tabindex="0" aria-label="${setup.name}. Drag to ${setup.mode==='push'?'push clay':setup.mode==='cut'?'cut clay':'paint clay'}. Compare with the separate reference picture."></canvas><span class="canvas-corner">亲手制作</span></div><div class="tool-row"><span class="station-tool" data-station-tool="${setup.mode}">${setup.tool}</span><button class="small-tool" id="undo-stroke" title="Undo this station's last stroke (Ctrl/Cmd Z)" aria-label="Undo stroke">↶</button><button class="small-tool" id="redo-stroke" title="Redo stroke" aria-label="Redo stroke">↷</button></div><div class="brush-row"><label for="brush-size">${setup.mode==='push'?'手掌宽度':'工具大小'}</label><input type="range" id="brush-size" min="${setup.min}" max="${setup.max}" value="${setup.size}"/><output id="brush-size-value">${setup.size}</output><span class="station-only">${setup.mode==='push'?'仅用于粗塑':'本站专用工具'}</span></div></section><aside class="editor-reference"><span class="board-label">订单参考图</span><img class="target-preview" src="${presetImages[p.id]}" alt="Target ${p.name}"/><h3>${p.name}</h3><p>${p.task}</p>${setup.mode==='paint'?`<div class="palette-label">选择颜色</div><div class="paint-colors">${PALETTE.slice(1).map((c,i)=>`<button class="paint-color ${i===1?'selected':''}" data-color="${i+1}" style="--paint:${c}" title="${COLOR_NAMES[i+1]}" aria-label="${COLOR_NAMES[i+1]} paint"><span></span></button>`).join('')}</div><span class="color-name" id="color-name">钴蓝</span>`:''}<div class="maker-tip station-note"><b>${setup.name}</b><p>${setup.note}</p></div><p class="guide-note" id="tool-hint">对照参考图，观察形状与花纹。</p></aside></div><div class="editor-bottom"><button class="primary-button" id="save-editor">保存并离开 <span>→</span></button><span>完成制作后先到窑炉烧制，再到交付台评分。</span></div>`, editorHints());
  const editor=attachEditor($('sculpt-canvas'),state,{mode:setup.mode,canInteract:()=>focused&&!document.hidden&&!helpOpen,onHint:message=>{if($('tool-hint').textContent!==message)$('tool-hint').textContent=message;},onChange:()=>{$('work-status').textContent='正在制作…';sfx.shape(setup.mode);},onFinish:()=>{$('work-status').textContent='已保存';sfx.shape(null);save();}});activeTask.editor=editor;activeTask.station=station;editor.setRadius(setup.size);
  document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{editor.setColor(b.dataset.color);document.querySelectorAll('[data-color]').forEach(c=>c.classList.toggle('selected',c===b));$('color-name').textContent=COLOR_NAMES[b.dataset.color];});
  $('brush-size').oninput=e=>{editor.setRadius(e.target.value);$('brush-size-value').textContent=e.target.value;};$('undo-stroke').onclick=()=>editor.undo();$('redo-stroke').onclick=()=>editor.redo();$('save-editor').onclick=closeTask;
@@ -326,18 +333,57 @@ window.addEventListener('blur',()=>{syncClocks();releaseStoke();focused=false;ke
 window.addEventListener('focus',()=>{syncClocks();focused=true;syncClocks();updateEfficiency();});
 document.addEventListener('visibilitychange',()=>{syncClocks();previousTime=0;if(document.hidden){releaseStoke();keys.clear();activeTask?.editor?.finish();}syncClocks();updateEfficiency();save();});
 window.addEventListener('beforeunload',()=>{syncClocks();save();});window.addEventListener('pagehide',()=>{syncClocks();save();});window.addEventListener('resize',()=>world.resize());
-document.querySelectorAll('[data-move]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.move);};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.move);});
+// 虚拟摇杆：输出 -1..1 的类比推力，交给 world.move 按模长缩放速度。
+const stick={x:0,y:0};
+const joystick=$('joystick'),joystickKnob=$('joystick-knob');
+const JOY_TRAVEL=34;
+let joyId=null;
+function joyVector(e){
+ const rect=joystick.getBoundingClientRect();
+ const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+ let sx=e.clientX-cx,sy=e.clientY-cy;
+ // 画面手动旋转 90° 后，屏幕坐标轴与画布坐标轴互换了
+ if(isRotated()){const t=sx;sx=sy;sy=-t;}
+ const len=Math.hypot(sx,sy);
+ const limit=Math.min(rect.width,rect.height)/2-6;
+ const k=len>limit?limit/len:1;
+ stick.x=THREE_clamp(sx*k/JOY_TRAVEL,-1,1);stick.y=THREE_clamp(sy*k/JOY_TRAVEL,-1,1);
+ joystickKnob.style.transform=`translate(${stick.x*JOY_TRAVEL}px,${stick.y*JOY_TRAVEL}px)`;
+}
+const THREE_clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function joyEnd(){joyId=null;stick.x=0;stick.y=0;joystickKnob.style.transform='translate(0,0)';}
+if(joystick){
+ joystick.onpointerdown=e=>{e.preventDefault();joyId=e.pointerId;try{joystick.setPointerCapture?.(e.pointerId);}catch{/* 某些容器/合成事件拿不到指针捕获，不影响拖动 */}joyVector(e);};
+ joystick.onpointermove=e=>{if(joyId===null||e.pointerId!==joyId)return;e.preventDefault();joyVector(e);};
+ joystick.onpointerup=joystick.onpointercancel=e=>{if(joyId!==null&&e.pointerId!==joyId)return;joyEnd();};
+ joystick.onlostpointercapture=joyEnd;
+}
+// 输入方式：大屏走键盘，小屏/触屏走摇杆；旋屏按钮只在小屏出现。
+function syncInputMode(){
+ inputMode=detectInputMode();
+ document.documentElement.dataset.input=inputMode;
+ $('app').dataset.input=inputMode;
+ if(inputMode!=='touch')joyEnd();
+}
+syncInputMode();
+window.addEventListener('resize',()=>{syncInputMode();});
+$('rotate-button').onclick=e=>{e.preventDefault();void toggleRotate();};
+onRotateChange(rotated=>{
+ document.documentElement.dataset.input=inputMode;
+ world.setDisplayRotation(rotated?90:0);
+ requestAnimationFrame(()=>{world.resize();});
+});
 $('touch-interact').onpointerdown=e=>{e.preventDefault();if(!started||activeTask||helpOpen)return;nearest=world.nearest();if(nearest)openStation(nearest.id);};
 function frame(ms){
  const t=ms/1000,elapsed=previousTime?Math.max(0,t-previousTime):0,dt=Math.min(.05,elapsed);previousTime=t;
  syncClocks();if(ms-lastClockSave>=1000){lastClockSave=ms;if(state.hasClay)save();updateEfficiency();}
  activeTask?.preview?.update?.(elapsed,state,!kilnRunning);activeTask?.upgrades?.update?.(elapsed);
- const playing=started&&!traveling&&!world.loading&&!world.loadError&&!activeTask&&!helpOpen&&!document.hidden&&focused;world.setInteractionEnabled(playing);$('reset-view').disabled=!playing;const dx=playing?Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')):0,dz=playing?Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')):0;
+ const playing=started&&!traveling&&!world.loading&&!world.loadError&&!activeTask&&!helpOpen&&!document.hidden&&focused;world.setInteractionEnabled(playing);$('reset-view').disabled=!playing;let dx=playing?Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft')):0;let dz=playing?Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup')):0;if(playing&&inputMode==='touch'){dx+=stick.x;dz+=stick.y;}dx=Math.max(-1,Math.min(1,dx));dz=Math.max(-1,Math.min(1,dz));
  const strideBefore=world.stride;world.move(dx,dz,dt);if(world.stride>strideBefore)state.advanceTutorial('move');sfx.walk(world.stride,world.stride>strideBefore,state.hasClay);sfx.firing(!!state.kiln&&kilnRunning);sfx.tick();nearest=world.nearest();$('world').dataset.player=JSON.stringify({x:world.player.group.position.x,z:world.player.group.position.z});$('app').dataset.task=activeTask?.kind||'';$('app').dataset.level=state.level+1;$('app').dataset.attempt=state.attempt;
  for(const s of STATIONS){const p=world.project(s.x,s.labelY,s.z);labels[s.id].style.left=`${p.x}px`;labels[s.id].style.top=`${p.y}px`;labels[s.id].classList.toggle('near',playing&&nearest?.id===s.id);labels[s.id].classList.toggle('next',playing&&state.nextStation()===s.id);labels[s.id].classList.toggle('locked',playing&&!state.stationAccess(s.id).allowed);}
  $('kiln-small').textContent=state.kiln?`${Math.ceil(state.kiln.remaining)}s`:state.kilnResult?'✓':'';
  const interact=playing&&nearest;$('interaction').classList.toggle('hidden',!interact);
- if(interact){const p=world.project(world.player.group.position.x,2.25,world.player.group.position.z);$('interaction').style.left=`${Math.max(125,Math.min($('world-wrap').clientWidth-125,p.x+128))}px`;$('interaction').style.top=`${Math.max(4,p.y-76)}px`;$('interact-title').textContent=stationMessage(nearest.id);$('interact-sub').textContent=state.stationAccess(nearest.id).allowed?(TOUCH_UI?'点按右下「操作」开始':'按 F 开始操作'):'🔒 请先完成前置步骤';}
+ if(interact){const p=world.project(world.player.group.position.x,2.25,world.player.group.position.z);$('interaction').style.left=`${Math.max(125,Math.min($('world-wrap').clientWidth-125,p.x+128))}px`;$('interaction').style.top=`${Math.max(4,p.y-76)}px`;$('interact-title').textContent=stationMessage(nearest.id);$('interact-sub').textContent=state.stationAccess(nearest.id).allowed?(touchUI()?'拖动左下摇杆靠近，点按右下「操作」':'按 F 开始操作'):'🔒 请先完成前置步骤';}
  guidance.update(dt,{state,playing,nearest,moving:!!(dx||dz),started});
  updateTutorial();updateKiln();if(started&&!activeTask?.editor)world.update(dt,t,state,playing);requestAnimationFrame(frame);
 }
