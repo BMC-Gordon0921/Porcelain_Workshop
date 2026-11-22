@@ -9,6 +9,17 @@ html[data-platform=minitool] {
   --mt-bottom-inset: 0px;
   --mt-left-inset: 0px;
   --mt-right-inset: 0px;
+  /* 右侧订单栏宽度：仓库里 upgrade.css 给了 260px（宽屏）、style.css 给 190/222px。
+     这里收成一个变量，让 3D 视口与「操作」键都按它让位，避免互相压边。 */
+  --mt-orders-w: 260px;
+  --mt-orders-gap: 42px; /* 订单栏右外边距 26px + 与 3D 视口的 16px 间隙 */
+}
+
+/* 平板/窄桌面（761–1100px）里 260px 的订单栏太挤，收窄到 222px */
+@media (min-width: 761px) and (max-width: 1100px) {
+  html[data-platform=minitool] {
+    --mt-orders-w: 222px;
+  }
 }
 
 html[data-platform=minitool] #app {
@@ -94,12 +105,50 @@ html[data-platform=minitool] #world-wrap {
   top: calc(95px + var(--mt-top-inset));
   bottom: calc(58px + var(--mt-bottom-inset));
   left: var(--mt-left-inset);
-  right: calc(265px + var(--mt-right-inset));
+  right: calc(var(--mt-orders-w) + var(--mt-orders-gap) + var(--mt-right-inset));
 }
 
 html[data-platform=minitool] #app > .commissions {
   top: calc(125px + var(--mt-top-inset));
   right: calc(26px + var(--mt-right-inset));
+  width: var(--mt-orders-w);
+}
+
+/* 宽屏（平板/桌面预览）里「操作」键原落在订单栏底下，挪到 3D 视口右下角 */
+@media (min-width: 761px) {
+  html[data-platform=minitool] .touch-controls #touch-interact {
+    right: calc(var(--mt-orders-w) + var(--mt-orders-gap) + var(--mt-right-inset));
+    bottom: calc(72px + var(--mt-bottom-inset));
+    width: 54px;
+    height: 54px;
+  }
+
+  /* 升级面板：sticky 的确认条会盖住下方 3D 预览的底边，改成随内容滚动 */
+  html[data-platform=minitool] .upgrade-confirmation {
+    position: static;
+    bottom: auto;
+  }
+
+  /* 开屏轮播页：左侧文案列比网格行高，会压到页脚；收紧文案让它收回行内 */
+  html[data-platform=minitool] .opening-copy > h1 {
+    font-size: 34px;
+    line-height: 1.06;
+  }
+
+  html[data-platform=minitool] .opening-lead {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  html[data-platform=minitool] .opening-copy .opening-chapter {
+    min-height: 0;
+    margin: 8px 0;
+    padding: 8px 0;
+  }
+
+  html[data-platform=minitool] .opening-copy .opening-rules {
+    margin: 6px 0 0;
+  }
 }
 
 html[data-platform=minitool] .bottom-bar {
@@ -147,6 +196,7 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     top: calc(85px + var(--mt-top-inset));
     left: calc(12px + var(--mt-left-inset));
     right: calc(12px + var(--mt-right-inset));
+    width: auto;
   }
 
   /* 效率提示在窄栏里会竖排成一串单字，直接收起 */
@@ -704,4 +754,9 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     right: calc(10px + var(--mt-right-inset));
     bottom: calc(44px + var(--mt-bottom-inset));
   }
+}
+
+/* 品牌字标不换行（窄屏上 ® 会顶出字框，但不会被裁切，只需禁止折行） */
+html[data-platform=minitool] .brand h1 {
+  white-space: nowrap;
 }

@@ -170,6 +170,18 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | 交互卡写「按 F 开始操作」「操作 F」 | 键盘语义 | `#interact-sub` 触屏改「点按右下「操作」开始」；`index.html` 的触屏键文案改为「操作」；制作面板底部提示改成「用下方滑杆调整笔刷大小 / 点保存并离开」（`EDITOR_HINTS`） |
 | 升级卡文案「悬停预览 · 点击选定」 | 触屏没有悬停 | `src/upgrades-view.js` 按 `matchMedia('(pointer:coarse)')` 输出「点选预览 · 确认升级」，词条同步进 `src/experience-i18n.js` |
 
+**②b 平板 / 桌面预览（834×852、1280×852）**：容器工作台除了 iPhone 还有 iPad 与桌面两种预览设备，逻辑视口分别 834×852、1280×852（`dpr` 恒 1、`pointer: fine`）。宽屏下沿用仓库原有的桌面排版，但外壳让位把它放大了几处既有缺陷：
+
+| 问题 | 根因 | 处理 |
+| --- | --- | --- |
+| 订单栏压住 3D 视口 21px | `src/upgrade.css` 把 `.commissions` 设为 260px 宽、`#world-wrap{right:310px}`，而 minitool 层只让了 265px | 收成变量 `--mt-orders-w`（≥1101px 260px、761–1100px 222px）+ `--mt-orders-gap`（26px 外边距 + 16px 间隙），`#world-wrap` 与订单栏都按变量让位 |
+| 右下「操作」键半个身子埋进订单栏（重叠 52×58） | `#touch-interact` 固定在 `right:20px`，而订单栏占据右侧整条竖带 | `@media (min-width:761px)` 里改为 `right: calc(var(--mt-orders-w) + var(--mt-orders-gap) + var(--mt-right-inset))`，落到 3D 视口右下角 |
+| 升级面板 3D 预览底边被 sticky 确认条盖住 76px | `.upgrade-confirmation{position:sticky;bottom:-22px}` 常态悬浮 | 宽屏同样改 `position:static`（手机端此前已改） |
+| 开屏轮播页左侧文案列比网格行高 15–23px，压到页脚 | 桌面字号在 834 宽下把 `.opening-copy` 撑高 | 宽屏收紧：`h1 34px`、`.opening-lead 13px`、`.opening-chapter{min-height:0}`、`.opening-rules` 上边距收窄 |
+| 品牌字标 `terra®` 在窄屏折行 | `.brand h1` 未禁折行 | `white-space:nowrap` |
+
+> 量化方式：`tools/minitool/audit_layout.mjs`（`W/H/IN_TOP/IN_SIDE` 环境变量）逐屏量 HUD 盒子、两两重叠、越界元素、文本截断与面板滚动；`tools/minitool/audit_panels.mjs` / `check_upgrade.mjs` 查面板内部（画布是否被 sticky 覆盖、子块是否横向越界）。三种视口跑完 `errors: []`，重叠项只剩「HUD 浮在 3D 画布之上」这种既有设计。
+
 **③ 横屏布局（`@media (orientation:landscape) and (max-height:520px)`）**：不是把界面旋转 90° 的假横屏，而是真正的响应式：
 
 - 顶栏 54px、底栏 38px，`#world-wrap` 四边重新让位（右侧留给 172px 宽的订单竖栏）；
@@ -182,7 +194,7 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 > 关于「怎么才能看到横屏」：容器本身不提供锁定屏幕方向的 API，页面只能做「竖屏优先 + 横屏响应式」。`redapp dev` 的本地工作台只有 iPhone / iPad / 桌面三种预览设备、**没有旋转按钮**（iPhone 预览固定 393×852，逻辑视口写在诊断面板里），所以在工作台里永远看不到横屏；要看横屏必须用真机横握，或用 `tools/minitool/shots_mobile.mjs`（`W=852 H=393`）注入外壳让位尺寸后截图，产物见 `qa/minitool/landscape2/`。
 
-**验证方式**：`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。`tools/minitool/measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS。
+**验证方式**：`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。`tools/minitool/audit_layout.mjs`（393×852 / 834×852 / 1280×852 三视口）、`audit_panels.mjs`、`check_upgrade.mjs`、`measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS；产物 `qa/minitool/audit-{phone2,ipad3,pc3}/`。
 
 ## 8. 后续待办
 
