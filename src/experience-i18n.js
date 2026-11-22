@@ -23,7 +23,7 @@ export const EXPERIENCE_EN={
  '再揉一块好瓷泥。':'Time for a fresh lump of clay.','慢慢推压，轮廓会更圆润。':'Slow, gentle shaping makes a smoother silhouette.','细节里藏着手艺。':'Craft lives in the little details.',
  '给它添一抹青花。':'A little cobalt blue would look lovely.','让窑火慢慢成就它。':'Let the kiln work its magic.','这件作品可以交付了。':'This piece is ready for delivery.','下一站会有什么新的灵感呢？':'What inspiration awaits at the next workshop?',
  '◌ {}':'◌ {}','✋ {}':'✋ {}','✧ {}':'✧ {}','🖌 {}':'🖌 {}','♨ {}':'♨ {}','✦ {}':'✦ {}',
- '悬停预览 · 点击选定':'Hover to preview · click to select','点击卡片选定要升级的工作台':'Select a workbench card to upgrade','确认升级':'Confirm upgrade',
+ '悬停预览 · 点击选定':'Hover to preview · click to select','点选预览 · 确认升级':'Tap to preview · confirm to upgrade','点击卡片选定要升级的工作台':'Select a workbench card to upgrade','确认升级':'Confirm upgrade',
  '悬停预览，点击选定，再确认升级。每个场景独立保存等级。':'Preview, select, then confirm. Each workshop keeps its own upgrades.',
  '{} · 外观与加成':'{} · appearance and benefits','当前 Lv.{} · {}':'Current Lv.{} · {}','下一级 Lv.{} · {} · {} 币':'Next Lv.{} · {} · {} coins',
  '{} · Lv.{} → Lv.{} · {} 币 · {}':'{} · Lv.{} → Lv.{} · {} coins · {}','购买后余额 {} 币':'Balance after purchase: {} coins','还差 {} 币':'{} more coins needed','{} · 已满级':'{} · max level',

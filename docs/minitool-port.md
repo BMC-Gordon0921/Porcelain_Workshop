@@ -117,7 +117,7 @@
 
 ### 改动文件
 
-`vite.config.js`（加 `__MINITOOL__: 'false'`）、`src/main.js`（`boot()` 异步化 + 平台初始化 + Storage 化读写 + `pagehide`/`visibilitychange` 落盘）、`src/world.js` / `src/decals.js` / `src/kiln-view.js` / `src/hero-carousel.js` / `src/workbench-model.js`（`createRenderer`）、`src/scene-environment.js`（自带几何 / GLTF 双路径）、`src/public-assets.js`（小工具下 png/jpeg → webp）、`src/i18n.js`（语言偏好走 Storage）。
+`vite.config.js`（加 `__MINITOOL__: 'false'`）、`src/main.js`（`boot()` 异步化 + 平台初始化 + Storage 化读写 + `pagehide`/`visibilitychange` 落盘）、`src/world.js` / `src/decals.js` / `src/kiln-view.js` / `src/hero-carousel.js` / `src/workbench-model.js`（`createRenderer`）、`src/scene-environment.js`（自带几何 / GLTF 双路径）、`src/public-assets.js`（小工具下 png/jpeg → webp）、`src/i18n.js`（语言偏好走 Storage）、`src/upgrades-view.js`（触屏文案）、`src/experience-i18n.js`（补触屏词条）。
 
 ### 命令
 
@@ -149,9 +149,42 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 截图：`qa/minitool/01-opening.png`（开屏已避开状态栏与胶囊）、`qa/minitool/02-workshop.png`（进入工坊后的关卡说明弹层已让开外壳）。
 
-## 7. 后续待办
+## 7. 移动端与横屏适配
+
+小程序容器是竖屏手机 + 顶部状态栏/胶囊 + 底部 home 条，且可切横屏；原桌面布局直接搬过来会错位。适配分三层：
+
+**① 外壳让位（运行时）**：`src/platform/safe-area.js` 读 `miniTool.getWindowInfo()`，把 `safeArea.top + 36`（状态栏 44 → 80px，给胶囊留高）、`windowHeight - safeArea.bottom` 写成 CSS 变量 `--mt-top-inset` / `--mt-bottom-inset`；横屏额外算左右刘海 `--mt-left-inset` / `--mt-right-inset`，并监听 `resize` / `orientationchange`（120ms 去抖）重算。`--mt-*` 缺失时全部有 `0px` 兜底，桌面构建完全不加载这段逻辑。
+
+**② 竖屏排版修正（`src/platform/minitool.css`，全部作用域在 `html[data-platform=minitool]`）**：
+
+| 问题 | 根因 | 处理 |
+| --- | --- | --- |
+| 订单卡被顶栏压住 | `.commissions{top:85px}` 是硬编码，而 minitool 下顶栏整体下移 80px | `top: calc(85px + var(--mt-top-inset))` |
+| 订单卡里「五分钟内通过，订单收益 +20%」竖排成单字 | 152px 窄列 + 长文案 | 窄屏隐藏 `.efficiency-indicator` 与 `.collection-link` |
+| 6 个 3D 站点标签叠成一团 | 每帧投影的 `.station-label` 全部可见 | 默认 `opacity:0;visibility:hidden`，只放行 `.near/.next/.active/.tutorial-target` |
+| `↺ 恢复视角` 被触屏方向键盖住 | 两者都在左下角 | `.reset-view` 移到右下（横屏再抬高） |
+| 任务面板小标题被关闭按钮压 | `.task-header` 居中文本延伸到右上 × | `.task-header{padding:0 34px}` |
+| 升级面板 3D 预览整块不见 | `.upgrade-confirmation{position:sticky;bottom:-22px}` 盖住画布，而画布本身有 240px 高 | 确认条改 `position:static`，画布压到 190px |
+| 底部还有桌面键位提示（F / Esc） | 桌面文案 | `@media(pointer:coarse)` 隐藏 `.bottom-bar .controls` 与 `#interaction small` |
+| 升级卡文案「悬停预览 · 点击选定」 | 触屏没有悬停 | `src/upgrades-view.js` 按 `matchMedia('(pointer:coarse)')` 输出「点选预览 · 确认升级」，词条同步进 `src/experience-i18n.js` |
+
+**③ 横屏布局（`@media (orientation:landscape) and (max-height:520px)`）**：不是把界面旋转 90° 的假横屏，而是真正的响应式：
+
+- 顶栏 54px、底栏 38px，`#world-wrap` 四边重新让位（右侧留给 172px 宽的订单竖栏）；
+- 订单栏改成右侧窄栏，隐藏 `.scene-heading/.scene-path/.preset-path/.reference-card>img/>p/.reference-link/.efficiency-indicator/.section-heading/.goal-card`，只留「第几关 + 作品名 + 贴画目标」；
+- 弹层：`task-artboard 148px`、`kiln-view 150px`、`serve-art 140px`、`upgrade-detail canvas 150px`、确认条 static；
+- 开屏页：故事页（`[data-opening-stage=intro]`）压成双栏海报（标题 52px、瓷碗容器 240px、隐藏轮播控件与「暂停背景」）；轮播页（`[data-opening-stage=map]`）左栏瘦身（隐藏 `.opening-lead`、`.opening-chapter p`、`.opening-rules`），右栏场景卡限高 200px，时间轴压到一行；
+- 触屏方向键、操作键、恢复视角都按 `--mt-*inset` 定位，避开订单栏与底部信息条。
+
+> 踩坑备忘：`[data-opening-stage=map] > .city-prologue{display:none}` 的特异性低于 `html[data-platform] .opening-screen > .city-prologue`，横屏覆盖 `display` 时若不带上 `[data-opening-stage=intro]`，会让已经隐藏的故事页重新出现（表现为两套文案叠在一起）。
+
+**验证方式**：`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape/`。`tools/minitool/measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS。
+
+## 8. 后续待办
 
 1. 上传到创服平台并走一遍真机（Android 10+ / iOS 18.4+）验收；确认上传侧接受 `.mp3`。
 2. 若要压到审计的 2 MiB 建议线以内，去掉 BGM 或改程序化音效（几何 base64 是体积主体）。
 3. 触屏手感调优（拖拽旋转、笔刷大小手势），以及低端机的动态降档（`renderer.__webglFlavor` 已就绪）。
 4. 若真机出现 WebGL 完全不可用，再补 2D 兜底视图（当前只有错误态）。
+5. 触屏文案还有几处桌面味：教学卡「按 WASD、方向键或屏幕方向按钮移动」、场景内交互卡与触屏键上的 `F`；都是 i18n 词条，改文案要同步 `experience-i18n.js`，本轮未动。
+6. 横屏故事页的 3D 瓷碗在扁画布里会被相机压扁裁切，当前直接收起轮播、只留光晕与印章；若要在横屏也展示瓷碗，需要给 `hero-carousel` 加按画布比例取景的相机分支。
