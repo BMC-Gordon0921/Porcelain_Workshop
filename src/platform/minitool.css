@@ -625,6 +625,12 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 
   /* 订单改成右侧竖排窄栏，横向空间够用，纵向最省 */
+  /* 横版空间紧张：教学浮标会压在订单卡上，引导文本在「玩法说明」里可查 */
+  html[data-platform=minitool][data-layout=ls] .tutorial-instruction,
+  html[data-platform=minitool][data-layout=ls] #guide-card {
+    display: none;
+  }
+
   html[data-platform=minitool][data-layout=ls] #app > .commissions {
     top: calc(60px + var(--mt-top-inset));
     left: auto;
@@ -635,6 +641,8 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
     max-height: none;
     overflow-y: auto;
     overscroll-behavior: contain;
+  
+    z-index: 6;
   }
 
   /* 竖排栏里只留「第几关 + 参考图 + 作品名 + 进价」，其余长文案收掉 */
