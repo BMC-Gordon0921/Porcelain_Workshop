@@ -16,6 +16,65 @@ html[data-platform=minitool] #app {
   height: 100dvh;
 }
 
+/* 触屏操作控件（方向键 + 操作键）在小工具里恒定显示。
+   容器的 WebView 可能报 pointer: fine（模拟器、部分安卓平板接鼠标时也是），
+   若只认 (pointer: coarse)，用户会看不到任何方向键、只剩键盘 WASD —— 故按容器身份判定。 */
+html[data-platform=minitool] .touch-controls {
+  display: block;
+  position: absolute;
+  left: 15px;
+  bottom: calc(165px + var(--mt-bottom-inset));
+  z-index: 7;
+  text-align: center;
+}
+
+html[data-platform=minitool] .touch-controls button {
+  width: 36px;
+  height: 34px;
+  border: 1px solid #8a977c80;
+  background: #f5f4e8bb;
+  border-radius: 8px;
+  color: #4d6348;
+  font-size: 19px;
+  touch-action: none;
+  user-select: none;
+}
+
+html[data-platform=minitool] .touch-controls > button {
+  margin-bottom: 3px;
+}
+
+html[data-platform=minitool] .touch-controls div {
+  display: flex;
+  gap: 3px;
+}
+
+html[data-platform=minitool] .touch-controls #touch-interact {
+  position: fixed;
+  right: calc(20px + var(--mt-right-inset));
+  bottom: calc(175px + var(--mt-bottom-inset));
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #4b6748dc;
+  color: #fff5d8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 触屏没有键盘：隐藏桌面键位提示与交互卡上的 F 徽标（文案已在 JS 里换成"点按操作"） */
+html[data-platform=minitool] .bottom-bar .controls {
+  display: none;
+}
+
+html[data-platform=minitool] #interaction .interact-key {
+  display: none;
+}
+
+html[data-platform=minitool] .task-footer kbd {
+  display: none;
+}
+
 /* 全屏开屏页整体让开外壳 */
 html[data-platform=minitool] .opening-screen {
   top: var(--mt-top-inset);
@@ -626,8 +685,8 @@ html[data-platform=minitool] #station-labels .station-label.tutorial-target {
   }
 }
 
-/* 横屏触屏：方向键贴左下（让开底部信息条），操作键贴右下并避开订单栏 */
-@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+/* 横屏：方向键贴左下（让开底部信息条），操作键贴右下并避开订单栏 */
+@media (orientation: landscape) and (max-height: 520px) {
   html[data-platform=minitool] .touch-controls {
     left: calc(8px + var(--mt-left-inset));
     bottom: calc(42px + var(--mt-bottom-inset));

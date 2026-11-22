@@ -165,7 +165,9 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 | `↺ 恢复视角` 被触屏方向键盖住 | 两者都在左下角 | `.reset-view` 移到右下（横屏再抬高） |
 | 任务面板小标题被关闭按钮压 | `.task-header` 居中文本延伸到右上 × | `.task-header{padding:0 34px}` |
 | 升级面板 3D 预览整块不见 | `.upgrade-confirmation{position:sticky;bottom:-22px}` 盖住画布，而画布本身有 240px 高 | 确认条改 `position:static`，画布压到 190px |
-| 底部还有桌面键位提示（F / Esc） | 桌面文案 | `@media(pointer:coarse)` 隐藏 `.bottom-bar .controls` 与 `#interaction small` |
+| 底部还有桌面键位提示（F / Esc） | 桌面文案 | 隐藏 `.bottom-bar .controls`、`.task-footer kbd`、`#interaction .interact-key` |
+| 屏幕方向键与「操作」键整组不显示 | `#touch-controls` 只在 `@media(pointer:coarse)` 下出现，而小工具 WebView 在模拟器/部分安卓平板上 `pointer` 报 `fine`、`maxTouchPoints` 为 0 | 改按**容器身份**判定：`html[data-platform=minitool] .touch-controls{display:block}`，并按 `--mt-*inset` 定位；`src/main.js` 里 `TOUCH_UI` 同时认 `(pointer:coarse)` 与 `__MINITOOL__` |
+| 交互卡写「按 F 开始操作」「操作 F」 | 键盘语义 | `#interact-sub` 触屏改「点按右下「操作」开始」；`index.html` 的触屏键文案改为「操作」；制作面板底部提示改成「用下方滑杆调整笔刷大小 / 点保存并离开」（`EDITOR_HINTS`） |
 | 升级卡文案「悬停预览 · 点击选定」 | 触屏没有悬停 | `src/upgrades-view.js` 按 `matchMedia('(pointer:coarse)')` 输出「点选预览 · 确认升级」，词条同步进 `src/experience-i18n.js` |
 
 **③ 横屏布局（`@media (orientation:landscape) and (max-height:520px)`）**：不是把界面旋转 90° 的假横屏，而是真正的响应式：
@@ -178,7 +180,9 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 > 踩坑备忘：`[data-opening-stage=map] > .city-prologue{display:none}` 的特异性低于 `html[data-platform] .opening-screen > .city-prologue`，横屏覆盖 `display` 时若不带上 `[data-opening-stage=intro]`，会让已经隐藏的故事页重新出现（表现为两套文案叠在一起）。
 
-**验证方式**：`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape/`。`tools/minitool/measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS。
+> 关于「怎么才能看到横屏」：容器本身不提供锁定屏幕方向的 API，页面只能做「竖屏优先 + 横屏响应式」。`redapp dev` 的本地工作台只有 iPhone / iPad / 桌面三种预览设备、**没有旋转按钮**（iPhone 预览固定 393×852，逻辑视口写在诊断面板里），所以在工作台里永远看不到横屏；要看横屏必须用真机横握，或用 `tools/minitool/shots_mobile.mjs`（`W=852 H=393`）注入外壳让位尺寸后截图，产物见 `qa/minitool/landscape2/`。
+
+**验证方式**：`tools/minitool/shots_mobile.mjs` 用 Playwright 在 393×852（竖屏）与 852×393（横屏）两种视口跑完整 10 屏 + 4 个面板，`errors: []` 全绿；产物 `qa/minitool/mobile3/`、`qa/minitool/landscape2/`。`tools/minitool/measure_panel.mjs` / `measure_opening.mjs` 用来量关键元素盒子，避免只靠肉眼调 CSS。
 
 ## 8. 后续待办
 
@@ -186,5 +190,5 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 2. 若要压到审计的 2 MiB 建议线以内，去掉 BGM 或改程序化音效（几何 base64 是体积主体）。
 3. 触屏手感调优（拖拽旋转、笔刷大小手势），以及低端机的动态降档（`renderer.__webglFlavor` 已就绪）。
 4. 若真机出现 WebGL 完全不可用，再补 2D 兜底视图（当前只有错误态）。
-5. 触屏文案还有几处桌面味：教学卡「按 WASD、方向键或屏幕方向按钮移动」、场景内交互卡与触屏键上的 `F`；都是 i18n 词条，改文案要同步 `experience-i18n.js`，本轮未动。
+5. 触屏文案还剩教学卡「按 WASD、方向键或屏幕方向按钮移动」（已含「屏幕方向按钮」，可接受）；其余桌面味文案（交互卡、触屏键、制作面板底部）已在本轮改掉。
 6. 横屏故事页的 3D 瓷碗在扁画布里会被相机压扁裁切，当前直接收起轮播、只留光晕与印章；若要在横屏也展示瓷碗，需要给 `hero-carousel` 加按画布比例取景的相机分支。
