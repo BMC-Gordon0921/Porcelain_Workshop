@@ -1,7 +1,13 @@
-# 小红书小工具移植记录（`Redbook_transplant`）
+# 小红书小工具移植记录
 
 本文件记录把本仓库（Terra · 景德镇瓷器之旅，JS 原版）移植为小红书小工具离线包的过程、依据与实测数据。
 目标产物：`dist-minitool.zip`（`index.html` 在 zip 根、相对路径、无联网）。
+
+> **分支状态（2026-11-23 收口）**：移植工作最初在 `Redbook_transplant` 分支进行，现已合并回 `main`。
+> 从此 **一个源码、两个构建目标**：`npm run build` → `dist/`（桌面/Electron），
+> `npm run build:minitool` → `dist-minitool/` + `dist-minitool.zip`。
+> 差异只允许存在于三处：构建期常量 `__MINITOOL__`、`src/platform/` 适配层、`html[data-platform=minitool]` 作用域 CSS。
+> 产物（`dist/`、`dist-minitool/`、`minitool/gen/`）一律不入库，由命令重新生成。
 
 ## 0. 规范来源
 
@@ -315,3 +321,15 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 - 模拟器端口由 redapp 分配，**不固定**，以启动日志里 `小工具调试工作台：http://127.0.0.1:xxxx/` 为准；要自动开浏览器就去掉 package.json 里脚本末尾的 `--no-open`。
 - `dev:minitool` 的 vite 只监听 IPv6 回环（`[::1]`），浏览器必须用 `localhost`，用 `127.0.0.1` 会 `ERR_CONNECTION_REFUSED`。
 - 模拟器里的 `pointer` 是 `fine`、`maxTouchPoints` 为 0，所以触屏控件靠 `__MINITOOL__` 兜底显示；真机才是真正的 `pointer: coarse`。
+
+## 10. 主线维护纪律（合并后的日常）
+
+两个构建目标共用 `main` 的一份源码，靠四条纪律防止悄悄分叉：
+
+1. **功能只写一份**。平台差异一律用 `__MINITOOL__`（构建期）或 `html[data-platform=minitool]`（样式期）表达，禁止为小工具另写一套组件。
+2. **每次改完跑两个构建**：`npm test` → `npm run build` → `npm run build:minitool`。只跑一个等于没验证。
+3. **提交前在容器里验一次**：`npm run sim:minitool` + `node tools/minitool/verify_minitool.mjs <工作台地址> qa/minitool`。触摸、安全区、存档、BGM 解码这类问题只在容器里暴露。
+4. **产物不入库**：`dist/`、`dist-minitool/`、`dist-minitool.zip`、`minitool/gen/` 全部 gitignore，由命令重建。
+
+排版回归用 `tools/minitool/` 下的审计脚本（`audit_hud.mjs`、`audit_overlap.mjs`、`audit_media.mjs`、`verify_panels.mjs`、`verify_rotate_real.mjs`）；
+桌面端视觉回归用 `qa/capture.mjs` 配两个 dev server 做像素比对（自身噪声 <0.3 mean，超过即是真改动）。
