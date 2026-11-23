@@ -1,4 +1,6 @@
+import {canvasSize} from './platform/canvas-metrics.js';
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {createKilnModel} from './kiln-view.js';
 import {disposeSceneTree} from './scene-environment.js';
@@ -49,11 +51,11 @@ export function createWorkbenchModel({id,level=1}){
 }
 
 export function createWorkbenchPreview(canvas){
- const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+ const renderer=createRenderer({canvas,alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(36,1,.1,50);camera.position.set(6,5.2,10);camera.lookAt(0,1.2,0);scene.add(new THREE.HemisphereLight(0xfff5df,0x687a72,3));const light=new THREE.DirectionalLight(0xffe4b8,3);light.position.set(-3,7,6);scene.add(light);
  let models=[],current=1,disposed=false;
  function draw(){const width=canvas.clientWidth,height=canvas.clientHeight;if(!width||!height)return;renderer.setScissorTest(true);models.forEach((model,i)=>{models.forEach(m=>m.group.visible=m===model);renderer.setViewport(i*width/2,0,width/2,height);renderer.setScissor(i*width/2,0,width/2,height);renderer.render(scene,camera);});renderer.setScissorTest(false);}
- function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(Math.max(1,r.width),Math.max(1,r.height),false);camera.aspect=Math.max(1,r.width/2)/Math.max(1,r.height);const distance=Math.max(1,1/camera.aspect);camera.position.set(3.4*distance,1.2+3.1*distance,5*distance);camera.lookAt(0,1.2,0);camera.updateProjectionMatrix();draw();}
+ function resize(){const {w,h}=canvasSize(canvas);renderer.setSize(w,h,false);camera.aspect=Math.max(1,w/2)/Math.max(1,h);const distance=Math.max(1,1/camera.aspect);camera.position.set(3.4*distance,1.2+3.1*distance,5*distance);camera.lookAt(0,1.2,0);camera.updateProjectionMatrix();draw();}
  const observer=new ResizeObserver(resize);observer.observe(canvas);
  function show(id,level){models.forEach(m=>{scene.remove(m.group);m.dispose();});current=level;models=[level,Math.min(3,level+1)].map(level=>{const model=createWorkbenchModel({id,level});model.group.rotation.y=-.25;model.update(0,{level,reduced:true});scene.add(model.group);return model;});canvas.dataset.workbench=id;canvas.dataset.level=String(level);resize();}
  return {show,update(dt){if(disposed||document.hidden)return;models.forEach((m,i)=>m.update(Math.min(.05,dt),{level:i?Math.min(3,current+1):current,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches}));draw();},dispose(){if(disposed)return;disposed=true;observer.disconnect();models.forEach(m=>m.dispose());renderer.dispose();renderer.forceContextLoss();}};

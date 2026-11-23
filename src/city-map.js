@@ -7,7 +7,7 @@ import {createOpeningTitle} from './opening-title.js';
 
 export function mapMarkup({selected=0,completed=[],mode='atlas',from=null}={}){
  const owned=Array.isArray(completed)?completed:Array.from({length:completed},(_,i)=>i);
- return `<div class="city-map-art" data-map-mode="${mode}"><img class="city-map-image" src="${CITY_MAP}" alt="景德镇四处工坊地图" draggable="false"/>${PLACES.map((place,i)=>`<button class="city-pin ${i===selected?'selected':''} ${owned.includes(i)?'collected':''} ${i===from?'departure':''}" data-place="${i}" style="left:${place.point[0]/10.24}%;top:${place.point[1]/10.24}%;--pin-color:${place.color}" aria-label="${place.name}" aria-pressed="${i===selected}"><span>${owned.includes(i)?'✓':i+1}</span></button>`).join('')}<div class="map-paper-shine" aria-hidden="true"></div></div>`;
+ return `<div class="city-map-art" data-map-mode="${mode}"><img class="city-map-image" src="${CITY_MAP}" alt="景德镇四处工坊地图" draggable="false"/><button class="map-image-retry secondary-button" type="button" hidden>重新加载地图</button>${PLACES.map((place,i)=>`<button class="city-pin ${i===selected?'selected':''} ${owned.includes(i)?'collected':''} ${i===from?'departure':''}" data-place="${i}" style="left:${place.point[0]/10.24}%;top:${place.point[1]/10.24}%;--pin-color:${place.color}" aria-label="${place.name}" aria-pressed="${i===selected}"><span>${owned.includes(i)?'✓':i+1}</span></button>`).join('')}<div class="map-paper-shine" aria-hidden="true"></div></div>`;
 }
 export function sceneRequirementsMarkup(state){
  if(!state.startedJourney)return '<p class="scene-gate unlocked">任选一处工坊，开启你的制瓷旅程。</p>';
@@ -91,6 +91,12 @@ export function createOpening(host,{getState,onStart,onNewGame,onPorcelain}){
 export function createCityMap(host,{state,onContinue,onReplay,onSelect,from=null}){
  let selected=state.scene,busy=false,disposed=false;
  host.innerHTML=`<div class="atlas-layout"><div class="atlas-map-column">${mapMarkup({selected,completed:state.collection.map(c=>c.scene),from})}<p class="atlas-caption">点击地点，选择下一处工坊或回访。</p></div><section class="atlas-detail"><div class="atlas-place-details"></div>${sceneRequirementsMarkup(state)}<div class="atlas-passport">${PLACES.map((p,i)=>`<span class="${state.isCollected(i)?'stamped':''}"><b>${p.stamp}</b><small>${state.isCollected(i)?'已收藏':'待收集'}</small></span>`).join('')}</div><p data-travel-error role="status"></p><button class="primary-button" id="map-select"></button><button class="secondary-button" id="map-continue">返回当前站</button><button class="atlas-replay" id="map-replay-opening">重播地图开场 ↗</button></section></div>`;
+ const image=host.querySelector('.city-map-image'), retry=host.querySelector('.map-image-retry');
+ const showRetry=()=>{retry.hidden=false;image.classList.add('load-failed');};
+ image.onerror=showRetry;
+ image.onload=()=>{retry.hidden=true;image.classList.remove('load-failed');};
+ if(image.complete&&!image.naturalWidth)showRetry();
+ retry.onclick=()=>{image.src=CITY_MAP;};
  const render=()=>{const p=PLACES[selected];host.querySelector('.atlas-place-details').innerHTML=`<h3>${p.name}</h3><p>${p.story}</p><div class="atlas-sticker"><small>纪念贴画</small><b>${p.sticker}</b><span>${state.isCollected(selected)?'✓ 已收藏 · 可选练习':selected===state.scene?'当前工坊':'等待探索'}</span></div>`;host.querySelectorAll('[data-place]').forEach(b=>{const active=Number(b.dataset.place)===selected;b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));});const button=host.querySelector('#map-select');button.disabled=busy||!state.canSelectScene(selected);button.textContent=busy?'正在准备工坊…':selected===state.scene?'继续当前工坊':state.canSelectScene(selected)?'前往此工坊':'🔒 请先完成当前工坊';};
  host.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{if(!busy){selected=Number(b.dataset.place);render();}});
  host.querySelector('#map-select').onclick=async()=>{if(busy)return;if(selected===state.scene){onContinue();return;}busy=true;render();const ok=await onSelect(selected);if(disposed)return;busy=false;if(!ok){host.querySelector('[data-travel-error]').textContent='场景加载失败，请重试。';render();}};

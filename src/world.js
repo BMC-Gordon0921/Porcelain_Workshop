@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {PLACES} from './places.js';
 import {loadSceneEnvironment} from './scene-environment.js';
 import {createWorkbenchModel} from './workbench-model.js';
@@ -157,7 +158,7 @@ function workshopSign(parent,text,accent='#8aa78d'){
 export function createWorld(canvas,{preview=false}={}) {
  let disposed=false;const removers=[];
  const listen=(target,event,fn,options)=>{if(preview)return;target.addEventListener(event,fn,options);removers.push(()=>target.removeEventListener(event,fn,options));};
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,preview?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
+ const renderer=createRenderer({canvas,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,preview?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
  const scene=new THREE.Scene();
  /* Orbit camera. Dragging with the left button turns the workshop; the polar
     angle is clamped so the eye can rise overhead but never sink below the floor. */
@@ -169,10 +170,11 @@ export function createWorld(canvas,{preview=false}={}) {
  const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,140);
  function placeCamera(){const s=Math.sin(orbit.polar),c=Math.cos(orbit.polar);camera.position.set(TARGET.x+orbit.radius*s*Math.sin(orbit.azimuth),TARGET.y+orbit.radius*c,TARGET.z+orbit.radius*s*Math.cos(orbit.azimuth));camera.lookAt(TARGET);camera.zoom=orbit.zoom;camera.updateProjectionMatrix();camera.updateMatrixWorld();}
  placeCamera();
- let orbitDrag=null,interactionEnabled=false;
+ let orbitDrag=null,interactionEnabled=false,displayRotation=0;
+ const setDisplayRotation=deg=>{displayRotation=Number(deg)||0;};
  const stopTween=()=>{cameraTween=null;};
  const onOrbitDown=e=>{if(!interactionEnabled||e.button!==0||!e.isPrimary)return;e.preventDefault();stopTween();orbitDrag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.classList.add('is-orbiting');canvas.setPointerCapture?.(e.pointerId);};
- const onOrbitMove=e=>{if(!interactionEnabled||!orbitDrag||e.pointerId!==orbitDrag.id)return;if(!(e.buttons&1)){onOrbitUp(e);return;}const dx=e.clientX-orbitDrag.x,dy=e.clientY-orbitDrag.y;orbitDrag.x=e.clientX;orbitDrag.y=e.clientY;orbit.azimuth-=dx*.0062;orbit.polar=THREE.MathUtils.clamp(orbit.polar+dy*.005,POLAR_MIN,POLAR_MAX);placeCamera();};
+ const onOrbitMove=e=>{if(!interactionEnabled||!orbitDrag||e.pointerId!==orbitDrag.id)return;if(!(e.buttons&1)){onOrbitUp(e);return;}const rawX=e.clientX-orbitDrag.x,rawY=e.clientY-orbitDrag.y;orbitDrag.x=e.clientX;orbitDrag.y=e.clientY;const dx=displayRotation===90?rawY:rawX,dy=displayRotation===90?-rawX:rawY;orbit.azimuth-=dx*.0062;orbit.polar=THREE.MathUtils.clamp(orbit.polar+dy*.005,POLAR_MIN,POLAR_MAX);placeCamera();};
  const onOrbitUp=()=>{if(!orbitDrag)return;const id=orbitDrag.id;orbitDrag=null;canvas.classList.remove('is-orbiting');if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);};
  const onOrbitWheel=e=>{if(!interactionEnabled)return;e.preventDefault();stopTween();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*Math.exp(-delta*.0012),ZOOM_MIN,ZOOM_MAX);placeCamera();};
  listen(canvas,'pointerdown',onOrbitDown);listen(window,'pointermove',onOrbitMove);listen(window,'pointerup',onOrbitUp);listen(window,'pointercancel',onOrbitUp);
@@ -236,28 +238,46 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   if(disposed)return false;
   if(index===requestedScene&&!force)return loadPromise;
   requestedScene=index;const ticket=++loadTicket;loading=true;loadError=null;canvas.dataset.loading='true';
+  const commit=next=>{
+   if(environment){scene.remove(environment.group);environment.dispose();}
+   environment=next;scene.add(next.group);activeScene=index;root.position.y=next.groundY;
+   chimneyAnchor=next.chimney;
+   if(chimneyAnchor)smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y-root.position.y,chimneyAnchor.z);
+   smokeField.points.visible=!!chimneyAnchor;
+   disposeWorldTree(gallery);gallery.clear();
+   workshopSign(gallery,PLACES[index].workshop,SCENES[index].accent);
+   resetCustomers();if(!preview)player.group.position.set(-4.55,0,-2.15);
+   canvas.dataset.landmark=PLACES[index].id;loading=false;canvas.dataset.loading='false';resize();return true;
+  };
   loadPromise=(async()=>{
    try{
     const next=await loadSceneEnvironment(PLACES[index].id);
     if(disposed||ticket!==loadTicket){next.dispose();return false;}
-    if(environment){scene.remove(environment.group);environment.dispose();}
-    environment=next;scene.add(next.group);activeScene=index;root.position.y=next.groundY;
-    chimneyAnchor=next.chimney;
-    if(chimneyAnchor)smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y-root.position.y,chimneyAnchor.z);
-    smokeField.points.visible=!!chimneyAnchor;
-    disposeWorldTree(gallery);gallery.clear();
-    workshopSign(gallery,PLACES[index].workshop,SCENES[index].accent);
-    resetCustomers();if(!preview)player.group.position.set(-4.55,0,-2.15);
-    canvas.dataset.landmark=PLACES[index].id;loading=false;canvas.dataset.loading='false';resize();return true;
-   }catch(error){if(ticket===loadTicket){loading=false;loadError=error;canvas.dataset.loading='error';}return false;}
+    return commit(next);
+   }catch(error){
+    if(disposed||ticket!==loadTicket)return false;
+    // 分块脚本偶发失败（并发注入或资源紧张）时自动重试一次，仍失败才落到错误态。
+    await new Promise(resolve=>setTimeout(resolve,300));
+    if(disposed||ticket!==loadTicket)return false;
+    try{
+     const retry=await loadSceneEnvironment(PLACES[index].id);
+     if(disposed||ticket!==loadTicket){retry.dispose();return false;}
+     return commit(retry);
+    }catch(retryError){
+     if(ticket===loadTicket){loading=false;loadError=retryError;canvas.dataset.loading='error';}
+     return false;
+    }
+   }
   })();return loadPromise;
  }
  let demo=null;
  function setDemoFrame(frame){demo=frame;}
  let width=1,height=1,carry=null,carryKey='',moving=false,walking=0,stride=0;
- function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
+ // 用 clientWidth/clientHeight 而不是 getBoundingClientRect：手动旋屏时 #app 被 rotate(90deg)，
+ // bbox 会把宽高互换，导致绘制缓冲与布局尺寸不一致（3D 被拉长）。clientWidth 不受 transform 影响。
+ function resize(){const r=canvas.getBoundingClientRect();const cw=canvas.clientWidth||r.width,ch=canvas.clientHeight||r.height;width=Math.max(1,cw);height=Math.max(1,ch);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
  function canMove(x,z){const r=.37;if(x<-7.76||x>2.45||z<-4.9||z>5.13)return false;for(const s of STATIONS){if(x>s.x-s.w/2-r&&x<s.x+s.w/2+r&&z>s.z-s.d/2-r&&z<s.z+s.d/2+r)return false;}return true;}
- function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt,x0=p.x,z0=p.z;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);if((p.x-x0)**2+(p.z-z0)**2>1e-8){moving=true;walking+=dt*11;stride+=dt*11;}else moving=false;}
+ function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);const thrust=Math.min(1,len);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt*thrust,x0=p.x,z0=p.z;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);if((p.x-x0)**2+(p.z-z0)**2>1e-8){moving=true;walking+=dt*11;stride+=dt*11;}else moving=false;}
  function project(x,y,z){const p=new THREE.Vector3(x,y+root.position.y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
  function nearest(){let best=null,dist=Infinity;for(const s of STATIONS){const p=player.group.position;const dx=Math.max(Math.abs(p.x-s.x)-s.w/2,0),dz=Math.max(Math.abs(p.z-s.z)-s.d/2,0);const d=Math.hypot(dx,dz);if(d<1.04&&d<dist){best=s;dist=d;}}return best;}
  let reducedQuery=null;const reducedMotion=()=>(reducedQuery??=matchMedia('(prefers-reduced-motion: reduce)')).matches;
@@ -332,7 +352,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
  function dispose(){if(disposed)return;disposed=true;loadTicket++;onOrbitUp();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
- resize();return {dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
+ resize();return {setDisplayRotation,dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
 }
 
 // Cache-owned primitives/materials are shared by the game and scene preview.

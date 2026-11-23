@@ -92,12 +92,18 @@ public/decals/
 .env.*
 *.local
 
-# ── 10. 小红书小工具链路：不属于本仓库运行时（开发在 Redbook_transplant 分支） ──
-#    小工具离线包、构建产物与配套 skill 不参与本游戏的 vite 构建，main 分支不入库。
-#    需要时切到 Redbook_transplant，或从本地保留的副本重新生成。
+# ── 10. 小红书小工具（同一套源码的第二个构建目标，见 docs/minitool-port.md）──
+#    源码与管线（tools/minitool/*、vite.minitool.config.js、src/platform/*）照常入库；
+#    只忽略可再生成的产物与中间件。
+#      .skill/            随包下载的开发规范 Skill（来源与版本记在 docs/）
+#      dist-minitool/     minitool 构建产物与离线包
+#      minitool/gen/      资源转换中间产物（图片/音频/几何，可再生成）
+#      probe/assets/tone.*  探针音频夹具，由 gen-tone.mjs 生成
 .skill/
-minitool/
-tools/minitool/
 dist-minitool/
 dist-minitool.zip
+dist-probe/
+minitool/gen/
+tools/minitool/probe/assets/tone.mp3
+tools/minitool/probe/assets/tone.wav
 terra-cover-3x4.png

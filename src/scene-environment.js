@@ -1,10 +1,21 @@
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {isPackedSceneMode, loadPackedEnvironment} from './platform/model-source.js';
+
+// 小工具构建把 __MINITOOL__ 定义成 true：走自带几何（<script> 分块 + base64），
+// 桌面/原生构建定义成 false：仍走 fetch + GLTFLoader。
+// 常量折叠后小工具包里不会留下 fetch / GLTFLoader 这条路径。
+const MINITOOL = typeof __MINITOOL__ !== 'undefined' && __MINITOOL__;
 
 let manifestPromise;
 const downloads=new Map();
 const base=import.meta.env?.BASE_URL||'/';
 async function read(url){const response=await fetch(base+url);if(!response.ok)throw new Error(`Scene asset: ${response.status}`);return response;}
 export async function loadSceneEnvironment(id){
+ if(MINITOOL||isPackedSceneMode()){
+  const {config,group}=await loadPackedEnvironment(id);
+  group.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});
+  return {...config,group,dispose(){disposeSceneTree(group);group.clear();}};
+ }
  if(!manifestPromise)manifestPromise=read('models/maps/manifest.json').then(r=>r.json()).catch(e=>{manifestPromise=null;throw e;});
  const config=(await manifestPromise)[id];
  if(!config)throw new Error(`Unknown scene: ${id}`);

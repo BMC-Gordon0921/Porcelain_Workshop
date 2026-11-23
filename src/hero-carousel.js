@@ -1,4 +1,6 @@
+import {canvasSize} from './platform/canvas-metrics.js';
 import * as THREE from 'three';
+import {createRenderer} from './platform/renderer.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {bowlModel} from './decals.js';
 import {SCENES} from './campaign.js';
@@ -17,7 +19,7 @@ export function createHeroCarousel(host){
  host.classList.add('hero-carousel');
  host.innerHTML='<canvas class="hero-canvas" tabindex="0" aria-label="四件成品瓷碗，可拖动旋转，悬停查看简介"></canvas><div class="hero-caption" aria-live="polite"></div><span class="hero-hint">拖动旋转 · 悬停查看</span>';
  const canvas=host.querySelector('canvas'),caption=host.querySelector('.hero-caption');
- const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+ const renderer=createRenderer({canvas,antialias:true,alpha:true});
  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x000000,0);
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(30,1,.1,60);
@@ -44,7 +46,7 @@ export function createHeroCarousel(host){
   controls.update();
  }
  function resize(){
-  const {width,height}=canvas.getBoundingClientRect();if(!width||!height)return;
+  const {w:width,h:height}=canvasSize(canvas);if(!width||!height)return;
   renderer.setSize(width,height,false);camera.aspect=width/height;
   const distance=6.4/Math.min(1,camera.aspect/1.3);camera.position.set(0,distance*.29,distance);camera.lookAt(0,0,0);camera.updateProjectionMatrix();
  }

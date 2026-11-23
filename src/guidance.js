@@ -9,7 +9,14 @@ export function createGuidance(host,world){
  return {deny(access){forced=access;forceLeft=4;gate.classList.remove('attention');void gate.offsetWidth;gate.classList.add('attention');},update(dt,{state,playing,nearest,moving,started}){
   loading.classList.toggle('hidden',!started||!world.loading&&!world.loadError);
   const loadKey=world.loadError?'error':world.loading?'loading':'';
-  if(loading.dataset.status!==loadKey){loading.dataset.status=loadKey;loading.innerHTML=loadKey==='error'?'<span>工坊加载失败</span><button type="button">重新加载</button>':'正在准备工坊…';loading.querySelector('button')?.addEventListener('click',()=>world.setScene(state.scene,{force:true}));}
+  if(loading.dataset.status!==loadKey){
+   loading.dataset.status=loadKey;
+   if(loadKey==='error'){
+    const reason=world.loadError&&world.loadError.message?String(world.loadError.message).split('\n')[0]:'';
+    loading.innerHTML=`<span>工坊加载失败${reason?' · '+reason:''}</span><button type="button">重新加载</button>`;
+   }else loading.innerHTML='正在准备工坊…';
+   loading.querySelector('button')?.addEventListener('click',()=>world.setScene(state.scene,{force:true}));
+  }
   forceLeft=Math.max(0,forceLeft-dt);if(!forceLeft)forced=null;
   const access=nearest?state.stationAccess(nearest.id):null,blocked=access&&!access.allowed?access:forced;
   const next=world.stations.find(s=>s.id===(blocked?.next||state.nextStation()));

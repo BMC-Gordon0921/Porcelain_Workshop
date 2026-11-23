@@ -1,0 +1,38 @@
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #14161a;
+  color: #e8eef5;
+  font: 13px/1.5 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+#app {
+  padding: 12px 14px 32px;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+
+.hint {
+  margin: 0 0 10px;
+  color: #8b98a8;
+}
+
+#out {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #1b1f25;
+  border: 1px solid #2a313a;
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 70vh;
+  overflow: auto;
+}

@@ -20,7 +20,11 @@ export function createSceneCarousel(host,{onChange,initial=0,presentation='inter
   const ticket=++loadTicket;
   status.hidden=false;status.textContent='正在准备工坊…';
   const success=await world.setScene(index,{force});if(disposed||ticket!==loadTicket||index!==active)return;
-  if(success){status.hidden=true;}else{status.innerHTML='<span>工坊加载失败</span><button type="button">重新加载</button>';status.querySelector('button').onclick=()=>load(index,true);}
+  if(success){status.hidden=true;}else{
+   const reason=world.loadError&&world.loadError.message?String(world.loadError.message).split('\n')[0]:'';
+   status.innerHTML=`<span>工坊加载失败 · ${PLACES[index].shortName}</span>${reason?`<small>${reason}</small>`:''}<button type="button">重新加载</button>`;
+   status.querySelector('button').onclick=()=>load(index,true);
+  }
  }
  function present(){
   if(active!==playback.index){active=playback.index;state.scene=active;demo.interact();load(active);onChange?.(active);}

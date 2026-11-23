@@ -1,0 +1,1501 @@
+/* 小工具容器专属的版式修正：只在 html[data-platform=minitool] 下生效，桌面/原生构建零影响。
+   1. 让开状态栏、右侧胶囊按钮、底部 home 指示条与横屏左右安全区；
+   2. 修手机竖屏的 HUD 错位（订单条压在顶栏下、3D 站点标签互相叠、恢复视角压住方向键）；
+   3. 补 Chrome 61（安卓 WebView 基线）不认的 100dvh —— 用 100vh 兜底；
+   4. 横屏（高 ≤520px）走一套独立的紧凑布局，而不是把竖屏旋转 90°。 */
+
+html[data-platform=minitool] {
+  --mt-top-inset: 0px;
+  --mt-bottom-inset: 0px;
+  --mt-left-inset: 0px;
+  --mt-right-inset: 0px;
+  /* 右侧订单栏宽度：仓库里 upgrade.css 给了 260px（宽屏）、style.css 给 190/222px。
+     这里收成一个变量，让 3D 视口与「操作」键都按它让位，避免互相压边。 */
+  --mt-orders-w: 260px;
+  --mt-orders-gap: 42px; /* 订单栏右外边距 26px + 与 3D 视口的 16px 间隙 */
+}
+
+/* 平板/窄桌面（761–1100px）里 260px 的订单栏太挤，收窄到 222px */
+@media (min-width: 761px) and (max-width: 1100px) {
+  html[data-platform=minitool] {
+    --mt-orders-w: 222px;
+  }
+}
+
+html[data-platform=minitool] #app {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* 触屏操作控件：左下虚拟摇杆 + 右下「操作」键。
+   判定用 html[data-input=touch]（JS 会按「触屏设备 / 小工具里的小屏」给出），
+   这样桌面预览与 PC 浏览器自动回到键盘方案，不再顶着摇杆。 */
+html[data-platform=minitool] .touch-controls {
+  display: none;
+  position: static;
+  z-index: 7;
+}
+
+html[data-platform=minitool][data-input=touch] .touch-controls {
+  display: block;
+}
+
+html[data-platform=minitool] .joystick {
+  position: absolute;
+  left: calc(16px + var(--mt-left-inset));
+  bottom: calc(64px + var(--mt-bottom-inset));
+  z-index: 7;
+  width: 118px;
+  height: 118px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid #8a977c59;
+  background: radial-gradient(circle at 50% 42%, #f8f7ecd9, #e7e4d1a6);
+  box-shadow: 0 6px 18px #4b46301f, inset 0 0 0 9px #ffffff3d;
+  touch-action: none;
+  user-select: none;
+}
+
+html[data-platform=minitool] .joystick-ring {
+  position: absolute;
+  inset: 15px;
+  border-radius: 50%;
+  border: 1px dashed #8a977c59;
+  pointer-events: none;
+}
+
+html[data-platform=minitool] .joystick-knob {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #74906a, #465d48);
+  box-shadow: 0 4px 10px #2f3d2c4d;
+  transition: transform .06s linear;
+  pointer-events: none;
+}
+
+html[data-platform=minitool] .touch-controls #touch-interact {
+  position: absolute;
+  right: calc(-6px + var(--mt-right-inset));
+  bottom: calc(6px + var(--mt-bottom-inset));
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  border: 1px solid #2f443066;
+  background: #4b6748e6;
+  color: #fff5d8;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 6px 16px #2b3a2b40;
+}
+
+/* 触屏没有键盘：隐藏桌面键位提示与交互卡上的 F 徽标（文案已在 JS 里换成"点按操作"） */
+html[data-platform=minitool][data-input=touch] .bottom-bar .controls {
+  display: none;
+}
+
+html[data-platform=minitool][data-input=touch] #interaction .interact-key {
+  display: none;
+}
+
+html[data-platform=minitool] .task-footer kbd {
+  display: none;
+}
+
+/* 全屏开屏页整体让开外壳 */
+html[data-platform=minitool] .opening-screen {
+  top: var(--mt-top-inset);
+  right: var(--mt-right-inset);
+  bottom: var(--mt-bottom-inset);
+  left: var(--mt-left-inset);
+}
+
+html[data-platform=minitool] .topbar {
+  top: var(--mt-top-inset);
+  left: var(--mt-left-inset);
+  right: var(--mt-right-inset);
+  width: auto;
+}
+
+html[data-platform=minitool] #world-wrap {
+  top: calc(95px + var(--mt-top-inset));
+  bottom: calc(58px + var(--mt-bottom-inset));
+  left: var(--mt-left-inset);
+  right: calc(var(--mt-orders-w) + var(--mt-orders-gap) + var(--mt-right-inset));
+}
+
+html[data-platform=minitool] #app > .commissions {
+  top: calc(125px + var(--mt-top-inset));
+  right: calc(26px + var(--mt-right-inset));
+  width: var(--mt-orders-w);
+}
+
+/* 宽屏：订单栏给了固定 top 却没给 bottom，内容一多就越过底栏压到「贴画目标」卡上。
+   这里补下边界并让它自己滚动。 */
+html[data-platform=minitool][data-layout=wide] #app > .commissions {
+  bottom: calc(74px + var(--mt-bottom-inset));
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 6px;
+}
+
+/* 触屏 + 宽屏（平板竖屏 / 手机横置前的宽视口）：订单栏内容比可视高度多约 20px，
+   导致最下面的「游历图」「贴画工坊」要滚动才够得到。这里把冗长的说明收掉，
+   保证所有按钮一屏可见（滚动条只作为兜底）。 */
+html[data-platform=minitool][data-input=touch][data-layout=wide] .efficiency-indicator {
+  display: none;
+}
+
+html[data-platform=minitool][data-input=touch][data-layout=wide] .reference-card > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+html[data-platform=minitool][data-input=touch][data-layout=wide] .reference-card > img {
+  max-height: 56px;
+  object-fit: cover;
+}
+
+/* 宽屏（平板/桌面预览）里「操作」键原落在订单栏底下，挪到 3D 视口右下角 */
+@media (min-width: 761px) {
+  html[data-platform=minitool] .touch-controls #touch-interact {
+    right: calc(var(--mt-orders-w) + var(--mt-orders-gap) + var(--mt-right-inset));
+    bottom: calc(72px + var(--mt-bottom-inset));
+    width: 54px;
+    height: 54px;
+  }
+
+  /* 升级面板：sticky 的确认条会盖住下方 3D 预览的底边，改成随内容滚动 */
+  html[data-platform=minitool] .upgrade-confirmation {
+    position: static;
+    bottom: auto;
+  }
+
+  /* 开屏轮播页：左侧文案列比网格行高，会压到页脚；收紧文案让它收回行内 */
+  html[data-platform=minitool] .opening-copy > h1 {
+    font-size: 34px;
+    line-height: 1.06;
+  }
+
+  html[data-platform=minitool] .opening-lead {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  html[data-platform=minitool] .opening-copy .opening-chapter {
+    min-height: 0;
+    margin: 8px 0;
+    padding: 8px 0;
+  }
+
+  html[data-platform=minitool] .opening-copy .opening-rules {
+    margin: 6px 0 0;
+  }
+}
+
+html[data-platform=minitool] #carry-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .bottom-bar {
+  bottom: var(--mt-bottom-inset);
+  left: var(--mt-left-inset);
+  right: var(--mt-right-inset);
+  width: auto;
+}
+
+/* 弹层外壳：贴安全区四边；面板拆成「固定顶栏 + 只滚 body + 固定底栏」，
+   关闭按钮因此常驻可见，不需要滚回顶部（手机横版尤其明显）。 */
+html[data-platform=minitool] .overlay {
+  top: var(--mt-top-inset);
+  right: var(--mt-right-inset);
+  bottom: var(--mt-bottom-inset);
+  left: var(--mt-left-inset);
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+html[data-platform=minitool] .task-panel,
+html[data-platform=minitool] .help-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #f9f4e7;
+}
+
+html[data-platform=minitool] .task-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+html[data-platform=minitool] .task-header {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 9px 54px 8px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e2dccb;
+  background: #f9f4e7;
+  z-index: 2;
+}
+
+html[data-platform=minitool] .task-header .eyebrow {
+  grid-column: 1;
+  font-size: 10px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+html[data-platform=minitool] .task-header h2 {
+  grid-column: 2;
+  min-width: 0;
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.25;
+  letter-spacing: -.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-platform=minitool] .task-header p {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: none;
+  font-size: 11px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 效率提示原本 sticky 在面板顶部，滚动时会盖住瓷泥画布 */
+html[data-platform=minitool] .task-efficiency {
+  position: static;
+}
+
+/* 「保存并离开」由脚本搬进面板页脚（常驻可见），正文里的说明行冗余故隐藏 */
+html[data-platform=minitool] [data-panel=editor] .editor-bottom {
+  display: none;
+}
+
+html[data-platform=minitool] .task-footer .primary-button {
+  padding: 9px 14px;
+  font-size: 12px;
+}
+
+html[data-platform=minitool] #task-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 14px 12px;
+}
+
+html[data-platform=minitool] .task-footer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 12px;
+  gap: 8px;
+  border-top: 1px solid #e2dccb;
+  background: #f6f1e2;
+  flex-wrap: wrap;
+}
+
+html[data-platform=minitool] .close-button {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  background: #f2ecdb;
+  border-color: #d8d5c2;
+  z-index: 6;
+}
+
+html[data-platform=minitool] .help-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 20px;
+}
+
+html[data-platform=minitool] .help-panel .close-button {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: -6px -6px 4px 0;
+}
+
+/* 面板里的图片必须有稳定盒子，否则细栏/横版下会被压成 0 高（看起来像没加载） */
+html[data-platform=minitool] .brief-pair img,
+html[data-platform=minitool] .review-pair img {
+  min-height: 120px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .target-preview {
+  min-height: 84px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .reference-texture img,
+html[data-platform=minitool] .decal-picker img {
+  min-height: 72px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .preset-gallery-card img,
+html[data-platform=minitool] .collection-card img {
+  min-height: 68px;
+  object-fit: contain;
+}
+
+html[data-platform=minitool] .overlay > * {
+  max-height: 100%;
+}
+
+/* 手机屏上一排站点标签会投叠成一团：只留当前/邻近/教学目标那一个（两种朝向都适用） */
+html[data-platform=minitool] #station-labels .station-label {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html[data-platform=minitool] #station-labels .station-label.near,
+html[data-platform=minitool] #station-labels .station-label.next,
+html[data-platform=minitool] #station-labels .station-label.active,
+html[data-platform=minitool] #station-labels .station-label.tutorial-target {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ---------- 手机竖屏 ---------- */
+
+@media (max-width: 760px) {
+  html[data-platform=minitool] .topbar {
+    height: 73px;
+  }
+
+  /* 订单条贴顶栏下沿往下 12px，不再钻到顶栏底下 */
+  html[data-platform=minitool] #app > .commissions {
+    top: calc(85px + var(--mt-top-inset));
+    left: calc(12px + var(--mt-left-inset));
+    right: calc(12px + var(--mt-right-inset));
+    width: auto;
+  }
+
+  /* 效率提示在窄栏里会竖排成一串单字，直接收起 */
+  html[data-platform=minitool] .reference-card .efficiency-indicator {
+    display: none;
+  }
+
+  html[data-platform=minitool] .reference-card,
+  html[data-platform=minitool] .decal-goal {
+    overflow: hidden;
+  }
+
+  /* 「0/3 关 · 0/400 币」在窄屏会折行，缩一号字并禁止换行 */
+  html[data-platform=minitool] .decal-goal div > span {
+    font-size: 9px;
+    white-space: nowrap;
+    letter-spacing: -.2px;
+  }
+
+  /* 藏品入口在窄屏会浮到 3D 视口上，改从贴画卡进旅程面板 */
+  html[data-platform=minitool] #app > .commissions .collection-link {
+    display: none;
+  }
+
+  /* 订单卡在窄屏压扁，给 3D 视口留高度 */
+  html[data-platform=minitool] .order-card {
+    padding: 6px;
+  }
+
+  html[data-platform=minitool] .order-info {
+    margin-top: 2px;
+    gap: 4px;
+  }
+
+  html[data-platform=minitool] .order-art {
+    width: 24px;
+    height: 29px;
+  }
+
+  html[data-platform=minitool] .order-art svg {
+    width: 22px;
+    height: 26px;
+  }
+
+  html[data-platform=minitool] .price {
+    margin-top: 1px;
+  }
+
+  html[data-platform=minitool] .order-status {
+    display: none;
+  }
+
+  html[data-platform=minitool] #world-wrap {
+    top: calc(171px + var(--mt-top-inset));
+    bottom: calc(112px + var(--mt-bottom-inset));
+    left: var(--mt-left-inset);
+    right: var(--mt-right-inset);
+  }
+
+  /* 3D 站点标签在窄屏会投叠成一团：只留当前/邻近/教学目标那一个 */  /* 「↺ 恢复视角」原来在世界区左下，被触屏方向键盖住 → 移到右下 */
+  html[data-platform=minitool] .reset-view {
+    left: auto;
+    right: calc(10px + var(--mt-right-inset));
+    bottom: 12px;
+  }
+
+  /* 面板标题左右各留出关闭按钮的位置 */
+  html[data-platform=minitool] .task-header {
+    padding: 0 34px;
+  }
+
+  /* 「古窑民俗博览区 · 第 1 关 / 3 · 尝试 1」在窄屏会折行并把关闭按钮挤到一起 */
+  html[data-platform=minitool] .task-header .eyebrow {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 面板最后一行别贴着圆角边 */
+  html[data-platform=minitool] .task-panel {
+    padding-bottom: 16px;
+  }
+
+  /* 升级面板：预览图别太高，底部确认条不再盖住预览 */
+  html[data-platform=minitool] .upgrade-detail canvas {
+    height: 118px;
+  }
+
+  html[data-platform=minitool] .task-header h2 {
+    font-size: 20px;
+    margin: 2px 0 4px;
+  }
+
+  html[data-platform=minitool] .task-header p {
+    font-size: 11px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* 竖屏一屏放不下六张工作台卡 + 预览 + 确认，整体压紧一档 */
+  html[data-platform=minitool] .workbench-card {
+    padding: 8px 10px;
+    gap: 2px;
+  }
+
+  html[data-platform=minitool] .workbench-card small {
+    font-size: 9px;
+  }
+
+  html[data-platform=minitool] .workbench-heading b {
+    font-size: 14px;
+  }
+
+  html[data-platform=minitool] .upgrade-wallet {
+    font-size: 12px;
+    margin: 2px 0 8px;
+  }
+
+  html[data-platform=minitool] .upgrade-comparison {
+    font-size: 10px;
+    gap: 6px;
+  }
+
+  /* 竖屏同样把确认条放回文档流，避免它被浮到面板外看不见；改成一整行放提示 + 按钮 */
+  html[data-platform=minitool] .upgrade-confirmation {
+    position: static;
+    bottom: auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 8px 0 2px;
+  }
+
+  html[data-platform=minitool] .upgrade-confirmation p {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  html[data-platform=minitool] .upgrade-confirmation button {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  html[data-platform=minitool] .upgrade-confirmation {
+    position: static;
+    padding: 12px 0 4px;
+  }
+
+  html[data-platform=minitool] .opening-screen .city-prologue {
+    min-height: 0;
+  }
+}
+
+/* 触屏设备没有键盘：底部键位提示会在方形按钮旁边自相矛盾 */
+@media (pointer: coarse) {
+  html[data-platform=minitool] .bottom-bar .controls {
+    display: none;
+  }
+
+  html[data-platform=minitool] #interaction small {
+    display: none;
+  }
+}
+
+/* ---------- 横屏（手机横置，高 ≤520px） ---------- */
+
+/* 紧凑横屏：真机横屏（高≤520）或用户手动旋屏（data-rotate=on）时由 JS 打上 data-layout=ls */
+  html[data-platform=minitool][data-layout=ls] .topbar {
+    height: 46px;
+    padding: 0 8px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .brand h1 {
+    font-size: 22px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .brand-mark {
+    width: 27px;
+    height: 27px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .brand-mark svg {
+    width: 20px;
+    height: 21px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .brand p {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .wallet strong {
+    font-size: 17px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .icon-button {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+
+  /* 侧边条里省掉「当前货币」小字，只留图标 + 数字 */
+  html[data-platform=minitool][data-layout=ls] .wallet small {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .wallet {
+    margin-right: 0;
+  }
+
+  /* 订单改成右侧竖排窄栏，横向空间够用，纵向最省 */
+  /* 横版空间紧张：教学浮标会压在订单卡上，引导文本在「玩法说明」里可查 */
+  html[data-platform=minitool][data-layout=ls] .tutorial-instruction,
+  html[data-platform=minitool][data-layout=ls] #guide-card {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] #app > .commissions {
+    top: calc(60px + var(--mt-top-inset));
+    left: auto;
+    right: calc(8px + var(--mt-right-inset));
+    /* 底部留出「操作」键的位置，否则订单卡会压在按键上 */
+    bottom: calc(72px + var(--mt-bottom-inset));
+    width: 156px;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  
+    z-index: 6;
+  }
+
+  /* 竖排栏里只留「第几关 + 参考图 + 作品名 + 进价」，其余长文案收掉 */
+  html[data-platform=minitool][data-layout=ls] .scene-heading,
+  html[data-platform=minitool][data-layout=ls] .scene-path,
+  html[data-platform=minitool][data-layout=ls] .preset-path,
+  html[data-platform=minitool][data-layout=ls] .section-heading,
+  html[data-platform=minitool][data-layout=ls] .goal-card,
+  html[data-platform=minitool][data-layout=ls] .reference-card > p,
+  html[data-platform=minitool][data-layout=ls] .reference-card .reference-link,
+  html[data-platform=minitool][data-layout=ls] .efficiency-indicator,
+  html[data-platform=minitool][data-layout=ls] #app > .commissions .collection-link {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-card {
+    display: block;
+    height: auto;
+    padding: 7px 8px;
+    margin-bottom: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-heading {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+
+  /* 参考图是玩家判断「这关要做什么」的主要线索，横屏也要留一张小图 */
+  html[data-platform=minitool][data-layout=ls] .reference-card > img {
+    display: block;
+    width: 100%;
+    max-height: 62px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin: 3px 0 2px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-card h3 {
+    font-size: 15px;
+    line-height: 1.2;
+    margin: 3px 0 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal {
+    margin: 0;
+    height: auto;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal > img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+  }
+
+  /* 横屏订单栏高度有限：「本场景贴画」说明行让位给贴画缩略图 */
+  html[data-platform=minitool][data-layout=ls] .decal-goal small {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal div > span {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal b {
+    font-size: 12px;
+    margin: 2px 0;
+  }
+
+  /* 旋屏/横屏时视口仍只有 393 宽，≤760 的竖屏排布会同时命中并与 ls 布局打架：
+     这里把订单栏恢复成单列、卡片按横屏尺寸重新定宽，避免参考图被网格挤成 0 高 */
+  html[data-platform=minitool][data-layout=ls] #app > .commissions {
+    display: block;
+    padding: 0 4px 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-card {
+    display: block;
+    height: auto;
+    padding: 7px 8px;
+    margin-bottom: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reference-card > img {
+    display: block;
+    width: 100%;
+    height: 52px;
+    object-fit: contain;
+    background: #eee6d3;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal {
+    display: flex;
+    height: auto;
+    margin-top: 6px;
+    padding: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .decal-goal > img {
+    width: 24px;
+    height: 32px;
+  }
+
+  /* 携带中的瓷泥卡：放到左下角与「操作」键、摇杆都不重叠的位置 */
+  html[data-platform=minitool][data-layout=ls] .carrying {
+    top: auto;
+    right: auto;
+    left: calc(200px + var(--mt-left-inset));
+    bottom: calc(44px + var(--mt-bottom-inset));
+    transform: none;
+    min-width: 0;
+    max-width: 236px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .touch-controls #touch-interact {
+    right: calc(8px + var(--mt-right-inset));
+    bottom: calc(4px + var(--mt-bottom-inset));
+    width: 64px;
+    height: 64px;
+    font-size: 13px;
+    z-index: 8;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reset-view {
+    top: auto;
+    left: auto;
+    right: calc(10px + var(--mt-right-inset));
+    bottom: calc(44px + var(--mt-bottom-inset));
+  }
+
+  html[data-platform=minitool][data-layout=ls] .touch-controls .joystick {
+    left: calc(48px + var(--mt-left-inset));
+    bottom: calc(42px + var(--mt-bottom-inset));
+  }
+
+  html[data-platform=minitool][data-layout=ls] #world-wrap {
+    top: calc(46px + var(--mt-top-inset));
+    bottom: calc(38px + var(--mt-bottom-inset));
+    left: var(--mt-left-inset);
+    right: calc(172px + var(--mt-right-inset));
+  }
+
+  /* 旋屏后底栏变成一条 38px 的侧边窄条，内容（原型角标 + 键位提示）在横屏没有价值，
+     直接收起，把左下角让给「操作」键 */
+  html[data-platform=minitool][data-layout=ls] .bottom-bar {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .bottom-bar .controls {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .guide-card {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .reset-view {
+    top: auto;
+    left: auto;
+    right: 10px;
+    bottom: 8px;
+  }
+
+  html[data-platform=minitool][data-panel-open] .touch-controls,
+  html[data-platform=minitool][data-panel-open] .reset-view {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .overlay {
+    padding: 0;
+  }
+
+  html[data-platform=minitool] .task-panel.atlas-panel {
+    inset: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-panel,
+  html[data-platform=minitool][data-layout=ls] .help-panel {
+    border-radius: 0;
+    padding: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-header {
+    padding: 6px 52px 6px 12px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-header .eyebrow {
+    font-size: 10px;
+    letter-spacing: .6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-header h2 {
+    margin: 0;
+    font-size: 17px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-header p {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .task-artboard {
+    height: 100%;
+    min-height: 120px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .kiln-view {
+    height: 140px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .serve-art {
+    height: 140px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .upgrade-confirmation {
+    position: static;
+    padding: 6px 0 0;
+  }
+
+  /* ---------- 横版两栏：工作台 / 升级 / 窑炉 / 贴画（左预览 58% + 右控件 42%） ---------- */
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] #task-body,
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] #task-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+    padding: 8px 12px 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom,
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .efficiency-indicator {
+    flex: 0 0 auto;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom {
+    margin: 0;
+    padding: 6px 0 0;
+    border-top: 1px solid #e2dccb;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .journey-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .journey-layout,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .journey-layout {
+    display: grid;
+    grid-template-columns: 58fr 42fr;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 10px;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* 工作台左列：画布吃满剩余高度（grid 行 1fr），工具行贴底，避免 flex + aspect-ratio 互压成 39px */
+  /* 画布独占左侧整列；工具/笔刷收进 132px 侧栏，靠拇指、也给画布更多高度 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .work-area {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 132px;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: 'canvas tools' 'canvas brush';
+    gap: 6px 8px;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row {
+    grid-area: tools;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 4px;
+    align-self: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    grid-area: brush;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    gap: 2px 4px;
+    align-self: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row input[type=range] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row > label,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row > output {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .board-top {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap {
+    grid-area: canvas;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    margin: 0;
+    aspect-ratio: 1;
+    align-self: center;
+    justify-self: center;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .bowl-stage,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .bowl-stage,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .bowl-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: 1;
+  }
+
+  /* 横版工作台：把页脚（玩法说明）提到标题栏右侧，页脚脱离文档流，高度全给画布 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer {
+    position: absolute;
+    top: 3px;
+    right: 50px;
+    z-index: 6;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  /* 「保存并离开」也提到标题栏，工作区因此只承载画布 + 工具行 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom {
+    position: absolute;
+    top: 2px;
+    right: 108px;
+    left: auto;
+    bottom: auto;
+    z-index: 6;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom > span {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-bottom .primary-button {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer > span {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    margin-top: 0;
+  }
+
+  /* 横版工作台：拿掉占位的升级入口与辅助说明，工具行压成单行，把高度全部让给画布 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .station-upgrade-entry,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-assists,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .station-only,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-efficiency {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-switch button {
+    padding: 5px 7px;
+    font-size: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row .small-tool {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row .guide-toggle {
+    width: auto;
+    margin: 0 0 0 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .task-footer .secondary-button {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .bowl-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .bowl-stage canvas,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .bowl-stage canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .editor-reference,
+  html[data-platform=minitool][data-layout=ls] [data-panel=kiln] .kiln-control,
+  html[data-platform=minitool][data-layout=ls] [data-panel=journey] .decal-details,
+  html[data-platform=minitool][data-layout=ls] [data-panel=decal] .decal-details,
+  html[data-platform=minitool][data-layout=ls] [data-panel=crafted] .decal-details {
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .tool-row,
+  html[data-platform=minitool][data-layout=ls] [data-panel=editor] .brush-row {
+    margin-top: 6px;
+  }
+
+  /* 升级面板：左预览、右卡片列表、底部确认条 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] #upgrade-content {
+    display: grid;
+    grid-template-columns: 58fr 42fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'wallet wallet'
+      'detail cards'
+      'detail confirm';
+    gap: 6px 10px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-wallet {
+    grid-area: wallet;
+    margin: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-detail {
+    grid-area: detail;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    margin: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-detail canvas {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .workbench-grid {
+    grid-area: cards;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    align-content: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-confirmation {
+    grid-area: confirm;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-confirmation p {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  html[data-platform=minitool][data-layout=ls] [data-panel=upgrades] .upgrade-confirmation button {
+    flex: 0 0 auto;
+    width: auto;
+    padding: 9px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* 地图面板：横版把地图按可用高度收住，图例压一行 */
+  html[data-platform=minitool][data-layout=ls] [data-panel=citymap] .city-map-art,
+  html[data-platform=minitool][data-layout=ls] [data-panel=travel] .city-map-art {
+    width: auto;
+    height: calc(100% - 6px);
+    max-height: none;
+    margin: 0 auto;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .city-map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* 开屏页横屏时内容比屏幕高，允许滚动而不是被裁掉 */
+  html[data-platform=minitool][data-layout=ls] .opening-screen {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-header {
+    padding: 8px 14px 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-copy {
+    padding: 8px 14px 12px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-screen .city-prologue {
+    min-height: 0;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .welcome-panel h2 {
+    font-size: 36px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .welcome-panel {
+    padding: 22px 26px;
+  }
+
+/* 横屏开屏页：393px 高度装不下竖排大标题，压成双栏海报式，尽量一屏放下 */
+/* 紧凑横屏：真机横屏（高≤520）或用户手动旋屏（data-rotate=on）时由 JS 打上 data-layout=ls */
+  /* 只作用于「故事开场」阶段；进入地图阶段时 city-prologue 必须保持 display:none */
+  html[data-platform=minitool][data-layout=ls] .opening-screen[data-opening-stage=intro] > .city-prologue {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: center;
+    gap: 2vw;
+    min-height: 0;
+    padding: 0 4vw 4px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-copy > .opening-title {
+    font-size: 52px;
+    line-height: 1.1;
+    letter-spacing: .01em;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-copy > h2 {
+    font-size: 15px;
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-kicker {
+    margin-bottom: 6px;
+    letter-spacing: 4px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-copy > p {
+    min-height: 0;
+    font-size: 11px;
+    line-height: 1.7;
+    margin: 8px 0 4px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-beats {
+    margin-top: 10px;
+  }
+
+  /* 大瓷碗在横屏缩成方形取景框：相机按画布比例取景，扁画布会把碗压成一条线 */
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain {
+    height: 240px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain > img {
+    width: 118%;
+    max-height: 210px;
+    object-fit: contain;
+  }
+
+  /* 横屏里 3D 瓷碗改为紧凑方形取景（画布尺寸已经用 clientWidth/clientHeight，
+     不再被旋转包围盒污染，2.2:1 的扁画布才会把碗压扁，这里给足高度） */
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain > .prologue-carousel {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 240px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain > .prologue-carousel > canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .porcelain-halo {
+    width: 200px;
+    height: 200px;
+  }
+
+  /* 开场页的瓷碗是装饰展示：横屏里收起轮播控件与提示，避免压住画面 */
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain .carousel-controls,
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain .carousel-hint,
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain .hero-hint,
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain .opening-pause,
+  html[data-platform=minitool][data-layout=ls] .prologue-porcelain .carousel-dots,
+  html[data-platform=minitool][data-layout=ls] .city-prologue > .opening-pause {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .porcelain-caption {
+    display: none;
+  }
+
+  /* 轮播阶段：左侧文案瘦身，右侧场景卡限高，避免正文压住场景清单 */
+  html[data-platform=minitool][data-layout=ls] .opening-screen[data-opening-stage=map] .opening-layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 2vw;
+    padding: 4px 0;
+    align-items: start;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-copy > h1 {
+    font-size: 30px;
+    line-height: 1.2;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-screen .opening-lead {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-chapter {
+    min-height: 0;
+    margin: 8px 0;
+    padding: 8px 0;
+    gap: 10px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-chapter > span {
+    font-size: 24px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-chapter small {
+    margin-bottom: 3px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-chapter h2 {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-chapter p {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-copy .scene-gate {
+    margin-top: 6px;
+    padding: 6px 8px;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-copy .scene-gate ul {
+    gap: 0 8px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-actions {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-rules {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .scene-carousel {
+    height: 200px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .hero-carousel .hero-caption {
+    display: none;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-map-section {
+    max-width: 100%;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-footer {
+    padding: 4px 0 6px;
+    margin-top: 2px;
+  }
+
+  html[data-platform=minitool][data-layout=ls] .opening-timeline > button {
+    padding-bottom: 6px;
+  }
+
+/* 横屏触屏控件的位置统一由上方 ls 块维护，这里不再重复定义（重复会按源码顺序反向覆盖） */
+
+/* 品牌字标不换行（窄屏上 ® 会顶出字框，但不会被裁切，只需禁止折行） */
+html[data-platform=minitool] .brand h1 {
+  white-space: nowrap;
+}
+
+/* 触屏下把「当前目标」引导卡挪到摇杆上方（手机放到订单条下面），避免与摇杆/操作键叠在一起 */
+html[data-platform=minitool][data-input=touch][data-layout=wide] #guide-card {
+  left: calc(16px + var(--mt-left-inset));
+  bottom: calc(196px + var(--mt-bottom-inset));
+  max-width: 46%;
+}
+
+/* 手机上「当前目标」引导卡与教学徽标、站牌、交互卡抢同一块 3D 区域，
+   内容与教学徽标重复，直接在触屏小屏收起；平板/桌面仍保留（挪到摇杆上方）。 */
+html[data-platform=minitool][data-input=touch][data-layout=sm] #guide-card {
+  display: none;
+}
+
+/* 手机上「恢复视角」挪到摇杆上方（右下留给「操作」键） */
+html[data-platform=minitool][data-input=touch][data-layout=sm] .reset-view {
+  left: calc(16px + var(--mt-left-inset));
+  right: auto;
+  bottom: calc(192px + var(--mt-bottom-inset));
+}
+
+/* 手机上「操作」键要抬到底栏之上，否则压住底部信息条 */
+html[data-platform=minitool][data-input=touch][data-layout=sm] .touch-controls #touch-interact {
+  bottom: calc(52px + var(--mt-bottom-inset));
+}
+
+/* 手动旋屏按钮只在触屏出现 */
+html[data-platform=minitool] #rotate-button {
+  display: none;
+}
+
+/* 平板与桌面已有足够宽度，旋屏只会让界面侧躺，故不提供入口 */
+@media (min-width: 761px), (min-height: 761px) {
+  html[data-platform=minitool] #rotate-button {
+    display: none;
+  }
+}
+
+html[data-platform=minitool][data-input=touch] #rotate-button {
+  display: grid;
+}
+
+/* 手动旋屏（系统方向不变，整页顺时针转 90°）：#app 换成横版尺寸后再旋转，
+   内部排版走 data-layout=ls 的紧凑横屏规则。 */
+html[data-platform=minitool][data-rotate=on] #app {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: var(--mt-height, 100vh);
+  height: var(--mt-width, 100vw);
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center center;
+}
+
+html[data-platform=minitool][data-rotate=on] .opening-background {
+  position: absolute;
+}
+
+html[data-platform=minitool][data-rotate=on] #rotate-button {
+  display: grid;
+}
+
+/* The opening page scrolls as one surface when its content exceeds the safe area. */
+html[data-platform=minitool] .opening-screen[data-opening-stage=map] .opening-map-phase {
+  flex: 1 0 auto;
+}
+html[data-platform=minitool] .opening-screen[data-opening-stage=map] .opening-layout {
+  flex: 1 0 auto;
+}
+html[data-platform=minitool] .opening-screen[data-opening-stage=map] > .opening-header {
+  position: sticky;
+  top: 0;
+  background: #f2ead7;
+}
+html[data-platform=minitool] .opening-actions,
+html[data-platform=minitool] .opening-rules {
+  flex-wrap: wrap;
+}
+
+html[data-platform=minitool] #toast {
+  left: calc(50% + (var(--mt-left-inset) - var(--mt-right-inset)) / 2);
+  bottom: calc(116px + var(--mt-bottom-inset));
+  width: max-content;
+  max-width: 65%;
+  max-width: min(440px, calc(100% - var(--mt-left-inset) - var(--mt-right-inset) - 32px));
+  overflow-wrap: break-word;
+}
+
+html[data-platform=minitool] .kiln-control .task-action-row {
+  flex-direction: row;
+  justify-content: center;
+}
+html[data-platform=minitool] .kiln-control .task-action-row button {
+  width: auto;
+  min-height: 44px;
+}
+html[data-platform=minitool][data-layout=ls] .kiln-control .kiln-times {
+  display: none;
+}
+html[data-platform=minitool][data-layout=ls] .kiln-control .kiln-gauge-wrap {
+  max-width: 136px;
+}
+html[data-platform=minitool][data-layout=ls] .kiln-control .kiln-caption {
+  min-height: 0;
+}
+
+html[data-platform=minitool] {
+  --mt-layout-height: var(--mt-height, 100vh);
+}
+html[data-platform=minitool][data-rotate=on] {
+  --mt-layout-height: var(--mt-width, 100vw);
+}
+html[data-platform=minitool][data-layout=ls] .atlas-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+html[data-platform=minitool][data-layout=ls] .atlas-map-column {
+  max-width: calc(var(--mt-layout-height) - var(--mt-top-inset) - var(--mt-bottom-inset) - 128px);
+}
+html[data-platform=minitool][data-layout=ls] .atlas-layout .city-map-art {
+  width: 100%;
+  height: auto;
+}

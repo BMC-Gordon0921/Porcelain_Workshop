@@ -43,6 +43,7 @@
 .kiln-time.grade-perfect em{background:linear-gradient(90deg,#e0a15a,#c95a2b)}
 .kiln-time.grade-good em{background:linear-gradient(90deg,#b9c48b,#7d9560)}
 .kiln-time.grade-plain em{background:#a9a293}
+#stoke-button{touch-action:none}
 #stoke-button.active{background:#f3d9b8;border-color:#c98645;color:#7c4a2a;box-shadow:inset 0 0 0 1px #c9864530}
 #stoke-button:disabled{opacity:.55}
 @media(max-width:760px){.kiln-head{margin-bottom:0}.kiln-timer{font-size:24px}.kiln-band-label{font-size:10px}.kiln-times{gap:3px;margin:4px 0}.kiln-time{grid-template-columns:30px 1fr 38px;font-size:10px}}
