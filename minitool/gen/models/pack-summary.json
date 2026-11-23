@@ -1,0 +1,41 @@
+{
+  "sites": {
+    "guyao": {
+      "glbBytes": 2755216,
+      "packedBytes": 1284884,
+      "base64Chars": 1713180,
+      "meshes": 30,
+      "triangles": 69580,
+      "vertices": 96164,
+      "chunks": 3
+    },
+    "museum": {
+      "glbBytes": 2118928,
+      "packedBytes": 992644,
+      "base64Chars": 1323528,
+      "meshes": 26,
+      "triangles": 54828,
+      "vertices": 73556,
+      "chunks": 2
+    },
+    "imperial": {
+      "glbBytes": 1792800,
+      "packedBytes": 841218,
+      "base64Chars": 1121624,
+      "meshes": 31,
+      "triangles": 47534,
+      "vertices": 61558,
+      "chunks": 2
+    },
+    "taoxichuan": {
+      "glbBytes": 3572588,
+      "packedBytes": 1679014,
+      "base64Chars": 2238688,
+      "meshes": 32,
+      "triangles": 93130,
+      "vertices": 124242,
+      "chunks": 4
+    }
+  },
+  "chunks": {}
+}

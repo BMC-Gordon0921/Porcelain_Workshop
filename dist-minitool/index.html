@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="UTF-8"/>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <meta name="theme-color" content="#ede9dc"/>
+ <title>Terra · 景德镇瓷器之旅</title>
+ <link rel="icon" href="./assets/logo-mark.webp"/>
+  <script src="./models/manifest.js"></script>
+  <script src="./assets/app.js"></script>
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+<div id="app">
+ <header class="topbar">
+  <div class="brand"><span class="brand-mark" id="brand-mark"></span><div><h1>terra<span>®</span></h1><p>四方瓷韵 · 瓷器工坊</p></div></div>
+  <div class="day-pill"><span class="sun-icon">☼</span><div><b>青花工坊</b><small>场景 1 / 4</small></div></div>
+  <div class="top-actions"><div class="wallet"><span id="coin-icon"></span><div><small>当前硬币</small><strong id="money">0<span> 硬币</span></strong></div></div><button class="city-map-button" id="upgrades-button" aria-label="升级工作台">↑ <span>升级</span></button><button class="city-map-button" id="map-button" aria-label="查看景德镇地图">⌖ <span>地图</span></button><button class="icon-button" id="sound-button" title="开启声音" aria-label="开启声音"></button><button class="icon-button lang-button" id="lang-toggle" data-lang-toggle title="切换语言 / Language" aria-label="切换语言">EN</button><button class="icon-button" id="rotate-button" title="横屏显示" aria-label="横屏显示">⟳</button><button class="icon-button" id="help-button" title="玩法说明" aria-label="玩法说明">?</button></div>
+ </header>
+ <main id="world-wrap"><canvas id="world" aria-label="3D 瓷器工坊，WASD 移动，靠近工作台按 F 操作"></canvas><button class="reset-view" id="reset-view" type="button" aria-label="恢复初始视角">↺ 恢复视角</button><div id="station-labels"></div><div id="interaction" class="hidden"><div class="interact-key"><span>F</span></div><div><strong id="interact-title">取泥台</strong><small id="interact-sub">按 F</small></div></div><div id="floating-reward"></div></main>
+ <aside class="commissions" aria-label="场景进度与订单"></aside>
+ <div class="guide-card" id="guide-card"><span class="guide-number" id="guide-number">01</span><div><small id="guide-kicker">开始你的第一件作品</small><strong id="guide-title">从一抔瓷泥开始</strong><p id="guide-copy">去取泥台领取瓷泥。</p></div></div>
+ <div id="toast" role="status" aria-live="polite"></div>
+ <footer class="bottom-bar"><div class="controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <i>/</i> 方向键 <b>移动</b></span><span><kbd>F</kbd><b>操作</b></span><span class="camera-hint">左键旋转 · 滚轮缩放</span><span><kbd>Esc</kbd><b>退出面板</b></span></div><div class="prototype-tag"><span></span>四方瓷韵 <i>05</i></div></footer>
+ <div class="touch-controls" id="touch-controls"><div class="joystick" id="joystick" role="application" aria-label="虚拟摇杆，拖动移动"><span class="joystick-ring"></span><span class="joystick-knob" id="joystick-knob"></span></div><button id="touch-interact" aria-label="操作">操作</button></div>
+ <div id="task-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="task-title"><section class="task-panel"><button class="close-button" id="close-task" aria-label="关闭面板">×</button><div class="task-header"><span class="eyebrow" id="task-eyebrow"></span><h2 id="task-title"></h2><p id="task-description"></p></div><div id="task-body"></div><div class="task-footer" id="task-footer"></div></section></div>
+ <div id="welcome" class="opening-screen" data-opening-stage="intro"><section class="city-prologue"><div class="prologue-copy"><span class="prologue-kicker">江西 · 景德镇</span><h1 class="opening-title">开窑啦！</h1><h2>千年瓷都 · 窑火不息</h2><p>因瓷而名，因瓷而兴。<br/>正在准备你的瓷器之旅…</p></div></section></div>
+ <div id="help-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title"><section class="help-panel"><button class="close-button" id="close-help" aria-label="关闭帮助">×</button><span class="eyebrow">工坊指南</span><h2 id="help-title">从瓷泥，到你的藏品。</h2><p><b>WASD / 方向键</b>移动；走近工作台<b>按 F</b>开始操作。按 <b>Esc</b> 保存并退出当前面板。左键拖动旋转视角，滚轮缩放。</p><div class="help-route"><p><b>01 · 领取瓷泥</b>升级取泥台可以领取更接近目标的白坯；每次领取新坯开始效率计时。</p><p><b>02 · 自由制作</b>沿目标参考线塑形，默认左右对称和轻辅助；可关闭。升级雕刻台解锁轮廓保护，升级上色台解锁直线笔与镜像。Ctrl/Cmd + Z 撤销，[ / ] 调整工具大小。</p><p><b>03 · 提交评分</b>形状占 65%，上色占 35%。80% 通过本关；未通过则重试，已获得硬币保留。提交前完成 12 秒连续烧制：按住空格或鼓风按钮升温，松开降温，让指针停留在目标区间。烧制不改变相似度。</p><p><b>04 · 按评分赚硬币</b>低于 60%：0 币；60–69%：60 币；70–79%：70 币；80–89%：80 币；90–99%：90 币；100%：100 币。火候一般 ×1、成功 ×1.1、完美 ×1.25；窑炉升级增加倍率，交付台升级增加订单收益。首次通关另得 60 币。</p><p><b>效率奖励 · 五分钟</b>领取新坯到提交通过，有效用时不超过五分钟，订单收益 +20%。超时保留全部原有收益。帮助、地图、独立升级界面和切到后台时暂停计时；回到工坊仍计时。刷新继续累计，换新坯重新计时。</p><p><b>独立升级 · 每个场景</b>六个工作台分别升级，升二级 100 币、升三级 200 币。每个场景独立保存等级，完成三关后仍可接练习订单赚取金币。</p><p><b>05 · 购买、贴花与下一场景</b>本场景三关通过，余额达到 400 币，即可花 400 币购买贴画。点击选择贴画，再点击白瓷碗或“贴到碗上”。完成后进入下一场景，剩余硬币继续保留。</p></div><p class="help-note">四处工坊可自由选择首站。完成当前站三单、购买并贴好贴画后，可任选下一站或回访。四站共十二单，集齐四件藏品后仍可练习和升级。</p><button class="primary-button" id="help-done">回到工坊 <span>→</span></button></section></div>
+</div>
+</body>
+</html>
