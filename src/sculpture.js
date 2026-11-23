@@ -116,7 +116,7 @@ export function pushClay(pixels,x0,y0,x1,y1,radius=18,grab=undefined,options={})
   if(options.target&&Math.abs(delta)>=.75){const target=rowBounds(options.target,row,horizontal),wanted=fromLeft?target.left:target.right,proposed=edge+shift,level=options.level||1;if(target.right>=target.left&&Math.abs(wanted-proposed)<=level)shift+=(wanted-proposed)*[.25,.4,.55][level-1];}
   let newLeft=fromLeft?Math.max(0,Math.min(right-5,Math.round(left+shift))):left;
   let newRight=fromLeft?right:Math.min(SIZE-1,Math.max(left+5,Math.round(right+shift)));
-  if(options.symmetric&&horizontal){if(fromLeft)newRight=Math.min(SIZE-1,Math.max(newLeft+5,right-(newLeft-left)));else newLeft=Math.max(0,Math.min(newRight-5,left-(newRight-right)));}
+  if(options.symmetric){if(fromLeft)newRight=Math.min(SIZE-1,Math.max(newLeft+5,right-(newLeft-left)));else newLeft=Math.max(0,Math.min(newRight-5,left-(newRight-right)));}
   for(let a=Math.min(left,newLeft);a<=Math.max(right,newRight);a++)pixels[index(a,row)]=0;
   for(let a=newLeft;a<=newRight;a++){const src=Math.round(left+(a-newLeft)/(newRight-newLeft)*(right-left));pixels[index(a,row)]=before[index(src,row)];}
  }

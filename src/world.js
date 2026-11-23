@@ -260,7 +260,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
  function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt,x0=p.x,z0=p.z;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);if((p.x-x0)**2+(p.z-z0)**2>1e-8){moving=true;walking+=dt*11;stride+=dt*11;}else moving=false;}
  function project(x,y,z){const p=new THREE.Vector3(x,y+root.position.y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
  function nearest(){let best=null,dist=Infinity;for(const s of STATIONS){const p=player.group.position;const dx=Math.max(Math.abs(p.x-s.x)-s.w/2,0),dz=Math.max(Math.abs(p.z-s.z)-s.d/2,0);const d=Math.hypot(dx,dz);if(d<1.04&&d<dist){best=s;dist=d;}}return best;}
- const reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+ let reducedQuery=null;const reducedMotion=()=>(reducedQuery??=matchMedia('(prefers-reduced-motion: reduce)')).matches;
  function update(dt,time,state,playing=true){
   if(disposed)return;
   if(cameraTween){const p=Math.min(1,(performance.now()-cameraTween.start)/cameraTween.duration),e=p*p*(3-2*p);orbit.azimuth=THREE.MathUtils.lerp(cameraTween.fromAz,cameraTween.toAz,e);orbit.polar=THREE.MathUtils.lerp(cameraTween.fromPolar,cameraTween.toPolar,e);orbit.zoom=THREE.MathUtils.lerp(cameraTween.fromZoom,cameraTween.toZoom,e);placeCamera();if(p>=1)cameraTween=null;}
@@ -282,7 +282,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   }
   playerRing.position.x=player.group.position.x;playerRing.position.z=player.group.position.z;
   const next=STATIONS.find(s=>s.id===state.nextStation());
-  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced=reducedMotion();
   marker.visible=!!next&&playing;hint.visible=!!next&&playing;
   if(next){
    marker.position.set(next.approach[0],.085,next.approach[1]);marker.scale.setScalar(1+Math.sin(time*3)*.08);

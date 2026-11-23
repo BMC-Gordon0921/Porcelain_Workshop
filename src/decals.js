@@ -156,9 +156,13 @@ export function createBowlPreview(canvas,{index=0,decorated=false,onApply=null,a
  const up=()=>{const click=drag&&!drag.moved;drag=null;if(click)onApply?.();};
  const cancel=()=>{drag=null;};canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);
  render();
- return {decorate(){scene.remove(bowl);disposeModel(bowl);bowl=bowlModel(index,true);scene.add(bowl);renderer.render(scene,camera);},snapshot(){renderer.render(scene,camera);return canvas.toDataURL('image/png');},dispose(){disposed=true;cancelAnimationFrame(raf);observer.disconnect();for(const [event,fn] of [['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',cancel]])canvas.removeEventListener(event,fn);disposeModel(bowl);environment.dispose();renderer.dispose();renderer.forceContextLoss();}};
+ const setBowl=next=>{scene.remove(bowl);disposeModel(bowl);bowl=bowlModel(next,true);scene.add(bowl);renderer.render(scene,camera);};
+ return {setBowl,decorate(){setBowl(index);},snapshot(){renderer.render(scene,camera);return canvas.toDataURL('image/png');},dispose(){disposed=true;cancelAnimationFrame(raf);observer.disconnect();for(const [event,fn] of [['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',cancel]])canvas.removeEventListener(event,fn);disposeModel(bowl);environment.dispose();renderer.dispose();renderer.forceContextLoss();}};
 }
+let thumbPreview=null;
 export function bowlImage(index){
  if(images.has(index))return images.get(index);
- const canvas=document.createElement('canvas');const preview=createBowlPreview(canvas,{index,decorated:true,animate:false});const url=preview.snapshot();preview.dispose();images.set(index,url);return url;
+ // One thumbnail renderer for every scene; a fresh context per scene costs ~200ms.
+ thumbPreview??=createBowlPreview(document.createElement('canvas'),{decorated:true,animate:false});
+ thumbPreview.setBowl(index);const url=thumbPreview.snapshot();images.set(index,url);return url;
 }

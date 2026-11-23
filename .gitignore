@@ -91,3 +91,13 @@ public/decals/
 .env
 .env.*
 *.local
+
+# ── 10. 小红书小工具链路：不属于本仓库运行时（开发在 Redbook_transplant 分支） ──
+#    小工具离线包、构建产物与配套 skill 不参与本游戏的 vite 构建，main 分支不入库。
+#    需要时切到 Redbook_transplant，或从本地保留的副本重新生成。
+.skill/
+minitool/
+tools/minitool/
+dist-minitool/
+dist-minitool.zip
+terra-cover-3x4.png
