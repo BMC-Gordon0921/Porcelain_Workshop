@@ -1,3 +1,4 @@
+import {panLimit,edgeCorrection} from './platform/camera-framing.js';
 import {bindOrbitGesture} from './platform/orbit-gesture.js';
 import * as THREE from 'three';
 import {createRenderer} from './platform/renderer.js';
@@ -165,6 +166,9 @@ export function createWorld(canvas,{preview=false}={}) {
     angle is clamped so the eye can rise overhead but never sink below the floor. */
  const TARGET=preview?new THREE.Vector3(0,1,-2):new THREE.Vector3(-.2,.7,-.7);
  const HOME_OFFSET=new THREE.Vector3(10,17,20).sub(TARGET);
+ const homeTarget=TARGET.clone();
+ let sceneBounds=null;
+ const localPoint=new THREE.Vector3(), cameraRight=new THREE.Vector3(), groundUp=new THREE.Vector3();
  const orbit={azimuth:Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),polar:Math.acos(HOME_OFFSET.y/HOME_OFFSET.length()),radius:HOME_OFFSET.length(),zoom:1};
  let cameraTween=null;
  const POLAR_MIN=THREE.MathUtils.degToRad(24),POLAR_MAX=Math.PI/2,ZOOM_MIN=.62,ZOOM_MAX=2.6;
@@ -174,11 +178,26 @@ export function createWorld(canvas,{preview=false}={}) {
  let interactionEnabled=false,displayRotation=0;
  const setDisplayRotation=deg=>{displayRotation=Number(deg)||0;gesture.clear();};
  const stopTween=()=>{cameraTween=null;};
- function zoomBy(scale){if(!Number.isFinite(scale)||scale<=0)return;stopTween();orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*scale,ZOOM_MIN,ZOOM_MAX);placeCamera();}
+ function limitTarget(){
+  if(!sceneBounds)return;
+  TARGET.x=panLimit(homeTarget.x,sceneBounds.min.x,sceneBounds.max.x,TARGET.x,orbit.zoom);
+  TARGET.z=panLimit(homeTarget.z,sceneBounds.min.z,sceneBounds.max.z,TARGET.z,orbit.zoom);
+ }
+ function panBy(dx,dy){
+  if(!sceneBounds)return;
+  const units=(camera.top-camera.bottom)/Math.max(1,height)/orbit.zoom;
+  cameraRight.set(1,0,0).applyQuaternion(camera.quaternion);cameraRight.y=0;cameraRight.normalize();
+  groundUp.set(-cameraRight.z,0,cameraRight.x);
+  TARGET.addScaledVector(cameraRight,-dx*units);
+  TARGET.addScaledVector(groundUp,-dy*units/Math.max(.3,Math.cos(orbit.polar)));
+  limitTarget();placeCamera();
+ }
+ function zoomBy(scale){if(!Number.isFinite(scale)||scale<=0)return;stopTween();orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*scale,ZOOM_MIN,ZOOM_MAX);limitTarget();placeCamera();}
  const gesture=bindOrbitGesture(canvas,listen,{
   enabled:()=>interactionEnabled,
   activity:stopTween,
   zoom:zoomBy,
+  pan:(x,y)=>panBy(displayRotation===90?y:x,displayRotation===90?-x:y),
   rotate:(x,y)=>{
    const dx=displayRotation===90?y:x,dy=displayRotation===90?-x:y;
    orbit.azimuth-=dx*.0062;
@@ -195,9 +214,9 @@ export function createWorld(canvas,{preview=false}={}) {
  function setInteractionEnabled(value){interactionEnabled=!!value;if(!interactionEnabled)gesture.clear();}
  function resetView(){
   const toAz=Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),toPolar=Math.acos(HOME_OFFSET.y/HOME_OFFSET.length());
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){orbit.azimuth=toAz;orbit.polar=toPolar;orbit.zoom=1;placeCamera();return;}
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){orbit.azimuth=toAz;orbit.polar=toPolar;orbit.zoom=1;TARGET.copy(homeTarget);placeCamera();return;}
   const delta=THREE.MathUtils.euclideanModulo(toAz-orbit.azimuth+Math.PI,Math.PI*2)-Math.PI;
-  cameraTween={fromAz:orbit.azimuth,fromPolar:orbit.polar,fromZoom:orbit.zoom,toAz:orbit.azimuth+delta,toPolar,toZoom:1,start:performance.now(),duration:650};
+  cameraTween={fromTarget:TARGET.clone(),fromAz:orbit.azimuth,fromPolar:orbit.polar,fromZoom:orbit.zoom,toAz:orbit.azimuth+delta,toPolar,toZoom:1,start:performance.now(),duration:650};
  }
  scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(preview?1024:2048,preview?1024:2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
  const root=group(scene);
@@ -254,6 +273,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   const commit=next=>{
    if(environment){scene.remove(environment.group);environment.dispose();}
    environment=next;scene.add(next.group);activeScene=index;root.position.y=next.groundY;
+   if(!preview){sceneBounds=new THREE.Box3().setFromObject(next.group);if(sceneBounds.isEmpty())sceneBounds=null;TARGET.copy(homeTarget);orbit.zoom=1;cameraTween=null;placeCamera();}
    chimneyAnchor=next.chimney;
    if(chimneyAnchor)smokeField.points.position.set(chimneyAnchor.x,chimneyAnchor.y-root.position.y,chimneyAnchor.z);
    smokeField.points.visible=!!chimneyAnchor;
@@ -288,15 +308,28 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
  let width=1,height=1,carry=null,carryKey='',moving=false,walking=0,stride=0;
  // 用 clientWidth/clientHeight 而不是 getBoundingClientRect：手动旋屏时 #app 被 rotate(90deg)，
  // bbox 会把宽高互换，导致绘制缓冲与布局尺寸不一致（3D 被拉长）。clientWidth 不受 transform 影响。
- function resize(){const r=canvas.getBoundingClientRect();const cw=canvas.clientWidth||r.width,ch=canvas.clientHeight||r.height;width=Math.max(1,cw);height=Math.max(1,ch);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(15.8,24/aspect);camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
+ function resize(){const r=canvas.getBoundingClientRect();const cw=canvas.clientWidth||r.width,ch=canvas.clientHeight||r.height;width=Math.max(1,cw);height=Math.max(1,ch);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(15.8,24/aspect);if(!preview&&sceneBounds){
+  const matrix=new THREE.Matrix4().lookAt(homeTarget.clone().add(HOME_OFFSET),homeTarget,camera.up).invert();
+  for(const x of [sceneBounds.min.x,sceneBounds.max.x])for(const y of [sceneBounds.min.y,sceneBounds.max.y])for(const z of [sceneBounds.min.z,sceneBounds.max.z]){
+   localPoint.set(x,y,z).sub(homeTarget).applyMatrix4(matrix);
+   vh=Math.max(vh,2.12*Math.abs(localPoint.y),2.12*Math.abs(localPoint.x)/aspect);
+  }
+ }camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
  function canMove(x,z){const r=.37;if(x<-7.76||x>2.45||z<-4.9||z>5.13)return false;for(const s of STATIONS){if(x>s.x-s.w/2-r&&x<s.x+s.w/2+r&&z>s.z-s.d/2-r&&z<s.z+s.d/2+r)return false;}return true;}
  function move(dx,dz,dt){moving=!!(dx||dz);if(!moving)return;const len=Math.hypot(dx,dz);const thrust=Math.min(1,len);dx/=len;dz/=len;const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);right.y=0;right.normalize();const forward=new THREE.Vector3().crossVectors(right,new THREE.Vector3(0,1,0));const vx=right.x*dx+forward.x*dz,vz=right.z*dx+forward.z*dz;const p=player.group.position,step=3.35*dt*thrust,x0=p.x,z0=p.z;if(canMove(p.x+vx*step,p.z))p.x+=vx*step;if(canMove(p.x,p.z+vz*step))p.z+=vz*step;const target=Math.atan2(vx,vz);let diff=THREE.MathUtils.euclideanModulo(target-player.group.rotation.y+PI,PI*2)-PI;player.group.rotation.y+=diff*Math.min(1,dt*15);if((p.x-x0)**2+(p.z-z0)**2>1e-8){moving=true;walking+=dt*11;stride+=dt*11;}else moving=false;}
+ function followPlayer(dt){
+  if(preview||gesture.active||cameraTween||orbit.zoom<=1)return;
+  const pos=player.group.position,point=project(pos.x,1.2,pos.z);
+  const ease=Math.min(1,dt*7);
+  const dx=edgeCorrection(point.x,width),dy=edgeCorrection(point.y,height);
+  if(dx||dy)panBy(-dx*ease,-dy*ease);
+ }
  function project(x,y,z){const p=new THREE.Vector3(x,y+root.position.y,z).project(camera);return {x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
  function nearest(){let best=null,dist=Infinity;for(const s of STATIONS){const p=player.group.position;const dx=Math.max(Math.abs(p.x-s.x)-s.w/2,0),dz=Math.max(Math.abs(p.z-s.z)-s.d/2,0);const d=Math.hypot(dx,dz);if(d<1.04&&d<dist){best=s;dist=d;}}return best;}
  let reducedQuery=null;const reducedMotion=()=>(reducedQuery??=matchMedia('(prefers-reduced-motion: reduce)')).matches;
  function update(dt,time,state,playing=true){
   if(disposed)return;
-  if(cameraTween){const p=Math.min(1,(performance.now()-cameraTween.start)/cameraTween.duration),e=p*p*(3-2*p);orbit.azimuth=THREE.MathUtils.lerp(cameraTween.fromAz,cameraTween.toAz,e);orbit.polar=THREE.MathUtils.lerp(cameraTween.fromPolar,cameraTween.toPolar,e);orbit.zoom=THREE.MathUtils.lerp(cameraTween.fromZoom,cameraTween.toZoom,e);placeCamera();if(p>=1)cameraTween=null;}
+  if(cameraTween){const p=Math.min(1,(performance.now()-cameraTween.start)/cameraTween.duration),e=p*p*(3-2*p);orbit.azimuth=THREE.MathUtils.lerp(cameraTween.fromAz,cameraTween.toAz,e);orbit.polar=THREE.MathUtils.lerp(cameraTween.fromPolar,cameraTween.toPolar,e);orbit.zoom=THREE.MathUtils.lerp(cameraTween.fromZoom,cameraTween.toZoom,e);TARGET.copy(cameraTween.fromTarget).lerp(homeTarget,e);placeCamera();if(p>=1)cameraTween=null;}
   player.body.position.y=moving?Math.abs(Math.sin(walking))*.04:Math.sin(time*2)*.015;
   player.feet.forEach((m,i)=>{m.position.z=.1+(moving?Math.sin(walking+i*PI)*.16:0);});
   player.arms.forEach((m,i)=>{m.rotation.x=state.hasClay?-1.05:moving?Math.sin(walking+i*PI)*.45:0;});
@@ -365,7 +398,7 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
  function dispose(){if(disposed)return;disposed=true;loadTicket++;gesture.clear();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
- resize();return {setDisplayRotation,dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,zoomBy,placeCamera,setInteractionEnabled,get stride(){return stride;}};
+ resize();return {setDisplayRotation,dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,followPlayer,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,zoomBy,placeCamera,setInteractionEnabled,get stride(){return stride;}};
 }
 
 // Cache-owned primitives/materials are shared by the game and scene preview.

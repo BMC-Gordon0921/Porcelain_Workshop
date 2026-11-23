@@ -531,6 +531,49 @@ Object.assign(EN,EXPERIENCE_EN, {
   "单指旋转 · 双指缩放": "Drag to rotate · pinch to zoom",
   "工坊进度": "Workshop progress"
 });
+Object.assign(EN,{
+  "切换竖屏": "Switch to portrait",
+  "切换横屏": "Switch to landscape",
+  "点顶栏旋屏按钮切换方向。横屏可双手操作，左手移动、右手点按；竖屏也可以单手玩，先移动，再点按「操作」。": "Tap the rotate button in the top bar. In landscape, move with your left hand and tap Action with your right. In portrait, use one hand to move, then tap Action.",
+  "3D 瓷器工坊，单指旋转，双指缩放与平移": "3D porcelain workshop. Drag with one finger to orbit, or use two fingers to pan and zoom.",
+  "拖动摇杆移动，靠近工作台后点按「操作」。单指拖动旋转场景，双指拖动平移，张开或捏合缩放。点按「保存并离开」返回工坊。": "Drag the joystick to move and tap Action near a workbench. Drag with one finger to rotate, drag with two to pan, and pinch to zoom. Tap Save and leave to return.",
+  "保存并退出当前面板。左键拖动旋转视角，右键拖动平移，滚轮缩放。": "to save and close. Left-drag to orbit, right-drag to pan, and scroll to zoom."
+});
+Object.assign(EN,{
+  "手机界面铺满可用窗口，切回竖屏时顶栏和操作按钮完整显示。": "The mobile interface fills the available window and keeps the top bar and controls visible when switching back to portrait.",
+  "手机工坊提示集中显示，减少对角色和工作台的遮挡。": "Mobile workshop hints now appear in one place to keep the player and workbenches visible.",
+  "双指拖动或按住鼠标右键可平移镜头，角色走近画面边缘时镜头会跟随。": "Drag with two fingers or the right mouse button to pan. The camera follows when your character walks near the edge.",
+  "触屏塑形和切割新增局部放大镜，升级卡片文字可完整显示。": "Touch sculpting and carving now have a magnifier, and upgrade card text has room to wrap."
+});
+Object.assign(EN,{
+  "沿目标参考线塑形，默认左右对称和轻辅助；可关闭。升级雕刻台解锁轮廓保护，升级上色台解锁直线笔与镜像。": "Shape along the reference outline. Symmetry and gentle assistance are on by default and can be turned off. Upgrade carving for outline protection, and painting for straight and mirrored strokes.",
+  "形状占 65%，上色占 35%。80% 通过本关；未通过则重试，已获得硬币保留。提交前完成 12 秒连续烧制：": "Shape is 65% of your score and painting is 35%. Score 80% to pass. If you retry, you keep your coins. Fire for 12 seconds before submitting.",
+  "烧制不改变相似度。": "Firing leaves the similarity score unchanged.",
+  "拖动左下摇杆靠近，点按右下「操作」": "Drag the joystick to approach the station, then tap Action."
+});
+Object.assign(EN,{
+  "首页和弹层铺满可用窗口，订单与结算按钮固定在底栏。": "The home screen and dialogs fill the available window, with order and result actions in the footer.",
+  "塑形、雕刻和绘画的放大镜跟随实际落点，减少竖屏连续误触。": "Magnifiers follow the touch point in shaping, carving and painting. Portrait mode guards against accidental double taps.",
+  "普通烧制时，火候指针升降更慢。": "The heat needle moves more slowly in normal firing.",
+  "结算详情": "Score breakdown"
+});
+Object.assign(EN,{
+  "声音": "Sound",
+  "语言": "Language",
+  "更新": "Updates",
+  "横屏": "Landscape",
+  "竖屏": "Portrait",
+  "帮助": "Help",
+  "放大镜": "Magnifier",
+  "工具说明": "Tool details",
+  "拖动摇杆，走近取泥台。": "Drag the joystick to the clay station.",
+  "点按操作，领取瓷泥。": "Tap Interact to collect clay.",
+  "用方向键移动，走近取泥台。": "Use the arrow keys to reach the clay station.",
+  "按 F，领取瓷泥。": "Press F to collect clay.",
+  "全屏面板重新排版，工坊顶栏新增按钮短标签。": "Full-screen panels use more space and workshop buttons have short labels.",
+  "首次进入工坊时分步提示移动和取泥。": "First-time hints guide players to move and collect clay.",
+  "工作台参考图与放大镜在操作时同时可见。": "Workbench references and magnifiers stay visible as you work."
+});
 const EXTRA_RULES = [
   [/^继续旅程 · (.+)$/, (m) => `Continue · ${m[1]}`],
   [/^抵达 (.+)$/, (m) => `Arrive at ${m[1]}`],

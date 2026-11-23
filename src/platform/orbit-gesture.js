@@ -6,9 +6,9 @@ export function createOrbitGesture() {
   };
   return {
     get active() { return points.size > 0; },
-    add(id,x,y,touch) {
+    add(id,x,y,touch,pan=false) {
       if (points.size >= 2 || (points.size && (!touch || !points.values().next().value.touch))) return false;
-      points.set(id,{x,y,touch});
+      points.set(id,{x,y,touch,pan});
       return true;
     },
     move(id,x,y) {
@@ -18,17 +18,17 @@ export function createOrbitGesture() {
       const before = pinch ? distance() : 0;
       const dx = x-point.x, dy = y-point.y;
       Object.assign(point,{x,y});
-      return pinch ? {scale:before >= 1 ? distance()/before : 1} : {dx,dy};
+      return pinch ? {scale:before >= 1 ? distance()/before : 1,panX:dx/2,panY:dy/2} : point.pan ? {panX:dx,panY:dy} : {dx,dy};
     },
     remove(id) { points.delete(id); },
     clear() { points.clear(); },
   };
 }
 
-export function bindOrbitGesture(canvas,listen,{enabled,rotate,zoom,activity=()=>{}}) {
+export function bindOrbitGesture(canvas,listen,{enabled,rotate,zoom,pan,activity=()=>{}}) {
   const gesture = createOrbitGesture();
   listen(canvas,'pointerdown',event=>{
-    if (!enabled() || event.button !== 0 || !gesture.add(event.pointerId,event.clientX,event.clientY,event.pointerType==='touch')) return;
+    if (!enabled() || (event.button !== 0 && !(pan && event.button===2 && event.pointerType==='mouse')) || !gesture.add(event.pointerId,event.clientX,event.clientY,event.pointerType==='touch',event.button===2)) return;
     event.preventDefault();
     try { canvas.setPointerCapture?.(event.pointerId); } catch { /* Window listeners still track the pointer. */ }
     activity();
@@ -38,9 +38,11 @@ export function bindOrbitGesture(canvas,listen,{enabled,rotate,zoom,activity=()=
     const motion = gesture.move(event.pointerId,event.clientX,event.clientY);
     if (!motion) return;
     if (motion.scale !== undefined) zoom(motion.scale);
-    else rotate(motion.dx,motion.dy);
+    if (motion.panX !== undefined) pan?.(motion.panX,motion.panY);
+    if (motion.dx !== undefined) rotate(motion.dx,motion.dy);
     activity();
   });
+  if(pan)listen(canvas,'contextmenu',event=>{if(enabled())event.preventDefault();});
   listen(window,'pointerup',event=>gesture.remove(event.pointerId));
   const clear = ()=>gesture.clear();
   listen(window,'pointercancel',clear);

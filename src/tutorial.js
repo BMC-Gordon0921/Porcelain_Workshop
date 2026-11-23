@@ -19,3 +19,10 @@ export function tutorialAllows(value,station){
  if(!tutorialInfo(value))return true;
  return TUTORIAL_STEPS.findIndex(s=>s.id===station)<=TUTORIAL_STEPS.findIndex(s=>s.id===value.step)&&station!=='move';
 }
+
+export function openInitialOrder(step){return step!=='move'&&step!=='clay';}
+export function firstWorkshopHint(step,station,touch){
+ if(step==='move'||(step==='clay'&&station!=='clay'))return {action:'move',text:touch?'拖动摇杆，走近取泥台。':'用方向键移动，走近取泥台。'};
+ if(step==='clay')return {action:'collect',text:touch?'点按操作，领取瓷泥。':'按 F，领取瓷泥。'};
+ return null;
+}

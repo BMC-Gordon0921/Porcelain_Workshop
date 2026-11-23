@@ -23,6 +23,7 @@ function createBufferMusic() {
   let buffer = null;
   let source = null;
   let gain = null;
+  let volume = 1;
   let loading = null;
 
   const AudioCtx = () => window.AudioContext || window.webkitAudioContext;
@@ -62,8 +63,9 @@ function createBufferMusic() {
     const data = await ensure();
     if (!data || !enabled || document.hidden || source) return;
     if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
+    if (!enabled || document.hidden || source) return;
     gain = gain || ctx.createGain();
-    gain.gain.value = 0.2;
+    gain.gain.value = 0.2 * volume;
     gain.connect(ctx.destination);
     source = ctx.createBufferSource();
     source.buffer = data;
@@ -86,6 +88,7 @@ function createBufferMusic() {
   return {
     unlock() { unlocked = true; start(); },
     setEnabled(value) { enabled = !!value; enabled ? start() : stop(); },
+    setVolume(value) { volume = value; if (gain) gain.gain.value = 0.2 * volume; },
     get enabled() { return enabled; },
     get unavailable() { return failed; },
     dispose() {
@@ -114,6 +117,7 @@ export function createMusic() {
   return {
     unlock() { unlocked = true; resume(); },
     setEnabled(value) { enabled = !!value; enabled ? resume() : pause(); },
+    setVolume(value) { audio.volume = 0.2 * value; },
     get enabled() { return enabled; }, get unavailable() { return failed; },
     dispose() { pause(); document.removeEventListener('visibilitychange', visibility); audio.removeEventListener('error', error); audio.removeAttribute('src'); audio.load(); },
   };

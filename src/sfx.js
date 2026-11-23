@@ -9,6 +9,7 @@ const TOOLS = {
 
 export function createSfx() {
   let enabled = true;
+  let volume = 1;
   let ctx = null;
   let stepIndex = -1;
   let tool = null;
@@ -25,7 +26,7 @@ export function createSfx() {
     if (!ctx) {
       ctx = new AudioCtx();
       const master = ctx.createGain();
-      master.gain.value = 0.85;
+      master.gain.value = 0.85 * volume;
       const soften = ctx.createBiquadFilter();
       soften.type = 'lowpass';
       soften.frequency.value = 9000;
@@ -217,6 +218,7 @@ export function createSfx() {
 
   return {
     setEnabled,
+    setVolume(value) { volume = value; if (ctx) ctx.__master.gain.value = 0.85 * volume; },
     get enabled() { return enabled; },
     unlock,
     play,

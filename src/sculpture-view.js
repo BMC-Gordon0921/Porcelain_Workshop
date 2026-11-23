@@ -1,4 +1,4 @@
-import {canvasPoint} from './platform/canvas-metrics.js';
+import {canvasPoint,containedCanvasPoint} from './platform/canvas-metrics.js';
 import {SIZE,PALETTE,clayEdge} from './sculpture.js';
 function layer(pixels,flatColor){const c=document.createElement('canvas');c.width=c.height=SIZE;const ctx=c.getContext('2d'),img=ctx.createImageData(SIZE,SIZE);for(let i=0;i<pixels.length;i++){if(!pixels[i])continue;const color=flatColor||PALETTE[pixels[i]],n=parseInt(color.slice(1),16);img.data[i*4]=n>>16;img.data[i*4+1]=(n>>8)&255;img.data[i*4+2]=n&255;img.data[i*4+3]=255;}ctx.putImageData(img,0,0);return c;}
 export function drawSculpture(canvas,pixels,{cursor=null,grid=false,target=null,line=null}={}){
@@ -15,7 +15,7 @@ export function drawSculpture(canvas,pixels,{cursor=null,grid=false,target=null,
  }
  if(line){ctx.save();ctx.strokeStyle='#315fa980';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(line.from.x/SIZE*w,line.from.y/SIZE*h);ctx.lineTo(line.to.x/SIZE*w,line.to.y/SIZE*h);ctx.stroke();ctx.restore();}
  if(cursor){
-  ctx.save();ctx.strokeStyle=cursor.tool==='cut'?'#fff7d8':cursor.tool==='push'?(cursor.edge?'#4b735b':'#a47d64'):'#fff8e6';ctx.lineWidth=2;ctx.shadowColor='#44321f80';ctx.shadowBlur=3;
+  ctx.save();ctx.strokeStyle=cursor.tool==='cut'?'#fff7d8':cursor.tool==='push'?(cursor.edge?'#4b735b':'#a47d64'):cursor.color||'#fff8e6';ctx.lineWidth=2;ctx.shadowColor='#44321f80';ctx.shadowBlur=3;
   const x=cursor.x/SIZE*w,y=cursor.y/SIZE*h;
   ctx.beginPath();ctx.arc(x,y,cursor.radius/SIZE*w,0,Math.PI*2);ctx.stroke();
   if(cursor.edge){const edge=cursor.edge,ex=edge.x/SIZE*w,ey=edge.y/SIZE*h;ctx.fillStyle='#4b735b';ctx.beginPath();ctx.arc(ex,ey,5,0,Math.PI*2);ctx.fill();ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText(edge.horizontal?'↔':'↕',x,y+8);}
@@ -24,16 +24,29 @@ export function drawSculpture(canvas,pixels,{cursor=null,grid=false,target=null,
  }
 }
 export function thumbnail(pixels,size=224){const c=document.createElement('canvas');c.width=c.height=size;drawSculpture(c,pixels);return c.toDataURL('image/png');}
-export function attachEditor(canvas,challenge,{mode='cut',onChange=()=>{},onFinish=()=>{},onHint=()=>{},canInteract=()=>true}={}){
- const tool=mode;let color=2,radius=mode==='push'?18:mode==='paint'?5:4,dragging=false,last=null,origin=null,strokeBase=null,cursor=null,grab=null,pointerId=null;
+export function loupeSample(x,y,w,h){
+ const size=Math.min(w,h)/3;
+ return {size,left:x-size/2,top:y-size/2};
+}
+export function attachEditor(canvas,challenge,{mode='cut',loupe=null,onChange=()=>{},onFinish=()=>{},onHint=()=>{},canInteract=()=>true}={}){
+ const tool=mode;let color=2,radius=mode==='push'?18:mode==='paint'?5:4,dragging=false,last=null,origin=null,strokeBase=null,cursor=null,grab=null,pointerId=null,touchStroke=false;
  const options={guides:tool!=='paint',symmetric:true,protect:true,line:false,mirror:false};
- const pos=e=>{const {x,y,w,h}=canvasPoint(canvas,e.clientX,e.clientY);return {x:Math.max(0,Math.min(SIZE,x/w*SIZE)),y:Math.max(0,Math.min(SIZE,y/h*SIZE))};};
- function render(){drawSculpture(canvas,challenge.piece.pixels,{cursor,grid:true,target:options.guides?challenge.target:null,line:dragging&&options.line?{from:origin,to:last}:null});canvas.dataset.edits=String(challenge.edits);canvas.dataset.guides=String(options.guides);}
+ const pos=e=>{const {x,y,inside}=containedCanvasPoint(canvasPoint(canvas,e.clientX,e.clientY),SIZE,SIZE);return {x:Math.max(0,Math.min(SIZE,x)),y:Math.max(0,Math.min(SIZE,y)),inside};};
+ const loupeCtx=loupe?.getContext('2d');
+ function renderLoupe(){
+  if(!loupeCtx)return;
+  if(!touchStroke||!cursor){delete loupe.dataset.visible;return;}
+  const {size,left,top}=loupeSample(cursor.x/SIZE*canvas.width,cursor.y/SIZE*canvas.height,canvas.width,canvas.height);
+  loupeCtx.fillStyle='#eee5d1';loupeCtx.fillRect(0,0,loupe.width,loupe.height);
+  loupeCtx.imageSmoothingEnabled=false;loupeCtx.drawImage(canvas,left,top,size,size,0,0,loupe.width,loupe.height);
+  loupe.dataset.visible='';
+ }
+ function render(){drawSculpture(canvas,challenge.piece.pixels,{cursor,grid:true,target:options.guides?challenge.target:null,line:dragging&&options.line?{from:origin,to:last}:null});canvas.dataset.edits=String(challenge.edits);canvas.dataset.guides=String(options.guides);renderLoupe();}
  function apply(p){const from=tool==='push'||options.line?origin:last;if(challenge.stroke(from.x,from.y,p.x,p.y,radius,tool,color,(tool==='push'||options.line)?strokeBase:null,grab,options))onChange();last=p;}
- function hover(p){const edge=tool==='push'?(dragging?grab:clayEdge(challenge.piece.pixels,p.x,p.y,radius,5)):null;cursor={...p,radius,tool,edge};if(tool==='push')onHint(edge?(edge.horizontal?'沿水平方向推压或拉伸':'沿竖直方向推压或拉伸'):'请将手掌移到瓷泥边缘');}
- canvas.addEventListener('pointerdown',e=>{if(!canInteract()||e.button!==0||!e.isPrimary||dragging)return;e.preventDefault();last=pos(e);grab=tool==='push'?clayEdge(challenge.piece.pixels,last.x,last.y,radius,5):null;if(tool==='push'&&!grab){hover(last);render();return;}pointerId=e.pointerId;canvas.setPointerCapture(pointerId);dragging=true;origin={...last};strokeBase=challenge.piece.pixels.slice();challenge.beginStroke();if(tool!=='push')apply(last);hover(last);render();});
- canvas.addEventListener('pointermove',e=>{if(!canInteract()||(dragging&&e.pointerId!==pointerId))return;const p=pos(e);if(dragging)apply(p);hover(p);render();});
- const finish=()=>{if(!dragging)return;dragging=false;last=null;challenge.finishStroke();if(canvas.hasPointerCapture(pointerId))canvas.releasePointerCapture(pointerId);pointerId=null;onFinish();render();};
+ function hover(p){const edge=tool==='push'?(dragging?grab:clayEdge(challenge.piece.pixels,p.x,p.y,radius,5)):null;cursor={...p,radius,tool,edge,color:tool==='paint'?PALETTE[color]:null};if(tool==='push')onHint(edge?(edge.horizontal?'沿水平方向推压或拉伸':'沿竖直方向推压或拉伸'):'请将手掌移到瓷泥边缘');}
+ canvas.addEventListener('pointerdown',e=>{if(!canInteract()||e.button!==0||!e.isPrimary||pointerId!==null)return;e.preventDefault();last=pos(e);if(!last.inside)return;grab=tool==='push'?clayEdge(challenge.piece.pixels,last.x,last.y,radius,5):null;pointerId=e.pointerId;touchStroke=e.pointerType==='touch';canvas.setPointerCapture(pointerId);if(tool==='push'&&!grab){hover(last);render();return;}dragging=true;origin={...last};strokeBase=challenge.piece.pixels.slice();challenge.beginStroke();if(tool!=='push')apply(last);hover(last);render();});
+ canvas.addEventListener('pointermove',e=>{if(!canInteract()||(pointerId!==null&&e.pointerId!==pointerId))return;const p=pos(e);if(dragging)apply(p);if(p.inside||dragging)hover(p);else cursor=null;render();});
+ const finish=event=>{if(pointerId===null||(event&&event.pointerId!==pointerId))return;const id=pointerId,hadStroke=dragging;pointerId=null;dragging=false;last=null;touchStroke=false;if(hadStroke)challenge.finishStroke();if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);if(hadStroke)onFinish();render();};
  canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',finish);canvas.addEventListener('lostpointercapture',finish);canvas.addEventListener('pointerleave',()=>{if(!dragging){cursor=null;render();}});
  render();return {render,setOption(name,value){finish();if(Object.hasOwn(options,name))options[name]=!!value;render();},setColor(value){finish();color=Number(value);},setRadius(value){finish();radius=Number(value);if(cursor)hover(cursor);render();},undo(){finish();challenge.undo();render();onFinish();},redo(){finish();challenge.redo();render();onFinish();},finish};
 }

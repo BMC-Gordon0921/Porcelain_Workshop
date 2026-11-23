@@ -31,3 +31,9 @@ export function canvasPoint(canvas, clientX, clientY) {
   const cy = r.top + r.height / 2;
   return {x: w / 2 + (clientY - cy), y: h / 2 - (clientX - cx), w, h};
 }
+
+export function containedCanvasPoint({x,y,w,h},width,height){
+ const scale=Math.min(w/width,h/height);
+ const px=(x-(w-width*scale)/2)/scale,py=(y-(h-height*scale)/2)/scale;
+ return {x:px,y:py,inside:px>=0&&px<=width&&py>=0&&py<=height};
+}

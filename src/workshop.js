@@ -60,5 +60,5 @@ export function orderIncome(base,{kiln=1,serve=1,passed=false,elapsedMs=0,eligib
 export const formatElapsed=ms=>`${String(Math.floor(ms/60000)).padStart(2,'0')}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}`;
 export function clockPolicy({started,helpOpen,hidden,focused,hasClay,canWork,kind}){
  const available=started&&!helpOpen&&!hidden&&focused;
- return {efficiency:available&&hasClay&&canWork&&!['citymap','travel','upgrades'].includes(kind),kiln:available&&kind==='kiln'};
+ return {efficiency:available&&hasClay&&canWork&&!['citymap','travel','upgrades','settings'].includes(kind),kiln:available&&kind==='kiln'};
 }

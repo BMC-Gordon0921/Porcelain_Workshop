@@ -93,3 +93,21 @@ test('kiln replaces a new piece even if its revision repeats and disposes the ol
  kiln.setPiece(first,2);const original=find();let disposed=false;original.geometry.addEventListener('dispose',()=>disposed=true);kiln.setPiece(first,2);assert.equal(find(),original);
  kiln.setPiece(next,2);assert.notEqual(find(),original);assert.equal(disposed,true);assert.notEqual(find().geometry.attributes.position.getX(0),original.geometry.attributes.position.getX(0));kiln.dispose();
 });
+
+test('normal firing uses 70% heat and cooling rates and legacy saves restore at fast pace',()=>{
+ const prepare=()=>{const c=new SculptureChallenge({tutorial:false});c.collectClay();shape(c);paint(c);return c;};
+ const slow=prepare(),fast=prepare();
+ slow.fire();fast.fire('fast');
+ const initial=slow.kiln.heat;
+ for(const c of [slow,fast]){c.setStoking(true);c.tick(.25);}
+ assert.ok(Math.abs((slow.kiln.heat-initial)/(fast.kiln.heat-initial)-.7)<1e-9);
+ const [s,f]=[slow.kiln.heat,fast.kiln.heat];
+ for(const c of [slow,fast]){c.setStoking(false);c.tick(.25);}
+ assert.ok(Math.abs((s-slow.kiln.heat)/(f-fast.kiln.heat)-.7)<1e-9);
+ assert.equal(SculptureChallenge.restore(slow.serialize()).kiln.pace,'normal');
+ const legacy=fast.serialize();delete legacy.sceneProgress[legacy.scene].kiln.pace;
+ const resumed=SculptureChallenge.restore(legacy);
+ assert.equal(resumed.kiln.pace,'fast');
+ assert.equal(resumed.kiln.heat,fast.kiln.heat);
+ assert.equal(resumed.kiln.remaining,fast.kiln.remaining);
+});

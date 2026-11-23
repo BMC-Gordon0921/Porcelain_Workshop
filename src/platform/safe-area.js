@@ -52,6 +52,10 @@ export function rotateInsets({top,right,bottom,left}) {
 
 export function latestWindowResponse(id, current) { return id === current; }
 
+export function gestureExtent(gesture) {
+  return gesture?.width>0 ? Math.max(0,num(gesture.right,0)) : 0;
+}
+
 function computeInsets(info) {
   const viewport = window.visualViewport;
   const domW = viewport?.scale === 1 ? viewport.width : window.innerWidth;
@@ -64,7 +68,8 @@ function computeInsets(info) {
   const safeTop = num(area.top, env ? env.top : 0);
   const safeBottomGap = info ? Math.max(0, winH - num(area.bottom, winH)) : env.bottom;
   const gesture = info?.gestureArea;
-  const safeLeft = Math.max(num(area.left, env ? env.left : 0), gesture?.width > 0 ? num(gesture.right,0) : 0);
+  const safeLeft = num(area.left, env ? env.left : 0);
+  const gestureInset = gestureExtent(gesture);
   const safeRightGap = info ? Math.max(0, winW - num(area.right, winW)) : env.right;
   // 状态栏 + 胶囊需要额外头部空间（实测 safeArea.top 44 → 需要 80px）；浏览器里只让出安全区
   const buttons = info?.menuButtons;
@@ -77,10 +82,10 @@ function computeInsets(info) {
   if (root().dataset[ROTATE_ATTR] === ROTATE_ON) {
     // 画面顺时针转 90°：屏幕右→布局上、屏幕下→布局右、屏幕上→布局左
     return {...rotateInsets({top:headTop,right:safeRightGap,bottom:safeBottomGap,left:safeLeft}),
-      landscape: true, rotated: true, winW, winH};
+      landscape: true, rotated: true, gestureInset, winW, winH};
   }
   return {top: headTop, bottom: safeBottomGap, left: safeLeft, right: safeRightGap,
-    landscape: winW > winH, rotated: false, winW, winH};
+    landscape: winW > winH, rotated: false, gestureInset, winW, winH};
 }
 
 function applyLayout(insets) {
@@ -88,10 +93,13 @@ function applyLayout(insets) {
   // 只在「真的够扁」时启用横版紧凑/两栏：旋屏后 iPad 近乎正方（852×834），套 58/42 会把画布挤成竖条
   const effW = insets.rotated ? insets.winH : insets.winW;
   const effH = insets.rotated ? insets.winW : insets.winH;
+  if(Math.min(effW,effH)<=600)el.dataset.phone='';else delete el.dataset.phone;
   const safeW = effW - insets.left - insets.right;
   const safeH = effH - insets.top - insets.bottom;
   const flatEnough = safeW >= 480 && safeW / safeH >= 1.2;
+  el.style.setProperty('--mt-gesture-inset', insets.gestureInset + 'px');
   el.style.setProperty('--mt-safe-width', safeW + 'px');
+  el.dataset.orientation = insets.landscape ? 'landscape' : 'portrait';
   const compactLandscape = flatEnough && (insets.rotated || (insets.landscape && insets.winH <= 520));
   el.dataset.layout = compactLandscape ? 'ls' : (insets.winW >= 761 ? 'wide' : 'sm');
   // 弹层外壳（全屏贴边 + 常驻关闭）只在窄屏/触屏上换掉窗口式卡片；宽屏桌面保持原样
@@ -131,11 +139,11 @@ export async function toggleRotate(force) {
   const next = typeof force === 'boolean' ? force : el.dataset[ROTATE_ATTR] !== ROTATE_ON;
   el.dataset[ROTATE_ATTR] = next ? ROTATE_ON : '';
   applyLayout(computeInsets(lastInfo));
+  rotateListener?.(isRotated());
   const insets = await refresh();
   // 容器尺寸变了要重算 canvas 与相机
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
-  rotateListener?.(isRotated());
-  return {rotated: next, insets};
+  return {rotated: isRotated(), insets};
 }
 
 export function isRotated() {
