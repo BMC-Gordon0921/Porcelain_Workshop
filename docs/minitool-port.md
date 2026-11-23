@@ -326,10 +326,35 @@ node node_modules/vite/bin/vite.js build       # 桌面/原生构建（不受影
 
 两个构建目标共用 `main` 的一份源码，靠四条纪律防止悄悄分叉：
 
-1. **功能只写一份**。平台差异一律用 `__MINITOOL__`（构建期）或 `html[data-platform=minitool]`（样式期）表达，禁止为小工具另写一套组件。
+1. **功能只写一份**。平台差异一律用 `__MINITOOL__`（构建期）或 `html[data-platform=minitool]`（样式期）表达，禁止为小工具另写一套组件。**设备差异用 `data-adapt`（任何环境都设）/ `data-shell`（窄屏或触屏才 full）/ `data-input` / `data-layout`（JS 按窗口算）**，不要再挂到 `data-platform=minitool` 上——那样桌面网页的移动端会永远吃不到这些改造。
 2. **每次改完跑两个构建**：`npm test` → `npm run build` → `npm run build:minitool`。只跑一个等于没验证。
 3. **提交前在容器里验一次**：`npm run sim:minitool` + `node tools/minitool/verify_minitool.mjs <工作台地址> qa/minitool`。触摸、安全区、存档、BGM 解码这类问题只在容器里暴露。
 4. **产物不入库**：`dist/`、`dist-minitool/`、`dist-minitool.zip`、`minitool/gen/` 全部 gitignore，由命令重建。
 
-排版回归用 `tools/minitool/` 下的审计脚本（`audit_hud.mjs`、`audit_overlap.mjs`、`audit_media.mjs`、`verify_panels.mjs`、`verify_rotate_real.mjs`）；
+排版回归用 `tools/minitool/` 下的审计脚本（`audit_hud.mjs`、`audit_overlap.mjs`、`audit_media.mjs`、`verify_panels.mjs`、`verify_rotate_real.mjs`、`verify_device_adapt.mjs`）；
 桌面端视觉回归用 `qa/capture.mjs` 配两个 dev server 做像素比对（自身噪声 <0.3 mean，超过即是真改动）。
+
+## 11. 设备适配层（P5：浏览器移动端也吃同一套）
+
+摇杆、安全区、面板外壳、横版两栏原先是容器专属（全挂 `html[data-platform=minitool]`），桌面网页的移动端只能用四个方向键。P5 把**设备相关的部分**提升为设备条件，**平台相关的部分仍然隔离**：
+
+| 层 | 闸门 | 谁生效 | 内容 |
+|---|---|---|---|
+| 平台专属 | `html[data-platform=minitool]` | 只有小工具 | 手动旋屏（`#rotate-button`、`[data-rotate=on]` 的旋转）、容器 Storage、胶囊让位 |
+| 设备适配 | `html[data-adapt]` | 所有环境（JS 无条件打上） | 安全区变量 `--mt-*`、`#app` 全高、摇杆/操作键样式、站牌收敛、`--mt-orders-w` 等 |
+| 全屏外壳 | `html[data-shell=full]` | 窗口 ≤900px 或 `pointer: coarse` | 面板全屏贴边 + 常驻 `×`、订单栏宽度/下边界、开屏文案收紧、站牌只显示当前 |
+| 输入方式 | `html[data-input=touch|keyboard]` | 所有环境 | 摇杆/操作键与键盘提示的显隐 |
+| 版面档位 | `html[data-layout=sm|wide|ls]` | 所有环境 | 窄屏、宽屏、横版紧凑（含两栏 58/42） |
+
+浏览器里的安全区来自 `env(safe-area-inset-*)` 探针（`src/platform/safe-area.js` 的 `envInsets()`，`index.html` 已加 `viewport-fit=cover`）；容器里仍以 `getWindowInfo()` 的 `safeArea` + 胶囊 `menuButtons` 为准。
+
+验证：
+
+```bash
+node tools/minitool/verify_device_adapt.mjs            # 手机浏览器 touch 摇杆可见 + 面板全屏；1440 桌面保持窗口式卡片与键盘方案
+W=393 H=852 node tools/minitool/audit_hud.mjs          # 三档 HUD 重叠
+GAME_URL=… node qa/capture.mjs                         # 桌面 1440 十屏像素回归（P5 后全部落在自身噪声内）
+```
+
+实测（2026-11-23）：手机 390×844 拿到 `adapt/touch/sm/shell=full`，摇杆可见、面板 `border-radius:0 + position:absolute`；桌面 1440×900 拿到 `adapt/keyboard/wide/shell=card`，摇杆不渲染、面板仍是 22px 圆角卡片；桌面十屏像素差 ≤1.15 mean（自身噪声 ≤0.63，属动画/粒子相位）。
+
