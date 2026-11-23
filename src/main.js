@@ -21,6 +21,8 @@ import {createBowlPreview, decalImage, bowlImage} from './decals.js';
 import {createWorld, STATIONS} from './world.js';
 import {createHeroCarousel} from './hero-carousel.js';
 import {initI18n, setLang, toggleLang, onLangChange, langButtonLabel} from './i18n.js';
+import {parseChangelog, latestVersion} from './changelog.js';
+import rawChangelog from '../CHANGELOG.md?raw';
 import {icon} from './art.js';
 import {createSfx} from './sfx.js';
 import {createMusic} from './music.js';
@@ -144,6 +146,37 @@ $('reset-view').onclick=()=>{if(started&&!activeTask&&!helpOpen)world.resetView(
 function showHelp(){syncClocks();releaseStoke();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();$('help-overlay').classList.remove('hidden');$('help-done').focus();syncClocks();updateEfficiency();save();}
 function hideHelp(){syncClocks();helpOpen=false;$('help-overlay').classList.add('hidden');keys.clear();syncClocks();updateEfficiency();}
 $('help-button').onclick=showHelp;$('close-help').onclick=hideHelp;$('help-done').onclick=hideHelp;
+const CHANGELOG_SEEN_KEY='terra-changelog-seen';
+const changelogSections=parseChangelog(rawChangelog);
+let changelogOpen=false;
+function readSeenVersion(){try{return localStorage.getItem(CHANGELOG_SEEN_KEY);}catch{return null;}}
+function markSeenVersion(version){try{localStorage.setItem(CHANGELOG_SEEN_KEY,version);}catch{}}
+function renderChangelog(){
+ const body=$('changelog-body');body.replaceChildren();
+ if(!changelogSections.length){const empty=document.createElement('p');empty.textContent='暂无更新说明。';body.append(empty);return;}
+ for(const section of changelogSections){
+  const heading=document.createElement('h3');heading.textContent=[section.version,section.date].filter(Boolean).join(' · ');body.append(heading);
+  const list=document.createElement('ul');
+  for(const item of section.items){const li=document.createElement('li');li.textContent=item;list.append(li);}
+  body.append(list);
+ }
+}
+function openChangelog(){
+ if(activeTask)return;
+ renderChangelog();changelogOpen=true;helpOpen=true;releaseStoke();world.setInteractionEnabled(false);keys.clear();
+ $('changelog-overlay').classList.remove('hidden');$('changelog-done').focus({preventScroll:true});syncClocks();updateEfficiency();
+}
+function hideChangelog(){
+ changelogOpen=false;helpOpen=false;$('changelog-overlay').classList.add('hidden');markSeenVersion(latestVersion(changelogSections));keys.clear();syncClocks();updateEfficiency();
+}
+function maybeShowChangelog(){
+ const latest=latestVersion(changelogSections);if(!latest)return;
+ const seen=readSeenVersion();if(seen===latest)return;
+ if(seen===null){markSeenVersion(latest);return;}
+ openChangelog();
+}
+$('changelog-button').onclick=openChangelog;$('close-changelog').onclick=hideChangelog;$('changelog-done').onclick=hideChangelog;
+$('welcome').addEventListener('click',event=>{if(event.target.closest('[data-changelog-open]'))openChangelog();});
 function openEditor(station){
  if(!state.canWork){openJourney();return;}
  if(nearest?.id!==station)return;
@@ -294,6 +327,7 @@ function stationMessage(id){return {clay:'领取完整瓷泥',wheel:'推压瓷�
 function openStation(id){if(activeTask||helpOpen||!started)return;const access=state.stationAccess(id);if(!access.allowed){guidance.deny(access);toast(access.reason);return;}sound();if(!state.canWork){openJourney();return;}({clay:openSupply,wheel:()=>openEditor('wheel'),carve:()=>openEditor('carve'),paint:()=>openEditor('paint'),kiln:openKiln,serve:openReview})[id]();}
 window.addEventListener('keydown',e=>{
  const key=e.key.toLowerCase();
+ if(changelogOpen){if(key==='escape'){e.preventDefault();hideChangelog();}return;}
  if(!started){if(key==='escape'){e.preventDefault();opening?.skip();}else if(key==='enter'&&$('welcome').dataset.openingStage==='map'&&e.target.tagName!=='BUTTON'){e.preventDefault();$('start-button').click();}return;}
  if(key==='escape'){e.preventDefault();if(helpOpen)hideHelp();else if(activeTask)closeTask();return;}
  if(key===' '&&activeTask?.kind==='kiln'&&!helpOpen){e.preventDefault();if(e.repeat||document.hidden||!focused)return;changeStoke('space',true);return;}
@@ -330,5 +364,5 @@ opening=createOpening($('welcome'),{getState:()=>state,onStart:enterGame,onNewGa
 document.addEventListener('click',e=>{if(e.target.closest('[data-lang-toggle]'))toggleLang();});
 function refreshLang(){document.querySelectorAll('[data-lang-toggle]').forEach(b=>{b.textContent=langButtonLabel();b.setAttribute('aria-label',document.documentElement.lang==='en'?'切换到中文':'Switch to English');});}
 onLangChange(refreshLang);initI18n();refreshLang();
-if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame};
-updateUI();requestAnimationFrame(frame);
+if(import.meta.env.DEV)window.__terra={get state(){return state;},world,sfx,music,closeTask,showHelp,hideHelp,openStation,openKiln,openUpgrades,syncClocks,openJourney,openCityMap,setLang,toggleLang,enter:enterGame,openChangelog};
+updateUI();requestAnimationFrame(frame);maybeShowChangelog();

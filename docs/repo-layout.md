@@ -126,3 +126,13 @@ git show pre-cleanup-2026-10-26:tools/package-quick-windows.mjs
 | `.git` | 118 MB | 118 MB（未重写历史，见下） |
 
 > `.git` 仍是最大单项，因为 commit `0a229fb` 曾提交 91 MB 的 `deliverables/`。要压到约 35 MB 需 `git filter-repo` 重写历史——**本次刻意没做**，它会改写所有 commit hash，破坏 tag 与协作者的克隆。若将来要公开仓库，再单独执行。
+
+---
+
+## 6. 更新说明（CHANGELOG.md）
+
+- **位置**：仓库根 `CHANGELOG.md`，随源码入库（构建时以 `?raw` 内联进游戏，玩家无需联网请求）。
+- **格式**：每个版本一段，标题 `## 版本号 · YYYY-MM-DD`，下面每条一行 `- 描述`；`#` 大标题、HTML 注释、空行忽略。
+- **累加规则**：新版本段落**加到文件最前面**，旧段落原样保留，不删不改。只写玩家看得见的变化（玩法、界面、修好的问题），重构与内部调整不写。
+- **玩家侧行为**：游戏启动时读取最新一版，与 `localStorage['terra-changelog-seen']` 比较；不同则自动弹出一次，关闭后记下版本号。入口两处：首页（开场页）顶部栏的「更新说明」、游戏顶栏「✳ 更新」。
+- **Agent 生成**：`git log --oneline <上一版提交>..HEAD` 取本次提交，筛出玩家可见项 → 在 `CHANGELOG.md` 顶部插入一段（版本号递增、日期为当天）→ 跑 `npm test`（`tests/changelog.test.js` 会校验文件格式）。

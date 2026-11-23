@@ -35,3 +35,9 @@
  .background-pause{right:9vw;bottom:19px;font-size:11px;min-height:36px}
 }
 @media(prefers-reduced-motion:reduce){.opening-title-word>span{animation:none;filter:none;transform:none;opacity:1}}
+
+.changelog-overlay{z-index:45}
+.opening-header .opening-notes{margin-left:0}
+.changelog-sections h3{font-size:13px;letter-spacing:1px;margin:14px 0 6px;color:#a37850}
+.changelog-sections ul{margin:0;padding-left:18px}
+.changelog-sections li{font-size:13px;line-height:1.7}
