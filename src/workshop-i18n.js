@@ -14,7 +14,7 @@ export const WORKSHOP_EN = {
  '达标 +20%':'On time +20%','已暂停':'Paused','效率达标 · +20%':'On time · +20%','原有收益完整保留':'Normal income fully retained',
  '交付台加成':'Delivery bonus','效率奖励':'Efficiency bonus','首次通关':'First pass',
  '参考线':'Guides','对称塑形':'Symmetric shaping','轮廓保护':'Contour guard','直线笔':'Straight strokes','镜像绘制':'Mirror painting','· 升级解锁':'· Unlock by upgrading',
- '沿参考轮廓推压或拉伸瓷泥。默认上下左右对称，接近轮廓时轻微辅助；可关闭参考线或对称操作。':'Push or stretch toward the outline. Symmetry applies to every edge, with gentle contour assistance; guides and symmetry can be switched off.',
+ '沿参考轮廓推压或拉伸瓷泥。上下左右都能推拉；对称沿竖直中轴线左右镜像，接近轮廓时轻微辅助；可关闭参考线或对称操作。':'Push or stretch toward the outline. Every edge can be dragged; symmetry mirrors left and right about the vertical axis, with gentle contour assistance; guides and symmetry can be switched off.',
  '本关需要 {} 次火候判定。指针进入目标区间时按空格或点击锁定，综合各轮表现获得金币加成。':'Complete {} firing rounds. Press Space or click Lock in heat inside the target zone. Your combined performance earns a coin bonus.',
  '窑炉与实际作品的烧制特写':'Close-up of the kiln firing your actual piece','窑火 · 亲手烧制':'Kiln fire · made by you','锁定火候 · 空格':'Lock in heat · Space',
  '第 {} 轮':'Round {}','待开始':'Waiting','完成 · 返回工坊':'Done · return to workshop','本轮已记录，准备下一轮…':'Round recorded. Preparing the next round…',

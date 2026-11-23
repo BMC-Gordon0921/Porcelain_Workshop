@@ -108,15 +108,16 @@ export function pushClay(pixels,x0,y0,x1,y1,radius=18,grab=undefined,options={})
  const {horizontal,fromLeft}=grab,along=horizontal?grab.x:grab.y,cross=horizontal?grab.y:grab.x,rawDelta=horizontal?dx:dy,delta=options.target?Math.max(-28,Math.min(28,rawDelta)):rawDelta,before=pixels.slice();let changed=false;
  const index=(a,b)=>horizontal?b*SIZE+a:a*SIZE+b;
  // Compress/stretch whole bands of clay under a broad hand. Paint moves with the clay.
- for(let row=Math.max(0,Math.floor(cross-radius));row<Math.min(SIZE,Math.ceil(cross+radius));row++){
+ const rows=[];for(let row=Math.max(0,Math.floor(cross-radius));row<Math.min(SIZE,Math.ceil(cross+radius));row++){rows.push(row);if(options.symmetric&&!horizontal&&SIZE-1-row!==row)rows.push(SIZE-1-row);}
+ for(const row of rows){
   let left=0,right=SIZE-1;while(left<SIZE&&!before[index(left,row)])left++;while(right>left&&!before[index(right,row)])right--;
   if(right-left<5)continue;const edge=fromLeft?left:right;if(Math.abs(along-edge)>radius)continue;
-  const d=Math.abs(row+.5-cross)/radius;if(d>=1)continue;const influence=(1+Math.cos(d*Math.PI))/2;
+  const own=Math.abs(row+.5-cross);const d=(options.symmetric&&!horizontal?Math.min(own,Math.abs(SIZE-1-row+.5-cross)):own)/radius;if(d>=1)continue;const influence=(1+Math.cos(d*Math.PI))/2;
   let shift=delta*influence;
   if(options.target&&Math.abs(delta)>=.75){const target=rowBounds(options.target,row,horizontal),wanted=fromLeft?target.left:target.right,proposed=edge+shift,level=options.level||1;if(target.right>=target.left&&Math.abs(wanted-proposed)<=level)shift+=(wanted-proposed)*[.25,.4,.55][level-1];}
   let newLeft=fromLeft?Math.max(0,Math.min(right-5,Math.round(left+shift))):left;
   let newRight=fromLeft?right:Math.min(SIZE-1,Math.max(left+5,Math.round(right+shift)));
-  if(options.symmetric){if(fromLeft)newRight=Math.min(SIZE-1,Math.max(newLeft+5,right-(newLeft-left)));else newLeft=Math.max(0,Math.min(newRight-5,left-(newRight-right)));}
+  if(options.symmetric&&horizontal){if(fromLeft)newRight=Math.min(SIZE-1,Math.max(newLeft+5,right-(newLeft-left)));else newLeft=Math.max(0,Math.min(newRight-5,left-(newRight-right)));}
   for(let a=Math.min(left,newLeft);a<=Math.max(right,newRight);a++)pixels[index(a,row)]=0;
   for(let a=newLeft;a<=newRight;a++){const src=Math.round(left+(a-newLeft)/(newRight-newLeft)*(right-left));pixels[index(a,row)]=before[index(src,row)];}
  }

@@ -26,17 +26,14 @@ test('symmetric shaping preserves symmetry, paint, undo and a no-op return',()=>
  for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)assert.equal(c.piece.pixels[y*SIZE+x],c.piece.pixels[y*SIZE+SIZE-1-x]);
  assert.ok(!pixelsEqual(b,c.piece.pixels));c.undo();assert.ok(pixelsEqual(b,c.piece.pixels));c.redo();const shaped=c.piece.pixels.slice();c.beginStroke();c.stroke(8,56,24,56,18,'push',2,shaped,g);c.stroke(8,56,8,56,18,'push',2,shaped,g);assert.equal(c.finishStroke(),false);assert.ok(pixelsEqual(shaped,c.piece.pixels));
 });
-test('symmetry also mirrors top and bottom edges',()=>{
+test('vertical drag mirrors left and right, not top and bottom',()=>{
  const base=makeBlank(),g=clayEdge(base,56,8);assert.equal(g.horizontal,false);assert.equal(g.fromLeft,true);
  const pushed=base.slice();assert.equal(pushClay(pushed,56,8,56,20,18,g,{symmetric:true}),true);
+ let mirrored=0;for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)if(pushed[y*SIZE+x]!==pushed[y*SIZE+SIZE-1-x])mirrored++;
+ assert.equal(mirrored,0,'every row must stay symmetric about the vertical axis');
  const column=(px,x)=>{let top=0,bottom=SIZE-1;while(top<SIZE&&!px[top*SIZE+x])top++;while(bottom>=top&&!px[bottom*SIZE+x])bottom--;return {top,bottom};};
- let checked=0;
- for(let x=0;x<SIZE;x++){
-  const a=column(base,x),b=column(pushed,x),dt=b.top-a.top,db=b.bottom-a.bottom;
-  if(!dt)continue;checked++;
-  assert.ok(Math.abs(dt+db)<=1,`column ${x}: top moved ${dt}, bottom moved ${db}`);
- }
- assert.ok(checked>10,'the vertical drag must move a band of columns');
+ const before=column(base,56),after=column(pushed,56);
+ assert.ok(Math.abs(after.top-before.top)>3,'the dragged top edge must move');assert.equal(after.bottom,before.bottom,'the opposite edge must not follow');
 });
 test('shaping displacement is bounded and identical for sparse or dense pointer streams',()=>{
  function run(steps,dx=80){const c=new SculptureChallenge({tutorial:false});c.collectClay();c.startStation('wheel');const b=c.piece.pixels.slice(),g=clayEdge(b,8,38);c.beginStroke();for(let i=1;i<=steps;i++)c.stroke(8,38,8+dx*i/steps,38+14*i/steps,18,'push',2,b,g);c.finishStroke();return c;}
