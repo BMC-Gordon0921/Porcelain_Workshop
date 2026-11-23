@@ -512,7 +512,25 @@ const EN = {
     'Four finished bowls — drag to spin, hover for a short introduction',
 };
 
-Object.assign(EN,EXPERIENCE_EN);
+Object.assign(EN,EXPERIENCE_EN, {
+  "缩小场景": "Zoom out",
+  "放大场景": "Zoom in",
+  "拖动摇杆移动，靠近工作台后点按「操作」。单指拖动旋转场景，双指张开或捏合缩放。点按「保存并离开」返回工坊。": "Drag the joystick to move and tap Action near a workbench. Drag with one finger to rotate, or pinch with two fingers to zoom. Tap Save and leave to return to the workshop.",
+  "点按撤销或重做，拖动滑杆调整工具大小。": "Tap Undo or Redo and drag the slider to adjust tool size.",
+  "按住鼓风按钮升温，松开降温，让指针停留在目标区间。": "Hold the stoke button to heat the kiln and release it to cool. Keep the needle in the target band.",
+  "走近工作台后点按「操作」。": "Approach a workbench and tap Action.",
+  "进度自动保存。": "Progress saves automatically.",
+  "3D 瓷器工坊，单指旋转，双指缩放": "3D porcelain workshop. Drag with one finger to rotate and pinch to zoom.",
+  "拖动摇杆移动，走近取泥台。": "Drag the joystick to approach the clay station.",
+  "走近取泥台，点按「操作」，再领取瓷泥。": "Approach the clay station, tap Action, then collect clay.",
+  "按住鼓风按钮升温，松开降温，完成 12 秒烧制。": "Hold the stoke button to heat the kiln and release it to cool. Firing lasts 12 seconds.",
+  "按住鼓风按钮升温，松开降温。让指针留在目标区间。": "Hold the stoke button to heat the kiln and release it to cool. Keep the needle in the target band.",
+  "按住鼓风 · 松开降温 · 退出面板会暂停烧制": "Hold to heat · release to cool · closing the panel pauses firing",
+  "烧制瓷器 · 按住鼓风": "Fire the piece · hold to stoke",
+  "四站工坊全景，可拖动旋转或双指缩放": "Four workshop views. Drag to rotate or pinch to zoom.",
+  "单指旋转 · 双指缩放": "Drag to rotate · pinch to zoom",
+  "工坊进度": "Workshop progress"
+});
 const EXTRA_RULES = [
   [/^继续旅程 · (.+)$/, (m) => `Continue · ${m[1]}`],
   [/^抵达 (.+)$/, (m) => `Arrive at ${m[1]}`],

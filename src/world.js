@@ -1,3 +1,4 @@
+import {bindOrbitGesture} from './platform/orbit-gesture.js';
 import * as THREE from 'three';
 import {createRenderer} from './platform/renderer.js';
 import {PLACES} from './places.js';
@@ -170,16 +171,28 @@ export function createWorld(canvas,{preview=false}={}) {
  const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,140);
  function placeCamera(){const s=Math.sin(orbit.polar),c=Math.cos(orbit.polar);camera.position.set(TARGET.x+orbit.radius*s*Math.sin(orbit.azimuth),TARGET.y+orbit.radius*c,TARGET.z+orbit.radius*s*Math.cos(orbit.azimuth));camera.lookAt(TARGET);camera.zoom=orbit.zoom;camera.updateProjectionMatrix();camera.updateMatrixWorld();}
  placeCamera();
- let orbitDrag=null,interactionEnabled=false,displayRotation=0;
- const setDisplayRotation=deg=>{displayRotation=Number(deg)||0;};
+ let interactionEnabled=false,displayRotation=0;
+ const setDisplayRotation=deg=>{displayRotation=Number(deg)||0;gesture.clear();};
  const stopTween=()=>{cameraTween=null;};
- const onOrbitDown=e=>{if(!interactionEnabled||e.button!==0||!e.isPrimary)return;e.preventDefault();stopTween();orbitDrag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.classList.add('is-orbiting');canvas.setPointerCapture?.(e.pointerId);};
- const onOrbitMove=e=>{if(!interactionEnabled||!orbitDrag||e.pointerId!==orbitDrag.id)return;if(!(e.buttons&1)){onOrbitUp(e);return;}const rawX=e.clientX-orbitDrag.x,rawY=e.clientY-orbitDrag.y;orbitDrag.x=e.clientX;orbitDrag.y=e.clientY;const dx=displayRotation===90?rawY:rawX,dy=displayRotation===90?-rawX:rawY;orbit.azimuth-=dx*.0062;orbit.polar=THREE.MathUtils.clamp(orbit.polar+dy*.005,POLAR_MIN,POLAR_MAX);placeCamera();};
- const onOrbitUp=()=>{if(!orbitDrag)return;const id=orbitDrag.id;orbitDrag=null;canvas.classList.remove('is-orbiting');if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);};
- const onOrbitWheel=e=>{if(!interactionEnabled)return;e.preventDefault();stopTween();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*Math.exp(-delta*.0012),ZOOM_MIN,ZOOM_MAX);placeCamera();};
- listen(canvas,'pointerdown',onOrbitDown);listen(window,'pointermove',onOrbitMove);listen(window,'pointerup',onOrbitUp);listen(window,'pointercancel',onOrbitUp);
- listen(canvas,'wheel',onOrbitWheel,{passive:false});listen(canvas,'lostpointercapture',onOrbitUp);listen(window,'blur',onOrbitUp);listen(document,'visibilitychange',()=>{if(document.hidden)onOrbitUp();});
- function setInteractionEnabled(value){interactionEnabled=!!value;if(!interactionEnabled)onOrbitUp();}
+ function zoomBy(scale){if(!Number.isFinite(scale)||scale<=0)return;stopTween();orbit.zoom=THREE.MathUtils.clamp(orbit.zoom*scale,ZOOM_MIN,ZOOM_MAX);placeCamera();}
+ const gesture=bindOrbitGesture(canvas,listen,{
+  enabled:()=>interactionEnabled,
+  activity:stopTween,
+  zoom:zoomBy,
+  rotate:(x,y)=>{
+   const dx=displayRotation===90?y:x,dy=displayRotation===90?-x:y;
+   orbit.azimuth-=dx*.0062;
+   orbit.polar=THREE.MathUtils.clamp(orbit.polar+dy*.005,POLAR_MIN,POLAR_MAX);
+   placeCamera();
+  },
+ });
+ listen(canvas,'wheel',e=>{
+  if(!interactionEnabled)return;
+  e.preventDefault();
+  const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
+  zoomBy(Math.exp(-delta*.0012));
+ },{passive:false});
+ function setInteractionEnabled(value){interactionEnabled=!!value;if(!interactionEnabled)gesture.clear();}
  function resetView(){
   const toAz=Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),toPolar=Math.acos(HOME_OFFSET.y/HOME_OFFSET.length());
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){orbit.azimuth=toAz;orbit.polar=toPolar;orbit.zoom=1;placeCamera();return;}
@@ -351,8 +364,8 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
   dust.forEach((m,i)=>{m.position.y+=dt*.018;if(m.position.y>3.8)m.position.y=.7;m.position.x+=Math.sin(time*.3+i)*dt*.012;});renderer.render(scene,camera);
  }
  function celebrate(index){const c=customers[index];if(!c)return;c.body.rotation.y+=PI*2;}
- function dispose(){if(disposed)return;disposed=true;loadTicket++;onOrbitUp();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
- resize();return {setDisplayRotation,dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,placeCamera,setInteractionEnabled,get stride(){return stride;}};
+ function dispose(){if(disposed)return;disposed=true;loadTicket++;gesture.clear();removers.forEach(remove=>remove());disposeWorldTree(scene);scene.traverse(object=>object.shadow?.dispose());renderer.dispose();renderer.forceContextLoss();}
+ resize();return {setDisplayRotation,dispose,scene,camera,renderer,player,stations:STATIONS,setDemoFrame,resetCustomers,get loading(){return loading;},get loadError(){return loadError;},get activeScene(){return activeScene;},get customerCount(){return customers.length+departing.length;},move,project,nearest,update,resize,celebrate,canMove,setScene,orbit,resetView,zoomBy,placeCamera,setInteractionEnabled,get stride(){return stride;}};
 }
 
 // Cache-owned primitives/materials are shared by the game and scene preview.

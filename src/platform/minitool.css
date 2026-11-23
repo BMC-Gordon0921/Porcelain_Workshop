@@ -1499,3 +1499,64 @@ html[data-adapt][data-layout=ls] .atlas-layout .city-map-art {
   width: 100%;
   height: auto;
 }
+
+/* The game uses the same measured window for native and simulated rotation. */
+html[data-platform=minitool] #app { width: var(--mt-width, 100vw); height: var(--mt-height, 100vh); }
+html[data-platform=minitool][data-rotate=on] #app {
+  top: 0; left: 0;
+  width: var(--mt-height, 100vh); height: var(--mt-width, 100vw);
+  transform-origin: top left;
+  transform: translateX(var(--mt-width, 100vw)) rotate(90deg);
+}
+#world { touch-action: none; }
+.view-controls { position: absolute; right: 10px; bottom: 8px; z-index: 4; display: flex; align-items: center; }
+.view-controls .reset-view { position: static; }
+.view-controls > button:not(.reset-view), [data-help-touch] { display: none; }
+html[data-input=touch] [data-help-keyboard], html[data-panel-open] .view-controls { display: none; }
+html[data-input=touch] span[data-help-touch] { display: inline; }
+html[data-input=touch] p[data-help-touch] { display: block; }
+html[data-input=touch] .view-controls > button:not(.reset-view) {
+  display: block; min-width: 44px; margin-right: 4px; border-radius: 50%;
+  border: 1px solid #d8d5c2; background: #f9f4e7; color: #374e3c;
+}
+html[data-input=touch] .view-controls button { min-height: 44px; }
+html[data-shell=full] .task-panel .close-button { top: 0; width: 44px; height: 44px; }
+html[data-shell=full] .task-panel .task-header { min-height: 44px; align-content: center; }
+html[data-shell=full] .task-footer button, html[data-shell=full] .task-action-row button { min-height: 44px; }
+html[data-shell=full] [data-panel=supply] #task-description:empty { display: none; }
+.supply-layout { display: grid; gap: 12px; padding: 4px 0; }
+.supply-preview, .supply-details { min-width: 0; padding: 12px; border: 1px solid #e2dccb; border-radius: 10px; }
+.supply-preview img { display: block; width: 100%; height: 108px; object-fit: contain; margin: 6px 0; }
+.supply-details p { margin-top: 6px; line-height: 1.5; }
+.supply-actions.task-action-row { margin: 0; }
+html[data-layout=ls] .supply-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+html[data-layout=ls] .supply-actions.task-action-row { flex-direction: row; }
+html[data-shell=full][data-layout=ls] [data-panel=editor] .task-footer {
+  position: static; padding: 4px 12px; border-top: 1px solid #e2dccb; background: #f6f1e2;
+}
+@supports (display: contents) {
+html[data-shell=full][data-layout=ls] [data-panel=editor] .editor-layout {
+  grid-template-columns: minmax(0, 54fr) minmax(0, 46fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "canvas tools" "canvas brush" "canvas reference";
+}
+html[data-shell=full][data-layout=ls] [data-panel=editor] .work-area { display: contents; }
+html[data-shell=full][data-layout=ls] [data-panel=editor] .editor-reference { grid-area: reference; }
+}
+html[data-shell=full][data-layout=ls] [data-panel=editor] .sculpt-canvas-wrap { height: 100%; }
+html[data-shell=full][data-layout=ls] [data-panel=editor] .tool-row .small-tool { width: 44px; height: 44px; }
+html[data-shell=full][data-layout=ls] [data-panel=editor] .brush-row,
+html[data-shell=full][data-layout=ls] [data-panel=editor] .tool-row { margin-top: 0; }
+html[data-shell=full][data-layout=ls] [data-panel=editor] .target-preview { height: 65px; width: 65px; }
+html[data-shell=full][data-layout=ls] [data-panel=editor] .editor-reference .board-label { width: auto; }
+html[data-shell=full][data-layout=ls] .kiln-control .kiln-gauge-wrap { max-width: 112px; }
+html[data-shell=full][data-layout=ls] .kiln-control .task-action-row { margin: 4px 0; }
+
+html[data-layout=ls] { --mt-side-width: 156px; }
+@supports (width: clamp(120px, 20px, 180px)) {
+  html[data-layout=ls] { --mt-side-width: clamp(130px, calc(var(--mt-safe-width) * .21), 184px); }
+}
+html[data-adapt][data-layout=ls] #app > .commissions { width: var(--mt-side-width); }
+html[data-adapt][data-layout=ls] #world-wrap { right: calc(var(--mt-side-width) + 16px + var(--mt-right-inset)); }
+
+html[data-platform=minitool][data-can-rotate=no] #rotate-button { display: none; }
