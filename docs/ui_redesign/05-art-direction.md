@@ -363,3 +363,19 @@
 
 **实测**：桌面 `kickerSize=14px / copySize=16px / 按钮 44×44 / 行 y=632`，手机 `13px / 13.5px / 行 y=732`；点第 3 条 → 文本变「走过古窑与展馆…」、`aria-pressed` 只有第 3 个 true；等 5.2s 后回到第 1 句（循环生效）；无 pageerror。`npm test` 101 条（新增 `tests/opening-beats.test.js` 1 条：`beatAt` 时间切片）。
 
+## 21. 放大与找路：参考图灯箱、画布缩放、场景切换（第十九轮）
+
+**起因**：五条玩家反馈（m05279）经方案确认后落地 —— ①上色时右栏参考图太小，想点开看大图；②上色/拉胚/雕刻时看不清操作区，想用滚轮放大；③世界页的切换场景按钮不明显，「下方」提示没说清在哪；④结算页「相似度」卡显示不全；⑤拉胚手感仍然差。用户拍板：①灯箱、②滚轮重采样缩放（不是 CSS 拉伸）、③文案改「点最下方 01–04」＋站条胶囊＋上一站/下一站＋顶栏「地图」文字、④面板宽与矮屏自适应、⑤只治「慢推抖动」和「抓不准」，不动行程上限与吸附强度。
+
+**参考图灯箱**（`src/main.js`）：右栏 `<figure class="ref-zoom">` 整块变成 `role="button" tabindex="0"`，右下角有 `点击放大` 徽标；Enter/Space 或点击调用 `openRefLightbox()` —— 建一个 `<dialog class="ref-lightbox">`，内部 canvas 用 `drawSculpture(...,{background:false})` 按 640² 重绘（不是把小图放大），点击任意处或 Esc 关闭。**Esc 会被全局 keydown 吃掉**（`main.js` 那只 `if(key==='escape'){preventDefault();closeTask()}`），所以全局处理器开头加了 `if(document.querySelector('dialog[open]'))return;`，把 Esc 让给浏览器的 `dialog.cancel`。
+
+**画布缩放**（`src/sculpture-view.js`）：`drawSculpture` 新增 `view={z,x,y}`，用 `ctx.setTransform(z,0,0,z,-x*(w/SIZE)*z,-y*(h/SIZE)*z)` 把整张 112 模型 px 的画布当作视野窗口，重采样绘制所以放大不糊（不是 CSS transform）。`attachEditor` 维护 `view`（z ∈ 1–3，x/y 是视口左上角在模型 px 里的位置）：`wheel` 以光标为锚点 `z*=exp(-deltaY*.0018)` 再反解 x/y，`contextmenu` 只在 z>1 时阻止；按住右键拖动平移（`k=SIZE/(rect.w||1)/view.z`）；右下角 `#canvas-zoom` 胶囊显示 `1.0× · 滚轮放大` / `2.1× · 复位`，点一下 `resetView()`；`canvas.dataset.zoom / dataset.view` 暴露当前视野给探针。指针映射跟着改：`mx=view.x+x/view.z`，loupe 采样 `(cursor.x-view.x)*view.z/SIZE*canvas.width`。触屏没有滚轮，`@media (max-width:760px)` 直接隐藏胶囊，避免误导。
+
+**手感**（`src/sculpture.js`）：推压死区 `0.75` → `0.3` 模型 px（轻推一两个像素就有反应），首次抓边容差 `5` → `10`（贴近轮廓更容易抓到手下那一段，原来的 90 兜底保留）。`attachEditor` 的推压不再每次 pointermove 立即落笔，而是记 `target`、由 rAF 里的 `step()` 以 `k=.4` 缓动追指针（settled 阈值 `0.08`），松手时先 `apply(target)` 对齐再结束笔画；所有重绘合并到一帧（`queue()`），慢推不再一格一格跳。层缓存从「每帧新建 canvas」改成两个复用槽（`scratchSlots()` 懒创建，否则 node 里 import 会碰 `document is not defined`）。
+
+**场景切换**：`src/city-map.js` 的 caption 改三块 —— 标题、「拖动旋转 · 点最下方 01–04 切换工坊」、`[data-chapter-step="-1|1"]` 的「‹ 上一站 / 下一站 ›」；点击按 `(selected+step+PLACES.length)%PLACES.length` 调 `sceneCarousel?.show()`。01–04 站条在 `art-direction.css` 里改成胶囊（`border-radius:12px`、hover 纸底、当前站 `paper-0 92%` 底 + 站色 45% 描边 + 软阴影），内部进度条 `i` 收到 `left/right:10px;bottom:6px`。游戏内顶栏 `#map-button` 加 `<span class="toolbar-label">地图</span>`，按钮 `width:auto;padding:0 13px`（手机媒体查询里恢复 44px 图标并隐藏文字）。
+
+**结算页**：根因是 `src/redesign.js:54 enrichResult()` 在 `.result-images` 后插入 `.result-explain`，`.result-layout` 变成三轨，第三轨只有 169px，而 `.score-card` 带着 `min-width:209px` → 卡片右溢 39px 被 `.task-panel{overflow:hidden}` 裁掉。改法两处：`art-direction.css` 的 `.score-card` 加 `min-width:0`，`[data-panel="result"] .result-layout` 三轨改 `minmax(200px,1fr) minmax(0,1.4fr) minmax(148px,.7fr)`；`.wide-panel{width:min(920px,calc(100vw - 48px))}`；`@media (max-height:840px)` 收参考图到 128px、`strong` 34px、`.settlement-details` 内部滚动。
+
+**实测**：灯箱 560×560、Esc 关闭后 `lightboxClosed=true`；滚轮 2.13×（`view=29.7,29.7`，即 `(112-112/2.13)/2` 的光标锚点值）、右键拖 → `37.9,35.6`、点胶囊回 1.00；慢推 1px 步进也能落笔（`edits 0→4`）。地图页 desktop/phone aria 一致，点「下一站」`active 0→1`、点「上一站」回 0；`#map-button` 桌面 81px 带字、手机 44px 无字。结算探针 1920/1600/1440/1366/1280/1024 六档全部 `bodySW==bodyCW`、`cardOverflow=0`，1366×768 自动用 34px 数字。`npm test` 101 passed，无 pageerror。
+

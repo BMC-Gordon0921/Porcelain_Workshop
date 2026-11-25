@@ -398,7 +398,7 @@ kbd{background:var(--xz-paper-0);border:1px solid var(--xz-line);border-bottom-w
  border:1px solid var(--xz-line);border-radius:var(--xz-r-md);padding:8px;margin:0;box-shadow:var(--xz-shadow-1)}
 .result-images figcaption{font-size:var(--xz-fs-xs);color:var(--xz-ink-3);letter-spacing:.12em;padding-top:6px;text-align:center}
 .score-card{
- position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+ position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;
  border-radius:var(--xz-r-md);padding:18px 20px;text-align:center;
  background-color:var(--xz-paper-0);background-image:var(--xz-grain);background-blend-mode:multiply;
  box-shadow:inset 0 0 0 2px var(--xz-paper-0),inset 0 0 0 3px var(--xz-line),var(--xz-shadow-1)}
@@ -597,7 +597,7 @@ kbd{background:var(--xz-paper-0);border:1px solid var(--xz-line);border-bottom-w
 /* 结算缩略图按内容高度收边，不再撑出空卡 */
 .result-images{align-items:flex-start}
 .result-images figure{justify-content:flex-start}
-[data-panel="result"] .result-layout{grid-template-columns:minmax(230px,1.05fr) minmax(0,1.35fr) minmax(150px,.62fr)}
+[data-panel="result"] .result-layout{grid-template-columns:minmax(200px,1fr) minmax(0,1.4fr) minmax(148px,.7fr)}
 
 /* ========== 13. 三档响应式 ========== */
 @media(min-width:1101px){
@@ -773,4 +773,68 @@ html[data-shell=full] .task-footer button,html[data-shell=full] .task-action-row
  .prologue-kicker{font-size:13px;letter-spacing:.14em}
  .prologue-copy p{font-size:13.5px;line-height:1.9}
  .prologue-beats{margin-top:0}
+}
+
+/* ========== 21. 参考图放大 / 画布滚轮缩放 / 场景切换（第十九轮） ========== */
+/* 制作画布：右下角缩放胶囊，点击复位 */
+[data-panel="editor"] .canvas-zoom{
+ position:absolute;right:14px;bottom:14px;min-height:30px;padding:0 12px;
+ border:1px solid color-mix(in srgb,var(--xz-station) 30%,var(--xz-line));border-radius:999px;
+ background:color-mix(in srgb,var(--xz-paper-0) 88%,transparent);color:color-mix(in srgb,var(--xz-station) 62%,var(--xz-ink));
+ font-family:var(--xz-font-body);font-size:var(--xz-fs-xs);letter-spacing:.06em;cursor:pointer;
+ box-shadow:0 6px 14px -10px color-mix(in srgb,var(--xz-station) 70%,transparent);backdrop-filter:blur(3px)}
+[data-panel="editor"] .canvas-zoom[data-zoomed="off"]{opacity:.78}
+[data-panel="editor"] .canvas-zoom:hover{background:var(--xz-paper-0);border-color:color-mix(in srgb,var(--xz-station) 52%,var(--xz-line))}
+[data-panel="editor"] .canvas-zoom:focus-visible{outline:2px solid var(--xz-station);outline-offset:3px}
+
+/* 右栏订单参考图：整块可点，点击开灯箱 */
+.ref-zoom{position:relative;cursor:zoom-in}
+.ref-zoom:focus-visible{outline:2px solid var(--xz-station);outline-offset:4px;border-radius:var(--xz-r-sm)}
+.ref-zoom-hint{position:absolute;right:10px;bottom:10px;padding:3px 9px;border-radius:999px;
+ background:color-mix(in srgb,var(--xz-paper-0) 86%,transparent);color:color-mix(in srgb,var(--xz-station) 58%,var(--xz-ink-3));
+ font-family:var(--xz-font-body);font-size:11px;letter-spacing:.08em;pointer-events:none}
+
+.ref-lightbox{padding:24px;border:0;background:transparent;max-width:none;max-height:none}
+.ref-lightbox[open]{display:grid;place-items:center}
+.ref-lightbox::backdrop{background:color-mix(in srgb,var(--xz-ink) 58%,transparent)}
+.ref-lightbox figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 16px 12px;
+ border-radius:var(--xz-r-md);background-color:var(--xz-paper-0);background-image:var(--xz-grain);background-blend-mode:multiply;
+ box-shadow:0 30px 60px -30px color-mix(in srgb,var(--xz-ink) 60%,transparent),0 0 0 1px color-mix(in srgb,var(--xz-station) 22%,var(--xz-line))}
+.ref-lightbox canvas{display:block;width:min(560px,84vw);height:auto}
+.ref-lightbox figcaption{font-family:var(--xz-font-body);font-size:var(--xz-fs-xs);letter-spacing:.1em;color:var(--xz-ink-3)}
+
+/* 地图页：说明文案改「点最下方 01–04」，并给上一站/下一站 */
+.opening-map-caption{align-items:center;gap:12px;flex-wrap:wrap}
+.opening-chapter-jump{display:inline-flex;gap:6px}
+.opening-chapter-jump button{min-height:30px;padding:0 11px;border-radius:999px;cursor:pointer;
+ border:1px solid color-mix(in srgb,var(--xz-line) 85%,transparent);
+ background:color-mix(in srgb,var(--xz-paper-0) 72%,transparent);color:color-mix(in srgb,var(--xz-ink-3) 88%,var(--xz-station));
+ font-family:var(--xz-font-body);font-size:12px;letter-spacing:.06em}
+.opening-chapter-jump button:hover,.opening-chapter-jump button:focus-visible{background:var(--xz-paper-0);border-color:color-mix(in srgb,var(--xz-station) 44%,var(--xz-line));color:color-mix(in srgb,var(--xz-station) 72%,var(--xz-ink))}
+
+/* 01–04 站条改成胶囊按钮，当前站高亮，一眼看出能点 */
+.opening-timeline>button{padding:8px 10px 14px;border:1px solid transparent;border-radius:12px;transition:background-color .18s,border-color .18s,color .18s}
+.opening-timeline>button:hover{background:color-mix(in srgb,var(--xz-paper-0) 78%,transparent);border-color:color-mix(in srgb,var(--xz-line) 70%,transparent)}
+.opening-timeline>button.active{background:color-mix(in srgb,var(--xz-paper-0) 92%,transparent);border-color:color-mix(in srgb,var(--xz-station) 45%,var(--xz-line));box-shadow:0 8px 18px -14px color-mix(in srgb,var(--xz-station) 80%,transparent)}
+.opening-timeline i{left:10px;right:10px;bottom:6px}
+
+/* 顶栏地图按钮带文字 */
+#map-button{width:auto;gap:6px;padding:0 13px}
+#map-button .toolbar-label{font-family:var(--xz-font-body);font-size:13px;letter-spacing:.08em}
+
+/* 结算：宽面板自适应 + 矮屏收边 */
+.wide-panel{width:min(920px,calc(100vw - 48px))}
+@media (max-height:840px){
+ [data-panel="result"] .result-images img{max-height:128px}
+ [data-panel="result"] .score-card strong{font-size:34px}
+ [data-panel="result"] .settlement-details{max-height:min(26vh,176px);overflow-y:auto;overscroll-behavior:contain}
+ [data-panel="result"] .earnings-banner{padding:6px 12px}
+}
+@media (max-width:760px){
+ #map-button{width:44px;padding:0}
+ #map-button .toolbar-label{display:none}
+ /* 触屏没有滚轮，缩放胶囊只是误导 */
+ [data-panel="editor"] .canvas-zoom{display:none}
+ [data-panel="editor"] .canvas-zoom{right:8px;bottom:8px;min-height:26px;padding:0 9px;font-size:11px}
+ .opening-chapter-jump button{min-height:34px}
 }

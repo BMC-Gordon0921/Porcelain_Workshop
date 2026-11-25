@@ -108,12 +108,12 @@ export function clayEdge(pixels,x,y,radius=18,tolerance=0,axis=null){
 export function pushClay(pixels,x0,y0,x1,y1,radius=18,grab=undefined,options={}){
  if(!Number.isFinite(x0+y0+x1+y1+radius))return false;
  radius=Math.max(14,Math.min(26,radius));
- const dx=x1-x0,dy=y1-y0;if(Math.hypot(dx,dy)<.75)return false;
+ const dx=x1-x0,dy=y1-y0;if(Math.hypot(dx,dy)<.3)return false;
  // 抓取方向跟随主拖动方向：抓到水平边就只认水平拖动，抓到竖直边只认垂直拖动。
  const wantsHorizontal=Math.abs(dx)>=Math.abs(dy);
  if(grab&&grab.horizontal!==wantsHorizontal)grab=null;
  // 任意位置都能起笔：先按拖动轴找近边，深按在瓷泥内部时放宽搜索，只移动手下那一带。
- grab=grab||clayEdge(pixels,x0,y0,radius,5,wantsHorizontal)||clayEdge(pixels,x0,y0,radius,90,wantsHorizontal);
+ grab=grab||clayEdge(pixels,x0,y0,radius,10,wantsHorizontal)||clayEdge(pixels,x0,y0,radius,90,wantsHorizontal);
  if(!grab)return false;
  const {horizontal,fromLeft}=grab,along=horizontal?grab.x:grab.y,cross=horizontal?grab.y:grab.x,rawDelta=horizontal?dx:dy,delta=options.target?Math.max(-28,Math.min(28,rawDelta)):rawDelta,before=pixels.slice();let changed=false;
  const index=(a,b)=>horizontal?b*SIZE+a:a*SIZE+b;
