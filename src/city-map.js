@@ -4,6 +4,7 @@ import logoMark from './assets/logo-mark.png';
 import {createSceneCarousel} from './scene-carousel.js';
 import {ORDERS_PER_SCENE} from './campaign.js';
 import {createOpeningTitle} from './opening-title.js';
+import {openOverlay,closeOverlay} from './overlay.js';
 
 export function mapMarkup({selected=0,completed=[],mode='atlas',from=null}={}){
  const owned=Array.isArray(completed)?completed:Array.from({length:completed},(_,i)=>i);
@@ -28,7 +29,7 @@ export function createOpening(host,{getState,onStart,onNewGame,onPorcelain}){
   host.querySelector('.opening-brand').onclick=returnHome;
    host.querySelectorAll('[data-chapter]').forEach(button=>button.onclick=()=>sceneCarousel?.show(Number(button.dataset.chapter)));
  host.querySelectorAll('[data-chapter-step]').forEach(button=>button.onclick=()=>{const step=Number(button.dataset.chapterStep)||0;sceneCarousel?.show((selected+step+PLACES.length)%PLACES.length);});
-  host.querySelector('#opening-new-game')?.addEventListener('click',()=>{stop();host.classList.add('hidden');onNewGame();});
+  host.querySelector('#opening-new-game')?.addEventListener('click',()=>{stop();closeOverlay(host);onNewGame();});
   onPorcelain?.(host.querySelector('#prologue-carousel'));
   title=createOpeningTitle(host.querySelector('.opening-title'));
   host.querySelectorAll('[data-intro-beat]').forEach(button=>button.onclick=()=>showBeat(Number(button.dataset.introBeat)));
@@ -71,13 +72,13 @@ export function createOpening(host,{getState,onStart,onNewGame,onPorcelain}){
  async function start(index){
   if(busy||!getState().canSelectScene(index))return;busy=true;updateChoice();sceneCarousel?.setPaused(true);
   const success=await onStart(index);busy=false;
-  if(success!==false){stop();host.classList.add('hidden');}else{sceneCarousel?.setPaused(paused);updateChoice();}
+  if(success!==false){stop();closeOverlay(host);}else{sceneCarousel?.setPaused(paused);updateChoice();}
  }
  function skip(){if(stage==='intro'&&!getState().startedJourney){unfold();return;}start(getState().startedJourney?getState().scene:selected);}
 
  function show(animate=true,startAt='intro'){
   stop();stage='intro';introElapsed=0;last=0;narrative=-1;paused=false;stopped=false;
-  host.classList.remove('hidden');host.dataset.openingStage='intro';render();host.scrollTop=0;
+  openOverlay(host);host.dataset.openingStage='intro';render();host.scrollTop=0;
   sceneCarousel=createSceneCarousel(host.querySelector('#opening-background'),{initial:getState().startedJourney?getState().scene:0,presentation:'background',onChange:updateScene});
   syncPause();drawIntro();if(startAt==='map'){unfold();return;}if(animate&&!reduced.matches)raf=requestAnimationFrame(tick);
  }

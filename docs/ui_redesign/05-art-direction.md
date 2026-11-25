@@ -379,3 +379,22 @@
 
 **实测**：灯箱 560×560、Esc 关闭后 `lightboxClosed=true`；滚轮 2.13×（`view=29.7,29.7`，即 `(112-112/2.13)/2` 的光标锚点值）、右键拖 → `37.9,35.6`、点胶囊回 1.00；慢推 1px 步进也能落笔（`edits 0→4`）。地图页 desktop/phone aria 一致，点「下一站」`active 0→1`、点「上一站」回 0；`#map-button` 桌面 81px 带字、手机 44px 无字。结算探针 1920/1600/1440/1366/1280/1024 六档全部 `bodySW==bodyCW`、`cardOverflow=0`，1366×768 自动用 34px 数字。`npm test` 101 passed，无 pageerror。
 
+
+## 22. 窗口开合过渡（第二十轮）
+
+**需求**：窗口的打开/关闭/切换要有过渡动画，合进 1.1.9（不新开版本号）。拍板：全弹层统一、纸页轻抬 120–180ms、含关闭动画且退场期间不误触下层。
+
+**规格**：淡入 + 上移 10px（`xz-panel-in`），关闭反向（`xz-panel-out`：淡出 + 下移 8px + `scale(.995)`），时长 140ms（复用 `--xz-dur-fast`），缓动 `--xz-ease-out`。面板进场原本是 `--xz-dur-slow`(320ms)，改成 140ms 与退场对齐。
+
+**实现**：新增 `src/overlay.js`，`hidden` 仍是唯一开关状态。
+- `openOverlay(el)`：清掉在途的关闭定时器、去掉 `is-closing` 与 `hidden`、去掉 `aria-hidden`。
+- `closeOverlay(el,done)`：先挂 `is-closing` + `aria-hidden=true`（视觉退场，DOM 仍在，所以这一帧点不到下层），`140ms` 后再挂 `hidden`；已关/已在退场则直接返回，不会重复排定时器；`prefers-reduced-motion: reduce` 下跳过动画，立即 `hidden`。
+- `isOverlayOpen(el)`：`hidden` 与 `is-closing` 都算关。`syncPanelOpen()` 改用它，所以按下关闭的瞬间 `data-panel-open` 就被移除，时钟与世界交互不会等那 140ms。
+
+**接线**：`main.js` 的 `taskShell/closeTask/showHelp/hideHelp/openChangelog/hideChangelog`、`city-map.js` 的 `#welcome` 开合全部改走 helper。⋯ 菜单用 `moreOpen` 变量记住逻辑状态（`setMoreMenu`），避免 `is-closing` 期间被当成「还开着」重复处理，Esc 与返回键都认它。面板内切换（再次 `taskShell`）时把 `.task-panel` 的 `animation` 置空 → 强制回流 → 还原，重播一次进场（实测动画 `startTime` 12694 → 13523）。参考图灯箱的 `closeLightbox(dialog)` 同规格：挂 `is-closing` → 140ms 后 `close()` + `remove()`，`cancel` 事件（Esc）也走它，所以不会再被全局 Esc 关掉编辑器。
+
+**CSS**（`art-direction.css` 末尾 §22）：`.overlay{transition:opacity 140ms}` + `.overlay.is-closing{opacity:0}`、退场时内部 `task/help/reader-panel` 跑 `xz-panel-out`；`.opening-screen` 同款淡出（`is-closing` 顺带 `pointer-events:none`）；`#more-menu` 进场 `xz-menu-in`（`translateY(-4px)`）退场 `is-closing`；`.ref-lightbox[open]` 进场 + `::backdrop` 淡入（复用已有 `backdrop-in`）。`prefers-reduced-motion` 下把这三处 transition 归零、面板退场动画置 `none`。
+
+**实测**（1440×900 / 393×852，均无 pageerror）：面板进场 `animationName=xz-panel-in`、`animationDuration=0.14s`；点关闭后 60ms 内 `#task-overlay` 已是 `overlay is-closing`、`data-panel-open` 已移除，450ms 后 `hidden` 且无残留 `is-closing`；连续开关 20 次最终 `hidden`、`is-closing=false`；⋯ 菜单退场期间点回顶栏不会重新打开（`#more-menu` 保持 hidden）；手机 393 宽同样有进场 140ms 与退场；`reducedMotion:'reduce'` 下点关闭立刻 `hidden`、不挂 `is-closing`。灯箱 `[open]` 进场 0.14s，点击后 `ref-lightbox is-closing`，500ms 后节点移除。开局进世界时 `#welcome` 的 class 轨迹是 `opening-screen → opening-screen is-closing → opening-screen hidden`（场景加载把定时器拖到约 240ms 才落 hidden，属主线程忙，不是逻辑问题）。
+
+**坑**：`src/overlay.js` 与 CSS 注释里的新汉字会被圆体子集脚本收集，新增文案后要跑 `npm run font:round`，否则 `tests/` 的字体覆盖检查会红（本轮重打后 glyphs=1144、codepoints=1129）。Windows 上 Vite dev server 占着 `src/main.js`，编辑会 `ReplaceFileW EIO (Win32 32)`，先停 dev server 再改。headless swiftshader 下渲染帧率约 3fps，`getComputedStyle(...).opacity` 的逐帧采样会滞后，验证退场请认 class 变化与最终 `hidden`，别用 opacity 中间值判断。

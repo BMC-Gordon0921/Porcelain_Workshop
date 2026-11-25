@@ -4,6 +4,7 @@ import {renderCoach, enableCoach, coachEnabled, panelStep} from './coach.js';
 import {startSpotlight, maybeStartSpotlight} from './spotlight.js';
 import {createPanelTapCooldown} from './platform/tap-cooldown.js';
 import {canvasPoint} from './platform/canvas-metrics.js';
+import {openOverlay,closeOverlay,isOverlayOpen,OVERLAY_MS} from './overlay.js';
 import './platform/three-compat.js';
 import './style.css';
 import './challenge.css';
@@ -159,25 +160,33 @@ function updateTutorial(){
 }
 function cleanupTask(){releaseStoke();activeTask?.editor?.finish();activeTask?.preview?.dispose();activeTask?.cityMap?.dispose();activeTask?.upgrades?.dispose();}
 function syncPanelOpen(){
- const open=!$('task-overlay').classList.contains('hidden')||!$('help-overlay').classList.contains('hidden');
+ const open=isOverlayOpen($('task-overlay'))||isOverlayOpen($('help-overlay'))||isOverlayOpen($('changelog-overlay'));
  const root=document.documentElement;
  if(open)root.dataset.panelOpen='1';else root.removeAttribute('data-panel-open');
 }
 function taskShell(kind,eyebrow,title,description,body,footer=(touchUI()?'进度自动保存。':'进度自动保存。按 Esc 返回工坊。')){
- syncClocks();cleanupTask();joyEnd();$('close-task').setAttribute('aria-label','关闭面板');activeTask={kind};world.setInteractionEnabled(false);keys.clear();clearTimeout(toastTimeout);$('toast').classList.remove('show');$('task-overlay').classList.remove('hidden');document.querySelector('.task-panel').classList.toggle('atlas-panel',kind==='citymap'||kind==='travel');document.querySelector('.task-panel').classList.toggle('wide-panel',['supply','editor','kiln','upgrades','result','brief','journey','decal','crafted','collection','citymap','travel'].includes(kind));
+ syncClocks();cleanupTask();joyEnd();$('close-task').setAttribute('aria-label','关闭面板');activeTask={kind};world.setInteractionEnabled(false);keys.clear();clearTimeout(toastTimeout);$('toast').classList.remove('show');const reopened=isOverlayOpen($('task-overlay'));openOverlay($('task-overlay'));if(reopened&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const shell=document.querySelector('.task-panel');shell.style.animation='none';void shell.offsetWidth;shell.style.animation='';}document.querySelector('.task-panel').classList.toggle('atlas-panel',kind==='citymap'||kind==='travel');document.querySelector('.task-panel').classList.toggle('wide-panel',['supply','editor','kiln','upgrades','result','brief','journey','decal','crafted','collection','citymap','travel'].includes(kind));
  document.querySelector('.task-panel').dataset.panel=kind;
  $('task-eyebrow').textContent=eyebrow;$('task-title').textContent=title;$('task-description').textContent=description;$('task-body').innerHTML=body;tutorialKey='';$('task-footer').innerHTML=footer+'<button type="button" id="task-help" class="secondary-button">玩法说明</button>';$('task-help').onclick=showHelp;const actionRow=$('task-body').querySelector('.task-action-row');if(actionRow)$('task-footer').prepend(actionRow);document.querySelector('.task-panel').scrollTop=0;$('close-task').focus({preventScroll:true});syncPanelOpen();syncClocks();updateEfficiency();save();
 }
-function closeTask(){const settingsClosed=activeTask?.kind==='settings';syncClocks();releaseStoke();cleanupTask();state.endStation();activeTask=null;keys.clear();$('task-overlay').classList.add('hidden');syncPanelOpen();syncClocks();updateUI();if(settingsClosed)$('settings-button').focus({preventScroll:true});}
+function closeTask(){const settingsClosed=activeTask?.kind==='settings';syncClocks();releaseStoke();cleanupTask();state.endStation();activeTask=null;keys.clear();closeOverlay($('task-overlay'));syncPanelOpen();syncClocks();updateUI();if(settingsClosed)$('settings-button').focus({preventScroll:true});}
 $('close-task').onclick=closeTask;
 function routeTask(){if(state.canWork)openBrief();else if(state.completed)openCollection();else openJourney();}
+function closeLightbox(dialog){
+ const finish=()=>{dialog.close();dialog.remove();};
+ if(dialog.classList.contains('is-closing'))return;
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){finish();return;}
+ dialog.classList.add('is-closing');
+ setTimeout(finish,OVERLAY_MS);
+}
 function openRefLightbox(){
  if(document.querySelector('.ref-lightbox'))return;
  const p=state.preset,dialog=document.createElement('dialog');
  dialog.className='ref-lightbox';dialog.setAttribute('aria-label','订单参考图');
  dialog.innerHTML=`<figure><canvas width="640" height="640" aria-hidden="true"></canvas><figcaption>${p.name} · 点击任意处关闭</figcaption></figure>`;
  drawSculpture(dialog.querySelector('canvas'),state.target,{background:false});
- dialog.addEventListener('click',()=>dialog.close());
+ dialog.addEventListener('click',()=>closeLightbox(dialog));
+ dialog.addEventListener('cancel',event=>{event.preventDefault();closeLightbox(dialog);});
  dialog.addEventListener('close',()=>dialog.remove());
  document.body.append(dialog);dialog.showModal();
 }
@@ -202,17 +211,18 @@ function schedulePreload(activeIndex){
 
 $('map-button').onclick=()=>openCityMap();
 $('reset-view').onclick=()=>{if(started&&!activeTask&&!helpOpen)world.resetView();};
-function showHelp(){syncClocks();releaseStoke();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();$('help-overlay').classList.remove('hidden');$('help-overlay').querySelector('.reader-body').scrollTop=0;$('help-done').focus({preventScroll:true});syncPanelOpen();syncClocks();updateEfficiency();save();}
-function hideHelp(){syncClocks();helpOpen=false;$('help-overlay').classList.add('hidden');syncPanelOpen();keys.clear();syncClocks();updateEfficiency();}
+function showHelp(){syncClocks();releaseStoke();activeTask?.editor?.finish();helpOpen=true;world.setInteractionEnabled(false);keys.clear();openOverlay($('help-overlay'));$('help-overlay').querySelector('.reader-body').scrollTop=0;$('help-done').focus({preventScroll:true});syncPanelOpen();syncClocks();updateEfficiency();save();}
+function hideHelp(){syncClocks();helpOpen=false;closeOverlay($('help-overlay'));syncPanelOpen();keys.clear();syncClocks();updateEfficiency();}
 $('help-button').onclick=showHelp;$('close-help').onclick=hideHelp;$('help-done').onclick=hideHelp;
 $('replay-tutorial').onclick=()=>{setMoreMenu(false);if(helpOpen)hideHelp();else if(activeTask)closeTask();enableCoach();const step=state.restartTutorial();tutorialKey='';updateTutorial();startSpotlight({onDone:()=>toast(step?`教学已重开：${step.title}`:'教学已重开。')});};
 // 顶栏 ⋯ 菜单：低频入口（设置/帮助/更新/语言/横屏/声音）收在这里，顶栏只留地图与升级。
 const moreMenu=$('more-menu'),moreButton=$('more-button');
-function setMoreMenu(open){moreMenu.classList.toggle('hidden',!open);moreButton.setAttribute('aria-expanded',String(open));}
-moreButton.onclick=()=>setMoreMenu(moreMenu.classList.contains('hidden'));
+let moreOpen=false;
+function setMoreMenu(open){if(open===moreOpen)return;moreOpen=open;moreButton.setAttribute('aria-expanded',String(open));if(open)openOverlay(moreMenu);else closeOverlay(moreMenu);}
+moreButton.onclick=()=>setMoreMenu(!moreOpen);
 moreMenu.addEventListener('click',event=>{if(event.target.closest('#settings-button,#help-button,#rotate-button,#replay-tutorial'))setMoreMenu(false);});
 document.addEventListener('click',event=>{if(!event.target.closest('.top-actions'))setMoreMenu(false);});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!moreMenu.classList.contains('hidden')){setMoreMenu(false);event.stopPropagation();}},true);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&moreOpen){setMoreMenu(false);event.stopPropagation();}},true);
 const CHANGELOG_SEEN_KEY='terra-changelog-seen';
 const changelogSections=parseChangelog(rawChangelog);
 let changelogOpen=false;
@@ -231,10 +241,10 @@ function renderChangelog(){
 function openChangelog(){
  if(activeTask)return;
  renderChangelog();$('changelog-overlay').querySelector('.reader-body').scrollTop=0;changelogOpen=true;helpOpen=true;releaseStoke();world.setInteractionEnabled(false);keys.clear();
- $('changelog-overlay').classList.remove('hidden');$('changelog-done').focus({preventScroll:true});syncClocks();updateEfficiency();
+ openOverlay($('changelog-overlay'));$('changelog-done').focus({preventScroll:true});syncClocks();updateEfficiency();
 }
 function hideChangelog(){
- changelogOpen=false;helpOpen=false;$('changelog-overlay').classList.add('hidden');markSeenVersion(latestVersion(changelogSections));keys.clear();syncClocks();updateEfficiency();
+ changelogOpen=false;helpOpen=false;closeOverlay($('changelog-overlay'));markSeenVersion(latestVersion(changelogSections));keys.clear();syncClocks();updateEfficiency();
 }
 function maybeShowChangelog(){
  const latest=latestVersion(changelogSections);if(!latest)return;
@@ -400,7 +410,7 @@ function openCityMap(){
 
 function requestNewGame(){
  taskShell('restart','重新开启旅程','从第一间工坊重新开始？','会清空本次旅程的关卡、硬币和四件藏品。', '<div class="task-action-row"><button class="secondary-button" id="cancel-new">取消</button><button class="primary-button" id="confirm-new">重新开始</button></div>');
- $('cancel-new').onclick=closeTask;$('confirm-new').onclick=()=>{state=new SculptureChallenge();started=true;$('welcome').classList.add('hidden');updateUI();opening.show(true);started=false;closeTask();};
+ $('cancel-new').onclick=closeTask;$('confirm-new').onclick=()=>{state=new SculptureChallenge();started=true;closeOverlay($('welcome'));updateUI();opening.show(true);started=false;closeTask();};
 }
 function confetti(){for(let i=0;i<25;i++){const e=document.createElement('div');e.className='confetti';e.style.cssText=`left:60%;top:40%;background:${['#315fa9','#e1bc76','#d5a0ba'][i%3]};--dx:${Math.cos(i*2.4)*(100+i*7)}px;--dy:${140+Math.sin(i*7)*140}px;animation-delay:${i*.02}s`;$('app').append(e);setTimeout(()=>e.remove(),3000);}}
 function stationMessage(id){return {clay:'领取完整瓷泥',wheel:'推压瓷泥，调整形状',carve:'用刻刀去除多余瓷泥',paint:state.fired?'烧成后补绘釉色':'选择颜色，亲手绘制',kiln:state.kilnResult?'查看火候结果':state.kiln?'继续烧制瓷器':(touchUI()?'烧制瓷器 · 按住鼓风':'烧制瓷器 · 按住空格鼓风'),serve:state.canWork?'提交作品并评分':'购买贴画与制作成品'}[id];}
@@ -645,7 +655,7 @@ $('home-button').onclick=()=>returnToOpening();
 const pushBack=()=>{try{history.pushState({terraBack:1},'');}catch{}};
 pushBack();
 window.addEventListener('popstate',()=>{
- if(!moreMenu.classList.contains('hidden')){setMoreMenu(false);pushBack();return;}
+ if(moreOpen){setMoreMenu(false);pushBack();return;}
  if(!$('help-overlay').classList.contains('hidden')){hideHelp();pushBack();return;}
  if(activeTask){closeTask();pushBack();return;}
  if(started){returnToOpening();pushBack();}

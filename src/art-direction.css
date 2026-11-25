@@ -162,7 +162,7 @@ button:disabled::after{display:none}
  border:1px solid var(--xz-line);border-radius:var(--xz-r-lg);
  box-shadow:var(--xz-shadow-2);
  color:var(--xz-ink);
- animation:xz-panel-in var(--xz-dur-slow) var(--xz-ease-out) both}
+ animation:xz-panel-in var(--xz-dur-fast) var(--xz-ease-out) both}
 .task-panel::before,.help-panel::before{
  content:"";position:absolute;inset:7px;border:1px solid color-mix(in srgb,var(--xz-line) 85%,transparent);
  border-radius:calc(var(--xz-r-lg) - 7px);pointer-events:none;z-index:0}
@@ -838,3 +838,21 @@ html[data-shell=full] .task-footer button,html[data-shell=full] .task-action-row
  [data-panel="editor"] .canvas-zoom{right:8px;bottom:8px;min-height:26px;padding:0 9px;font-size:11px}
  .opening-chapter-jump button{min-height:34px}
 }
+
+/* ========== 22. 窗口开合过渡：纸页轻抬（140ms 进 / 140ms 出） ========== */
+.overlay{transition:opacity var(--xz-dur-fast) var(--xz-ease-out)}
+.overlay.is-closing{opacity:0}
+.overlay.is-closing .task-panel,
+.overlay.is-closing .help-panel,
+.overlay.is-closing .reader-panel{animation:xz-panel-out var(--xz-dur-fast) var(--xz-ease-out) both}
+@keyframes xz-panel-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.995)}}
+.opening-screen{transition:opacity var(--xz-dur-fast) var(--xz-ease-out)}
+.opening-screen.is-closing{opacity:0;pointer-events:none}
+#more-menu{animation:xz-menu-in var(--xz-dur-fast) var(--xz-ease-out) both;transition:opacity var(--xz-dur-fast) var(--xz-ease-out),transform var(--xz-dur-fast) var(--xz-ease-out)}
+#more-menu.is-closing{opacity:0;transform:translateY(-4px);pointer-events:none}
+@keyframes xz-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.ref-lightbox[open]{animation:xz-panel-in var(--xz-dur-fast) var(--xz-ease-out) both}
+.ref-lightbox[open]::backdrop{animation:backdrop-in var(--xz-dur-fast) var(--xz-ease-out) both}
+.ref-lightbox.is-closing{opacity:0;transition:opacity var(--xz-dur-fast) var(--xz-ease-out)}
+.ref-lightbox.is-closing figure{animation:xz-panel-out var(--xz-dur-fast) var(--xz-ease-out) both}
+@media (prefers-reduced-motion: reduce){.overlay,.opening-screen,#more-menu,.ref-lightbox{transition:none}.overlay.is-closing .task-panel,.overlay.is-closing .help-panel{animation:none}}
