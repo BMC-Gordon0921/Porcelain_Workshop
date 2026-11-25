@@ -668,5 +668,7 @@ installPreviewRetry($('app'));updateUI();requestAnimationFrame(frame);maybeShowC
 // 切后台/退出前把去抖中的存档落盘，容器里可能随时冻结页面
 window.addEventListener('pagehide',flushStorage);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushStorage();});
+// 站点数据服务写失败（限流/断网）：告诉玩家进度仍在本机，别以为丢档了
+window.addEventListener('terra:storage-error',e=>toast((e.detail&&e.detail.message)||'存档同步失败，进度已保存在本机。','deny'));
 }
 boot();

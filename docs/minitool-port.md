@@ -358,3 +358,27 @@ GAME_URL=… node qa/capture.mjs                         # 桌面 1440 十屏像
 
 实测（2026-11-23）：手机 390×844 拿到 `adapt/touch/sm/shell=full`，摇杆可见、面板 `border-radius:0 + position:absolute`；桌面 1440×900 拿到 `adapt/keyboard/wide/shell=card`，摇杆不渲染、面板仍是 22px 圆角卡片；桌面十屏像素差 ≤1.15 mean（自身噪声 ≤0.63，属动画/粒子相位）。
 
+## 12. 站点数据服务（PS SDK）：部署在 2AIGC Pages 时的云存档
+
+2AIGC Pages 提供同源的数据服务脚本 `https://pages.2aigc.space/ps-sdk.js`（`PS.kv` / `PS.me` / `PS.col`）。小工具要离线可用，所以**不往 index.html 里塞 `<script>`**，而是运行时按需注入：
+
+| 情况 | 存储去哪 | 谁决定 |
+|---|---|---|
+| 小红书容器（有 `window.xhs.miniTool.getStorage`） | 容器存储 | `resolveTool()` 返回桥对象 |
+| 2AIGC Pages 域名下（https，且无容器桥） | 站点数据服务 `PS.me`，本地仍留一份镜像 | `loadSiteSdk()` 注入 SDK 成功 |
+| 其它静态托管 / 本地 http 预览 | `localStorage` | `browserStorageUsable()` |
+| 浏览器禁存储 | 内存（刷新丢档） | 兜底 |
+
+`src/platform/storage.js` 用一个 `mode` 变量（`ps` / `miniTool` / `localStorage` / `memory`）驱动读写分支；`main.js` 的 `boot()` 在第一次 `readStorage` 之前 `await initStorage([...])`。
+
+要点：
+
+- **同源**：SDK 里 `BASE='/_ps'`、请求都带 `credentials:'same-origin'`，脚本可以从 pages.2aigc.space 拉，但请求打回站点自己的域名。所以只在页面是 `https:` 时才注入（本地 `http://127.0.0.1` 预览不拉外部脚本）。
+- **体积**：整份存档 51KB（`sceneProgress` 25KB + 四站 112×112 像素网格 25KB），`CompressionStream('gzip')` + base64 后只剩约 1.2KB（≈42×），切成 ≤7000 字符的片（`PS_CHUNK`），每片存成 `<key>__c<i>`，片数与时间写进 `<key>__n` 的 `{n, at}`；单行 8KB 上限留了余量。
+- **同步顺序**：先并行写切片，再写元数据，最后删掉上一次多出来的旧切片 —— 中途失败只会读到旧元数据，不会读到半截存档。
+- **本地镜像**：本地同时存原样的 `<key>` 与 `<key>__at`。启动时比 `__at` 与云端 `at`：云端新就回写镜像，本地新就把这次进度排进队列补传（离线做的进度也不丢）。
+- **失败提示**：写失败时数据留在内存队列、4 秒后重试，并 `dispatchEvent('terra:storage-error')`（30 秒节流），`main.js` 接住弹「存档上传失败…进度已保存在本机」的朱砂色 toast。
+- **键名限制**：`/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/`，最长 64 字符；现有键最长 `terra-porcelain-journey-v6__c0`（30 字符），加后缀仍安全。
+- **测试**：`tests/storage-ps.test.js` 用假 `PS` 覆盖四件事（切片上传后新实例读回逐字节一致、变短时清旧片、本地新则补传、写失败不丢数据且只发一次事件）；`qa/probe-ps-site.mjs` 在 `https://kiln-day.pages.2aigc.space` 路由下用假 SDK 跑真产物，实测删掉本地镜像后刷新能从云端恢复 51098 字节。
+
+⚠️ 重试定时器要 `unref`（`flushTimer.unref?.()`），否则 `node --test` 进程不退出，看起来像测试卡死。
