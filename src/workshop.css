@@ -28,7 +28,7 @@
 @media(min-width:761px){.sculpt-canvas-wrap{width:min(100%,42vh,410px)}.station-upgrade-strip .workbench-card{display:grid;grid-template-columns:1fr auto;gap:3px 12px}.station-upgrade-strip .workbench-card>.workbench-heading,.station-upgrade-strip .workbench-card>p,.station-upgrade-strip .workbench-card>small{grid-column:1}.station-upgrade-strip .workbench-card>button,.station-upgrade-strip .workbench-card>.max-level{grid-column:2;grid-row:1 / 4;align-self:center;margin:0}}
 
 .kiln-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
-.kiln-timer{font-family:'Fraunces',Georgia,serif;font-size:30px;line-height:1;color:#7c4a2a;font-variant-numeric:tabular-nums}
+.kiln-timer{font-family:var(--xz-font-display);font-size:30px;line-height:1;color:#7c4a2a;font-variant-numeric:tabular-nums}
 .kiln-timer small{font-size:13px;margin-left:2px}
 .kiln-band-label{font-size:11px;color:#8d7a5d;text-align:right;line-height:1.4}
 #kiln-center line{stroke:#fff8e8;stroke-width:2;stroke-dasharray:2 3;opacity:.92}

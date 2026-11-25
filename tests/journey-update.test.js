@@ -12,13 +12,15 @@ function prepareTutorial(c){
  stroke(c,'carve',[12,75,15,75,2],'cut');
  stroke(c,'paint',[45,50,60,50,4],'paint');c.endStation();
 }
-test('tutorial requires real ordered actions, persists, and undo restores its checkpoint',()=>{
+test('tutorial requires real ordered actions, persists, and undo no longer rewinds teaching',()=>{
  let c=new SculptureChallenge();assert.equal(c.collectClay(),false);assert.equal(c.tutorial.step,'move');
  c.advanceTutorial('move');c=restore(c);assert.equal(c.tutorial.step,'clay');c.collectClay();
  assert.equal(c.startStation('carve'),false);assert.equal(c.startStation('paint'),false);
  c.startStation('wheel');c.beginStroke();c.finishStroke();assert.equal(c.tutorial.step,'wheel');
  stroke(c,'wheel',[8,40,24,40,18],'push');assert.equal(c.tutorial.step,'carve');
- c.undo();assert.equal(c.tutorial.step,'wheel');c.redo();assert.equal(c.tutorial.step,'carve');
+ assert.equal(c.hasShape,true);
+ c.undo();assert.equal(c.tutorial.step,'carve');assert.equal(c.hasShape,false);
+ c.redo();assert.equal(c.tutorial.step,'carve');assert.equal(c.hasShape,true);
  c=restore(c);assert.equal(c.tutorial.step,'carve');assert.equal(c.startStation('paint'),false);
  stroke(c,'carve',[12,75,15,75,2],'cut');assert.equal(c.tutorial.step,'paint');
  c.collectClay();assert.equal(c.tutorial.step,'wheel');assert.deepEqual(c.piece.pixels,makeBlank());

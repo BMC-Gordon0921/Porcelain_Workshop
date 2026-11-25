@@ -161,10 +161,15 @@ export function createBowlPreview(canvas,{index=0,decorated=false,onApply=null,a
  const setBowl=next=>{scene.remove(bowl);disposeModel(bowl);bowl=bowlModel(next,true);scene.add(bowl);renderer.render(scene,camera);};
  return {setBowl,decorate(){setBowl(index);},snapshot(){renderer.render(scene,camera);return canvas.toDataURL('image/png');},dispose(){disposed=true;cancelAnimationFrame(raf);observer.disconnect();for(const [event,fn] of [['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',cancel]])canvas.removeEventListener(event,fn);disposeModel(bowl);environment.dispose();renderer.dispose();renderer.forceContextLoss();}};
 }
-let thumbPreview=null;
+let thumbPreview=null,thumbHost=null;
 export function bowlImage(index){
  if(images.has(index))return images.get(index);
- // One thumbnail renderer for every scene; a fresh context per scene costs ~200ms.
- thumbPreview??=createBowlPreview(document.createElement('canvas'),{decorated:true,animate:false});
+ // 缩略图渲染器只建一次；画布必须挂进文档，否则 clientWidth 为 0、快照是空白。
+ if(!thumbPreview){
+  thumbHost=document.createElement('canvas');thumbHost.width=thumbHost.height=320;
+  thumbHost.style.cssText='position:fixed;left:-9999px;top:0;width:320px;height:320px;pointer-events:none';
+  document.body.append(thumbHost);
+  thumbPreview=createBowlPreview(thumbHost,{decorated:true,animate:false});
+ }
  thumbPreview.setBowl(index);const url=thumbPreview.snapshot();images.set(index,url);return url;
 }

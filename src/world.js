@@ -169,7 +169,7 @@ export function createWorld(canvas,{preview=false}={}) {
  const homeTarget=TARGET.clone();
  let sceneBounds=null;
  const localPoint=new THREE.Vector3(), cameraRight=new THREE.Vector3(), groundUp=new THREE.Vector3();
- const orbit={azimuth:Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),polar:Math.acos(HOME_OFFSET.y/HOME_OFFSET.length()),radius:HOME_OFFSET.length(),zoom:1};
+ const orbit={azimuth:Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),polar:Math.acos(HOME_OFFSET.y/HOME_OFFSET.length()),radius:HOME_OFFSET.length(),zoom:1.22};
  let cameraTween=null;
  const POLAR_MIN=THREE.MathUtils.degToRad(24),POLAR_MAX=Math.PI/2,ZOOM_MIN=.62,ZOOM_MAX=2.6;
  const camera=new THREE.OrthographicCamera(-10,10,7,-7,.1,140);
@@ -214,9 +214,9 @@ export function createWorld(canvas,{preview=false}={}) {
  function setInteractionEnabled(value){interactionEnabled=!!value;if(!interactionEnabled)gesture.clear();}
  function resetView(){
   const toAz=Math.atan2(HOME_OFFSET.x,HOME_OFFSET.z),toPolar=Math.acos(HOME_OFFSET.y/HOME_OFFSET.length());
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){orbit.azimuth=toAz;orbit.polar=toPolar;orbit.zoom=1;TARGET.copy(homeTarget);placeCamera();return;}
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){orbit.azimuth=toAz;orbit.polar=toPolar;orbit.zoom=1.22;TARGET.copy(homeTarget);placeCamera();return;}
   const delta=THREE.MathUtils.euclideanModulo(toAz-orbit.azimuth+Math.PI,Math.PI*2)-Math.PI;
-  cameraTween={fromTarget:TARGET.clone(),fromAz:orbit.azimuth,fromPolar:orbit.polar,fromZoom:orbit.zoom,toAz:orbit.azimuth+delta,toPolar,toZoom:1,start:performance.now(),duration:650};
+  cameraTween={fromTarget:TARGET.clone(),fromAz:orbit.azimuth,fromPolar:orbit.polar,fromZoom:orbit.zoom,toAz:orbit.azimuth+delta,toPolar,toZoom:1.22,start:performance.now(),duration:650};
  }
  scene.add(new THREE.HemisphereLight(0xfff6dc,0xa7aa90,2.1));const sun=new THREE.DirectionalLight(0xffe3b3,3.4);sun.position.set(-3,14,7);sun.castShadow=true;sun.shadow.mapSize.set(preview?1024:2048,preview?1024:2048);Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13,near:.1,far:45});sun.shadow.normalBias=.045;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);const fill=new THREE.DirectionalLight(0xd3e6df,1.2);fill.position.set(8,7,-5);scene.add(fill);
  const root=group(scene);
@@ -308,11 +308,11 @@ const flowerGeo=new THREE.SphereGeometry(.045,6,5),flowerMat=new THREE.MeshStand
  let width=1,height=1,carry=null,carryKey='',moving=false,walking=0,stride=0;
  // 用 clientWidth/clientHeight 而不是 getBoundingClientRect：手动旋屏时 #app 被 rotate(90deg)，
  // bbox 会把宽高互换，导致绘制缓冲与布局尺寸不一致（3D 被拉长）。clientWidth 不受 transform 影响。
- function resize(){const r=canvas.getBoundingClientRect();const cw=canvas.clientWidth||r.width,ch=canvas.clientHeight||r.height;width=Math.max(1,cw);height=Math.max(1,ch);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(15.8,24/aspect);if(!preview&&sceneBounds){
+ function resize(){const r=canvas.getBoundingClientRect();const cw=canvas.clientWidth||r.width,ch=canvas.clientHeight||r.height;width=Math.max(1,cw);height=Math.max(1,ch);renderer.setSize(width,height,false);let aspect=width/height;let vh=preview?Math.max(23,32/aspect):Math.max(12.6,19/aspect);const fit=width<760?1.1:1.06;if(!preview&&sceneBounds){
   const matrix=new THREE.Matrix4().lookAt(homeTarget.clone().add(HOME_OFFSET),homeTarget,camera.up).invert();
   for(const x of [sceneBounds.min.x,sceneBounds.max.x])for(const y of [sceneBounds.min.y,sceneBounds.max.y])for(const z of [sceneBounds.min.z,sceneBounds.max.z]){
    localPoint.set(x,y,z).sub(homeTarget).applyMatrix4(matrix);
-   vh=Math.max(vh,2.12*Math.abs(localPoint.y),2.12*Math.abs(localPoint.x)/aspect);
+   vh=Math.max(vh,fit*Math.abs(localPoint.y),fit*Math.abs(localPoint.x)/aspect);
   }
  }camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();}
  function canMove(x,z){const r=.37;if(x<-7.76||x>2.45||z<-4.9||z>5.13)return false;for(const s of STATIONS){if(x>s.x-s.w/2-r&&x<s.x+s.w/2+r&&z>s.z-s.d/2-r&&z<s.z+s.d/2+r)return false;}return true;}

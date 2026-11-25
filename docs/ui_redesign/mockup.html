@@ -1,0 +1,513 @@
+<title>terra · 界面重构原型</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --vase:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M38 16h24v9c0 4 2 6 6 10 8 8 12 18 12 30 0 20-14 32-30 32S20 85 20 65c0-12 4-22 12-30 4-4 6-6 6-10z' fill='%23DCE6F2' stroke='%239FB7D4' stroke-width='2'/%3E%3C/svg%3E");
+  --paper:#FAF6EF; --card:#FFFDF8; --line:#E3DACB; --ink:#2A2723; --ink2:#5C554A;
+  --sub:#8A8377; --blue:#2B4C8C; --blue-soft:#9FB7D4; --blue-wash:#EDF1F7;
+  --red:#B4442F; --amber:#B8862F; --radius:14px;
+  --shadow:0 10px 24px rgba(42,39,35,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EFE9DF;color:var(--ink);
+  font:15px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 20px 56px}
+.doc-head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+h1{font:600 20px/1.3 "Songti SC",Georgia,serif;margin:0}
+.doc-head p{margin:4px 0 0;color:var(--sub);font-size:13px}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:flex;background:#E4DCCC;border-radius:10px;padding:3px}
+.seg button{border:0;background:none;font:inherit;font-size:13px;padding:7px 13px;border-radius:8px;color:var(--ink2);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.08);font-weight:600}
+
+/* ---------- frame ---------- */
+.frame{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+.frame[data-device=desktop]{aspect-ratio:16/10.2}
+.frame[data-device=phone]{width:393px;height:790px;margin:0 auto;border-radius:26px;border:6px solid #D9D0BE}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;font-size:13px}
+.screen.on{display:flex}
+
+/* ---------- topbar ---------- */
+.top{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:rgba(255,253,248,.7)}
+.brand{font:600 15px/1 "Songti SC",serif;letter-spacing:.02em}
+.brand small{font:400 11px/1 inherit;color:var(--sub);letter-spacing:.08em}
+.mid{display:flex;align-items:center;gap:8px;margin:0 auto;color:var(--ink2);font-size:12px}
+.dots{display:flex;gap:4px}
+.dots i{width:16px;height:4px;border-radius:2px;background:var(--line);display:block}
+.dots i.done{background:var(--blue-soft)}
+.dots i.now{background:var(--blue)}
+.top-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.coin{display:flex;align-items:center;gap:5px;font-size:13px;font-variant-numeric:tabular-nums}
+.coin b{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--amber);color:#fff;font-size:9px}
+.tbtn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;color:var(--ink2);cursor:pointer}
+.tbtn:hover{border-color:var(--blue-soft);color:var(--blue)}
+
+/* ---------- world ---------- */
+.world{flex:1;display:grid;grid-template-columns:1fr 268px;min-height:0}
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 8px 0;min-height:0}
+.diorama{position:relative;width:min(100%,900px);margin-top:40px}
+.iso{width:100%;display:block;filter:drop-shadow(0 18px 22px rgba(70,55,30,.16))}
+.pin{position:absolute;transform:translate(-50%,-50%);border:1px solid var(--line);background:var(--card);
+  border-radius:999px;padding:4px 9px;font-size:11px;color:var(--ink2);white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.pin b{font-weight:600;color:var(--ink)}
+.pin.now{border-color:var(--blue);background:var(--blue);color:#fff;box-shadow:0 0 0 5px rgba(43,76,140,.14)}
+.pin.now b{color:#fff}
+.pin.done{color:var(--sub);background:#F3EEE4}
+.pin.done:after{content:" ✓";color:var(--blue)}
+.pin.lock{opacity:.55}
+
+.next{position:absolute;left:50%;top:14px;transform:translateX(-50%);width:290px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:13px 14px;text-align:left}
+.next .k{font-size:11px;color:var(--blue);letter-spacing:.08em}
+.next h3{margin:3px 0 2px;font:600 19px/1.25 "Songti SC",serif}
+.next p{margin:0 0 10px;font-size:12px;color:var(--sub);line-height:1.5}
+.next .row{display:flex;gap:8px;align-items:center}
+.btn{border:0;border-radius:10px;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;justify-content:center}
+.btn-main{background:var(--blue);color:#fff;height:44px;padding:0 18px;font-size:15px;font-weight:600}
+.btn-main:hover{background:#23407a}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink2);height:44px;padding:0 16px;font-size:14px}
+.btn-ghost:hover{border-color:var(--blue-soft);color:var(--blue)}
+.hintkey{font-size:11px;color:var(--sub)}
+
+.rail{border-left:1px solid var(--line);background:rgba(255,253,248,.55);padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.ord{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px;display:flex;gap:9px;align-items:center}
+.ord .thumb{width:38px;height:44px;flex:0 0 auto;border-radius:6px;background:var(--blue-wash);display:grid;place-items:center;font-size:9px;color:var(--blue-soft)}
+.ord .t1{font-size:11px;color:var(--sub)}
+.ord .t2{font:600 14px/1.2 "Songti SC",serif}
+.ord .goal{margin-left:auto;font-size:11px;color:var(--blue);border:1px solid var(--blue-soft);border-radius:999px;padding:2px 7px}
+.ordtime{font-size:11px;color:var(--sub);margin:-4px 2px 0}
+.steps{display:flex;flex-direction:column;gap:7px;margin-top:2px}
+.steps div{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub)}
+.steps i{width:9px;height:9px;border-radius:50%;border:1px solid var(--line);background:#fff;flex:0 0 auto}
+.steps .now{color:var(--ink);font-weight:600}
+.steps .now i{background:var(--blue);border-color:var(--blue)}
+.steps .done i{background:var(--blue-soft);border-color:var(--blue-soft)}
+.rail .spacer{flex:1}
+.rail-icons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rail-icons button{height:46px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:inherit;font-size:11px;color:var(--ink2);cursor:pointer}
+.keys{border-top:1px solid var(--line);padding:6px 16px;display:flex;gap:14px;align-items:center;font-size:11px;color:var(--sub);background:rgba(255,253,248,.7)}
+kbd{font:inherit;font-size:10px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:#fff;color:var(--ink2)}
+
+/* ---------- editor ---------- */
+.ed-top{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.flow{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.flow span{padding:3px 9px;border-radius:999px;border:1px solid transparent}
+.flow .done{color:var(--blue);background:var(--blue-wash)}
+.flow .now{color:#fff;background:var(--blue);font-weight:600}
+.ed-body{flex:1;display:grid;grid-template-columns:1fr 340px;gap:14px;padding:14px 16px;min-height:0}
+.canvas{position:relative;border:1px solid var(--line);border-radius:var(--radius);background:
+  repeating-linear-gradient(0deg,#F7F1E4 0 23px,#F3ECDD 23px 24px),
+  repeating-linear-gradient(90deg,#F7F1E4 0 23px,#F3ECDD 23px 24px);display:grid;place-items:center;overflow:hidden}
+.vase{font-size:11px;color:#C9BEA8;text-align:center}
+.ref{position:absolute;right:12px;top:12px;width:104px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px;text-align:center;font-size:10px;color:var(--sub);box-shadow:var(--shadow)}
+.ref .ph{height:74px;border-radius:6px;background:var(--blue-wash);display:grid;place-items:center;font-size:9px;color:var(--blue-soft);margin-bottom:4px}
+.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:13px 14px}
+.card h3{margin:0 0 8px;font:600 15px/1.3 "Songti SC",serif}
+.req{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:7px}
+.req li{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45}
+.req b{width:15px;height:15px;border:1px solid var(--blue-soft);border-radius:4px;flex:0 0 auto;margin-top:2px;display:grid;place-items:center;color:var(--blue);font-size:10px}
+.rule{font-size:11px;color:var(--sub);border-top:1px dashed var(--line);padding-top:8px}
+.tools{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.sw{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink2)}
+.sw i{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:block}
+.sw .sel{box-shadow:0 0 0 3px rgba(43,76,140,.2);border-color:var(--blue)}
+.sld{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--sub)}
+.sld .track{flex:1;height:4px;border-radius:2px;background:var(--line);position:relative}
+.sld .track:after{content:"";position:absolute;left:0;top:0;height:4px;width:42%;background:var(--blue-soft);border-radius:2px}
+.sld .knob{position:absolute;left:42%;top:-4px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--blue);transform:translateX(-50%)}
+.ed-foot{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--line);background:rgba(255,253,248,.8)}
+.ed-foot .l{margin-right:auto;font-size:11px;color:var(--sub)}
+
+/* ---------- preview / result ---------- */
+.panel{flex:1;display:flex;flex-direction:column;padding:18px 20px;min-height:0;overflow:auto}
+.panel h2{margin:0;font:600 24px/1.3 "Songti SC",serif}
+.panel .sub{margin:4px 0 14px;font-size:13px;color:var(--sub)}
+.cmp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.box{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:10px;text-align:center}
+.box .ph{height:150px;border-radius:10px;background:var(--blue-wash) var(--vase) center/auto 66% no-repeat;
+  display:grid;place-items:end center;padding-bottom:7px;font-size:10px;color:var(--sub)}
+.box .cap{margin-top:7px;font-size:12px;color:var(--sub)}
+.check{font-size:13px;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.check li{display:flex;gap:8px}
+.check b{color:var(--blue)}
+.score{border:1px solid var(--red);border-radius:var(--radius);background:#FBEFEA;padding:10px;text-align:center}
+.score .n{font:600 40px/1 "Songti SC",serif;color:var(--red);font-variant-numeric:tabular-nums}
+.score .m{font-size:11px;color:var(--red);margin-top:4px}
+.bars{margin-top:16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);padding:14px}
+.bar-row{display:grid;grid-template-columns:96px 1fr 104px;gap:10px;align-items:center;font-size:13px;margin-bottom:9px;white-space:nowrap}
+.bar{height:8px;border-radius:4px;background:#F0E9DA;overflow:hidden}
+.bar i{display:block;height:8px;background:var(--blue-soft)}
+.bar i.low{background:var(--red)}
+.tag{font-size:10px;color:var(--amber);border:1px solid #E4C98A;background:#FBF3E0;border-radius:999px;padding:1px 6px;margin-left:6px}
+.diag{margin-top:12px;font-size:13px;color:var(--ink2);background:var(--blue-wash);border-radius:10px;padding:10px 12px}
+.foot-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+
+/* ---------- intro & map ---------- */
+.intro{flex:1;display:grid;grid-template-columns:1.05fr .95fr;min-height:0}
+.intro-l{position:relative;display:flex;flex-direction:column;justify-content:center;padding:36px 40px;
+  background:radial-gradient(120% 90% at 15% 10%, #FBF6EA 0%, #F4ECDC 55%, #EFE5D2 100%)}
+.seal{width:54px;height:54px;border-radius:11px;background:var(--red);color:#fff;display:grid;place-items:center;
+  font:600 21px/1 "Songti SC",serif;letter-spacing:.04em;box-shadow:0 8px 18px rgba(180,68,47,.22)}
+.intro-l h2{margin:18px 0 8px;font:600 40px/1.12 "Songti SC",serif;letter-spacing:.02em}
+.intro-l .lede{margin:0;font-size:15px;color:var(--ink2);max-width:32ch;line-height:1.85}
+.intro-l .quote{margin:20px 0 0;padding-left:14px;border-left:2px solid var(--blue-soft);font-size:13px;color:var(--sub);max-width:34ch;line-height:1.85}
+.intro-r{border-left:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;padding:26px 26px 22px;gap:10px}
+.intro-r .k{font-size:11px;letter-spacing:.14em;color:var(--blue)}
+.intro-r h3{margin:2px 0 0;font:600 19px/1.4 "Songti SC",serif}
+.intro-r p{margin:0;font-size:13px;color:var(--ink2);line-height:1.75}
+.intro-r ul{margin:2px 0 0;padding-left:16px;font-size:13px;color:var(--ink2);line-height:1.85}
+.dots-nav{display:flex;gap:6px;margin-top:auto}
+.dots-nav i{width:22px;height:3px;border-radius:2px;background:var(--line)}
+.dots-nav i.on{background:var(--blue)}
+.intro-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.intro-actions .btn-main{height:50px;font-size:16px}
+.map-wrap{flex:1;display:grid;grid-template-columns:1fr 318px;min-height:0}
+.map-canvas{position:relative;background:#F6F0E2;display:grid;place-items:center;padding:12px}
+.map-canvas svg{width:100%;height:auto;max-height:100%}
+.map-rail{border-left:1px solid var(--line);background:var(--card);padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.foot-stat{font-size:12px;color:var(--sub)}
+.foot-stat b{color:var(--blue);font-weight:600}
+
+/* phone tweaks */
+.frame[data-device=phone] .top{padding:8px 10px;gap:8px}
+.frame[data-device=phone] .mid{display:none}
+.frame[data-device=phone] .brand small{display:none}
+.frame[data-device=phone] .tbtn{padding:5px 7px;font-size:11px}
+.frame[data-device=phone] .world{grid-template-columns:1fr}
+.frame[data-device=phone] .rail,.frame[data-device=phone] .keys{display:none}
+.frame[data-device=phone] .stage{padding:8px 10px 150px;justify-content:flex-start;gap:8px}
+.frame[data-device=phone] .diorama{width:100%;margin-top:4px}
+.frame[data-device=phone] .next{position:static;transform:none;width:100%;padding:11px 12px;order:-1}
+.frame[data-device=phone] .next h3{font-size:17px}
+.frame[data-device=phone] .ed-body{grid-template-columns:1fr;padding:10px}
+.frame[data-device=phone] .cmp{grid-template-columns:1fr 1fr}
+.frame[data-device=phone] .intro{grid-template-columns:1fr;overflow:auto}
+.frame[data-device=phone] .intro-l{padding:20px;justify-content:flex-start}
+.frame[data-device=phone] .intro-l h2{font-size:30px;margin-top:12px}
+.frame[data-device=phone] .intro-r{border-left:0;border-top:1px solid var(--line);padding:18px}
+.frame[data-device=phone] .map-wrap{grid-template-columns:1fr;grid-template-rows:auto auto;overflow:auto;align-content:start}
+.frame[data-device=phone] .map-canvas{padding:6px}
+.frame[data-device=phone] .map-rail{border-left:0;border-top:1px solid var(--line);max-height:none;overflow:visible}
+.frame[data-device=phone] .map-rail .card{display:none}
+.chip{display:flex;align-items:center;gap:8px;
+  border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 9px;font-size:11px;color:var(--ink2)}
+.chip .thumb{width:20px;height:24px;border-radius:4px;background:var(--blue-wash)}
+.chip b{font-weight:600;color:var(--ink);font-size:12px}
+.chip .goal{margin-left:auto;color:var(--blue)}
+.pad{position:absolute;left:0;right:0;bottom:14px;display:flex;align-items:flex-end;justify-content:center;gap:20px}
+.frame[data-device=phone] .pad{display:flex}
+.frame[data-device=phone] .chip{order:-2;margin-bottom:0}
+.frame[data-device=phone] .pin:not(.now){width:12px;height:12px;padding:0;border:0;font-size:0;overflow:hidden;
+  background:var(--blue-soft);box-shadow:0 0 0 3px rgba(255,253,248,.75)}
+.frame[data-device=phone] .pin.now{font-size:11px}
+.stick{width:96px;height:96px;border-radius:50%;border:1px solid var(--line);background:rgba(255,253,248,.85);
+  position:relative;box-shadow:var(--shadow)}
+.stick:after{content:"";position:absolute;left:50%;top:50%;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;
+  background:var(--blue-soft);opacity:.55}
+.act{width:74px;height:74px;border-radius:50%;border:0;background:var(--blue);color:#fff;font:600 15px/1 "Songti SC",serif;box-shadow:var(--shadow)}
+.mobile{display:none}
+.frame[data-device=phone] .mobile{display:flex}
+.legend{margin-top:18px;display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+.legend b{color:var(--ink);font-weight:600}
+</style>
+
+<div class="wrap">
+  <div class="doc-head">
+    <div>
+      <h1>terra · 界面重构原型（可点）</h1>
+      <p>每屏只留一条主线；「下一步」可直接点；判断依据放在做决定的那一刻。数据为示意。</p>
+    </div>
+    <div class="ctrl">
+      <div class="seg" id="dev">
+        <button data-dev="desktop" aria-pressed="true">桌面</button>
+        <button data-dev="phone" aria-pressed="false">手机</button>
+      </div>
+      <div class="seg" id="scr">
+        <button data-scr="intro" aria-pressed="false">开屏</button>
+        <button data-scr="world" aria-pressed="true">世界屏</button>
+        <button data-scr="editor" aria-pressed="false">制作</button>
+        <button data-scr="preview" aria-pressed="false">预览</button>
+        <button data-scr="result" aria-pressed="false">结算</button>
+        <button data-scr="map" aria-pressed="false">地图</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame" id="frame" data-device="desktop">
+    <!-- ============ INTRO ============ -->
+    <section class="screen" data-screen="intro">
+      <div class="top">
+        <div class="brand">terra <small>景德镇 · 古窑民俗</small></div>
+        <div class="top-right"><button class="tbtn">EN</button><button class="tbtn">跳过介绍</button></div>
+      </div>
+      <div class="intro">
+        <div class="intro-l">
+          <div class="seal">景德</div>
+          <h2>开窑啦</h2>
+          <p class="lede">十二月的窑火刚熄，你回到瓷都接手一间旧工坊。第一块瓷泥已经在取泥台上等你了。</p>
+          <p class="quote">「匠从八方来，器成天下走。」——这里的人，一生只做一件事。</p>
+        </div>
+        <div class="intro-r">
+          <div class="k">序 · 第一窑</div>
+          <h3>你会做三件事</h3>
+          <ul>
+            <li>接单：每天有一张瓷器订单</li>
+            <li>制作：取泥、塑形、雕刻、上色、烧制</li>
+            <li>交付：拿到评分与硬币，换更好的工位</li>
+          </ul>
+          <p>先不用记流程，进工坊后屏幕上永远只有一句「下一步」。</p>
+          <div class="dots-nav"><i class="on"></i><i></i><i></i></div>
+          <div class="intro-actions">
+            <button class="btn btn-main" id="enterShop">走进工坊</button>
+            <button class="btn btn-ghost">看瓷都介绍</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WORLD ============ -->
+    <section class="screen on" data-screen="world">
+      <div class="top">
+        <div class="brand">terra <small>古窑民俗</small></div>
+        <div class="mid"><span>第 1 单 / 3</span><div class="dots"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></div></div>
+        <div class="top-right">
+          <div class="coin"><b>¥</b>0</div>
+          <button class="tbtn">地图</button><button class="tbtn">工坊</button><button class="tbtn">菜单</button>
+        </div>
+      </div>
+      <div class="world">
+        <div class="stage">
+          <div class="diorama">
+          <svg class="iso" viewBox="0 0 640 420" aria-label="工坊场景">
+            <g opacity=".9">
+              <path d="M320 300 L560 210 L320 120 L80 210 Z" fill="#EADFC8" stroke="#D8CAB0"/>
+              <path d="M80 210 L320 300 L320 330 L80 240 Z" fill="#DCCFB4" stroke="#D8CAB0"/>
+              <path d="M560 210 L320 300 L320 330 L560 240 Z" fill="#CFC1A4" stroke="#D8CAB0"/>
+            </g>
+            <g stroke="#B9A88A" stroke-width="1.2" fill="#F6EEDD">
+              <path d="M320 300 L320 265 L296 255 L296 290 Z"/><path d="M296 255 L320 265 L344 255 L320 245 Z"/>
+              <path d="M330 288 L330 262 L310 254 L310 280 Z"/><path d="M310 254 L330 262 L350 254 L330 246 Z"/>
+            </g>
+            <g stroke="#A99060" stroke-width="1.2" fill="#FFFDF8">
+              <rect x="236" y="196" width="34" height="22" rx="3"/><rect x="386" y="210" width="30" height="20" rx="3"/>
+              <rect x="300" y="238" width="36" height="22" rx="3"/><rect x="196" y="222" width="26" height="18" rx="3"/>
+            </g>
+            <path d="M418 214 q6 -42 26 -46 q22 -4 26 44" fill="#F3D9C8" stroke="#D9B79E"/>
+            <text x="320" y="352" text-anchor="middle" font-size="11" fill="#A2937C">工坊小岛 · 自动取景到视口 70%</text>
+          </svg>
+          <div class="pin now" style="left:37.5%;top:59.5%"><b>① 取泥</b></div>
+          <div class="pin" style="left:46.9%;top:50%">塑形</div>
+          <div class="pin" style="left:58%;top:56%">雕刻</div>
+          <div class="pin" style="left:46.9%;top:69%">上色</div>
+          <div class="pin" style="left:70.6%;top:49.5%">窑炉</div>
+          <div class="pin lock" style="left:31%;top:66.5%">交付</div>
+          </div>
+          <div class="next">
+            <div class="k">下一步 · 第 1 步</div>
+            <h3>① 去取泥台领一块瓷泥</h3>
+            <p>每一单都从一整块白瓷泥开始。走到台前也可以按 F。</p>
+            <div class="row">
+              <button class="btn btn-main" id="goClay">前往取泥台</button>
+              <span class="hintkey">或按 W</span>
+            </div>
+          </div>
+          <div class="chip mobile">
+            <span class="thumb"></span><span>第 1 单</span><b>一抹青花罐</b><span class="goal">目标 80%</span>
+          </div>
+          <div class="pad mobile"><div class="stick"></div><button class="act">操作</button></div>
+        </div>
+        <aside class="rail">
+          <div class="ord"><div class="thumb">瓷</div>
+            <div><div class="t1">第 1 单 / 3</div><div class="t2">一抹青花罐</div></div>
+            <div class="goal">目标 80%</div></div>
+          <div class="ordtime">剩余 04:46 · 五分钟内 +20%</div>
+          <div class="steps">
+            <div class="now"><i></i>取泥</div><div><i></i>塑形</div><div><i></i>雕刻</div>
+            <div><i></i>上色</div><div><i></i>烧制</div>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn btn-main">查看订单要求</button>
+          <div class="rail-icons"><button>地图</button><button>升级</button><button>收藏</button><button>说明</button></div>
+        </aside>
+      </div>
+      <div class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 <kbd>F</kbd> 操作 <kbd>Esc</kbd> 返回 <span style="margin-left:auto">提示 8 秒后淡出</span></div>
+    </section>
+
+    <!-- ============ EDITOR ============ -->
+    <section class="screen" data-screen="editor">
+      <div class="ed-top">
+        <div class="flow"><span class="done">取泥</span><span class="done">塑形</span><span class="done">雕刻</span><span class="now">上色</span><span>烧制</span></div>
+        <div style="margin-left:auto;font-size:11px;color:#8A8377">已自动保存</div>
+        <button class="tbtn">×</button>
+      </div>
+      <div class="ed-body">
+        <div class="canvas">
+          <svg viewBox="0 0 100 120" style="width:min(46%,320px);opacity:.5"><path d="M38 16h24v9c0 4 2 6 6 10 8 8 12 18 12 30 0 20-14 32-30 32S20 85 20 65c0-12 4-22 12-30 4-4 6-6 6-10z" fill="#F2F6FC" stroke="#9FB7D4" stroke-width="1.6"/><rect x="20" y="52" width="60" height="13" fill="#CFDCEB" clip-path="inset(0 round 2px)"/></svg>
+          <div class="vase" style="position:absolute;bottom:12px;left:0;right:0;text-align:center">画布 · 作品占画布高 70%，进入即取景</div>
+          <div class="ref"><div class="ph">订单参考</div>参考图 · 常显</div>
+        </div>
+        <div>
+          <div class="card">
+            <h3>这一单要什么</h3>
+            <ul class="req">
+              <li><b>✓</b><span>圆润的罐身，肩部略收</span></li>
+              <li><b>✓</b><span>腰部一条宽蓝带，上下留白</span></li>
+              <li><b> </b><span>其余保持白瓷</span></li>
+            </ul>
+            <div class="rule">通过标准：提交后按 形状 + 上色 评分，满 80% 过关（本屏不显示分数）</div>
+            <div class="tools">
+              <div class="sw"><i style="background:#FFFDF8" class="sel"></i>白瓷<i style="background:#2B4C8C"></i>青花</div>
+              <div class="sld">工具大小<div class="track"><div class="knob"></div></div>5</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ed-foot">
+        <div class="l">拖动即可上色 · Ctrl+Z 撤销 · Esc 保存并离开</div>
+        <button class="btn btn-ghost">玩法说明</button>
+        <button class="btn btn-main" id="toPreview">保存并离开</button>
+      </div>
+    </section>
+
+    <!-- ============ PREVIEW ============ -->
+    <section class="screen" data-screen="preview">
+      <div class="top"><div class="brand">预览 <small>第 1 单</small></div>
+        <div class="top-right"><button class="tbtn">×</button></div></div>
+      <div class="panel">
+        <h2>提交前，自己看一眼</h2>
+        <div class="sub">按下面三条逐项对照——提交后才会评分，这一屏不显示任何分数。</div>
+        <div class="cmp">
+          <div class="box"><div class="ph">你的作品</div><div class="cap">你做的</div></div>
+          <div class="box"><div class="ph">订单参考</div><div class="cap">要做的</div></div>
+          <div class="box" style="text-align:left">
+            <ul class="check">
+              <li><b>✓</b><span>轮廓接近订单（对照边缘）</span></li>
+              <li><b>✓</b><span>蓝带在腰部、宽度一致</span></li>
+              <li><b>○</b><span>其余是否保持留白</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="foot-actions">
+          <button class="btn btn-ghost">回去再改</button>
+          <button class="btn btn-main" id="toResult">提交评分</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RESULT ============ -->
+    <section class="screen" data-screen="result">
+      <div class="top"><div class="brand">结算 <small>第 1 单</small></div>
+        <div class="top-right"><button class="tbtn">×</button></div></div>
+      <div class="panel">
+        <h2>还差 56.9%</h2>
+        <div class="sub">差异主要在造型：罐身上半部偏窄，蓝带位置偏低。</div>
+        <div class="cmp">
+          <div class="box"><div class="ph">你的作品</div><div class="cap">你做的 · 形状 21.8 / 上色 25.5</div></div>
+          <div class="box"><div class="ph">订单参考</div><div class="cap">要做的</div></div>
+          <div class="score"><div class="n">23.1%</div><div class="m">未通过 · 需 80% · 差 56.9%</div></div>
+        </div>
+        <div class="bars">
+          <div class="bar-row"><span>形状 · 权重 65%</span><div class="bar"><i class="low" style="width:22%"></i></div><span>21.8%<span class="tag">主要差距</span></span></div>
+          <div class="bar-row"><span>上色 · 权重 35%</span><div class="bar"><i style="width:26%"></i></div><span>25.5%</span></div>
+          <div class="diag">下次：上半部收窄约一成，把蓝带往上挪到腰部中央；低于 60 分不产生硬币，本次 0 币（进度已保留）。</div>
+        </div>
+        <div class="foot-actions">
+          <button class="btn btn-ghost">回工坊</button>
+          <button class="btn btn-main" id="again">重新塑形</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MAP ============ -->
+    <section class="screen" data-screen="map">
+      <div class="top">
+        <div class="brand">瓷都地图 <small>你的足迹</small></div>
+        <div class="top-right"><span class="foot-stat">已到访 <b>1</b> / 4 区</span><button class="tbtn">×</button></div>
+      </div>
+      <div class="map-wrap">
+        <div class="map-canvas">
+          <svg viewBox="0 0 660 420" aria-label="瓷都地图">
+            <rect x="0" y="0" width="660" height="420" fill="#F6F0E2"/>
+            <path d="M-10 250 C120 236 150 300 250 296 C360 292 380 214 470 224 C560 234 600 250 670 236" fill="none" stroke="#CFE0EC" stroke-width="22" opacity=".85"/>
+            <path d="M60 90 C170 60 300 96 380 70 C470 40 560 78 610 62" fill="none" stroke="#D9CBB0" stroke-width="3" stroke-dasharray="7 7"/>
+            <g fill="#EFE6D2" stroke="#D6C8AC">
+              <path d="M120 150 C150 110 230 112 250 150 C268 184 236 214 186 212 C140 210 96 186 120 150 Z"/>
+              <path d="M330 122 C378 100 448 116 456 158 C462 194 412 206 372 198 C336 190 300 152 330 122 Z"/>
+              <path d="M352 268 C392 248 456 258 460 292 C464 326 400 340 366 322 C336 306 320 284 352 268 Z"/>
+              <path d="M182 236 C224 220 268 236 270 266 C272 296 226 310 196 296 C170 284 156 250 182 236 Z"/>
+            </g>
+            <g font-size="12" fill="#5C554A">
+              <text x="368" y="166">陶溪川</text>
+              <text x="386" y="302">御窑厂</text>
+              <text x="212" y="272">三宝村</text>
+            </g>
+            <g stroke="#9FB7D4" stroke-width="1.4" fill="#FFFDF8">
+              <circle cx="252" cy="196" r="10"/><circle cx="470" cy="150" r="10"/>
+              <circle cx="452" cy="290" r="10"/><circle cx="252" cy="300" r="10"/>
+            </g>
+            <g fill="#B4442F"><circle cx="252" cy="196" r="4.5"/></g>
+            <text x="252" y="164" font-size="11" fill="#B4442F" text-anchor="middle">你在这里</text>
+            <text x="30" y="40" font-size="11" fill="#A2937C" letter-spacing="2">景德镇 · 手绘地图</text>
+          </svg>
+          <div class="pin now" style="left:38%;top:47%"><b>古窑民俗博览区</b></div>
+        </div>
+        <aside class="map-rail">
+          <div class="k" style="font-size:11px;letter-spacing:.14em;color:var(--blue)">当前所在</div>
+          <h3 style="margin:0;font:600 20px/1.3 'Songti SC',serif">古窑民俗博览区</h3>
+          <p style="margin:0;font-size:13px;color:var(--ink2);line-height:1.7">这里能学全 5 道工序。做完第一只罐子，才会解锁陶溪川。</p>
+          <div class="card" style="padding:11px 12px">
+            <div style="font-size:12px;color:var(--sub);margin-bottom:6px">本区进度 · 第 1 单 / 3</div>
+            <div class="steps" style="gap:5px">
+              <div class="now"><i></i>取泥</div><div><i></i>塑形</div><div><i></i>雕刻</div><div><i></i>上色</div><div><i></i>烧制</div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--sub)">🔒 陶溪川 · 御窑厂 · 三宝村：完成本区后开放</div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-main">去 · 古窑民俗博览区</button>
+            <button class="btn btn-ghost">返回当前工坊</button>
+            <button class="btn btn-ghost" style="border:0;color:var(--sub);height:36px">玩法说明与重播开场</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="legend">
+    <span><b>改了什么</b></span>
+    <span>① 场景自动取景，进场景不用再滚轮放大</span>
+    <span>② 世界里只有一个可点的「下一步」标牌</span>
+    <span>③ 工位钉写名字，只高亮一个</span>
+    <span>④ 右栏从 8 件事收成 订单 + 进度 + 1 个主按钮</span>
+    <span>⑤ 制作面板顶部步骤条 + 底部固定主按钮，参考图常显</span>
+    <span>⑥ 预览屏只给自查清单，不给分数</span>
+    <span>⑦ 结算首屏直接给标准、分项与一句可执行诊断</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  var frame = document.getElementById('frame');
+  function press(btns, key, val){
+    btns.forEach(function(b){ b.setAttribute('aria-pressed', b.dataset[key] === val ? 'true' : 'false'); });
+  }
+  document.querySelectorAll('#dev button').forEach(function(b){
+    b.addEventListener('click', function(){
+      frame.dataset.device = b.dataset.dev;
+      press(Array.prototype.slice.call(document.querySelectorAll('#dev button')), 'dev', b.dataset.dev);
+    });
+  });
+  function show(name){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.dataset.screen === name); });
+    press(Array.prototype.slice.call(document.querySelectorAll('#scr button')), 'scr', name);
+  }
+  document.querySelectorAll('#scr button').forEach(function(b){
+    b.addEventListener('click', function(){ show(b.dataset.scr); });
+  });
+  document.getElementById('enterShop').addEventListener('click', function(){ show('world'); });
+  document.getElementById('goClay').addEventListener('click', function(){ show('editor'); });
+  document.getElementById('toPreview').addEventListener('click', function(){ show('preview'); });
+  document.getElementById('toResult').addEventListener('click', function(){ show('result'); });
+  document.getElementById('again').addEventListener('click', function(){ show('world'); });
+})();
+</script>

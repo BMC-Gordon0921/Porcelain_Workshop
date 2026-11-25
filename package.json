@@ -1,6 +1,6 @@
 {
   "name": "terra-little-clay-workshop",
-  "version": "0.1.0",
+  "version": "1.1.8",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,8 @@
     "dev:minitool": "vite --config vite.minitool.config.js --host 127.0.0.1 --port 5175",
     "build:minitool": "node tools/minitool/build_minitool.mjs",
     "preview:minitool": "vite preview --config vite.minitool.config.js --host 127.0.0.1 --port 4173",
+    "font:round": "node tools/fonts/build.mjs",
+    "font:check": "node tools/fonts/check.mjs",
     "sim:minitool": "\"C:/Users/17038/.dsh/dsh-ops/npm-global/redapp.cmd\" dev --dir dist-minitool --env prod --agent"
   },
   "dependencies": {

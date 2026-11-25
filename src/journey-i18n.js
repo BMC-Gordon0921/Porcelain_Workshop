@@ -4,7 +4,7 @@ const steps=[
  ['Collect your first clay','Walk to the clay table, press F or the action button, and collect a white clay blank.'],
  ['Shape the clay edge','At the shaping table, drag along an edge to push or stretch the clay. Refine the outline before visiting the carving table.'],
  ['Carve away extra clay','At the carving table, remove a small piece outside the target outline. Keep the body intact; undo if you cut too much.'],
- ['Paint your first blue band','Choose cobalt blue at the painting table and draw a wide band across the middle. Use the reference to refine your work.'],
+ ['Paint your first glaze band','Choose the main glaze at the painting table and draw a wide band across the middle. Use the reference to refine your work.'],
  ['Keep the kiln fire steady','Start firing at the kiln. Hold Space or the bellows button to heat up, release to cool, and finish the 12-second firing.'],
  ['Deliver your first piece','Take your piece to the delivery counter. Reach 80% to complete order one. Teaching ends after this submission; failed work can be retried freely.'],
 ];

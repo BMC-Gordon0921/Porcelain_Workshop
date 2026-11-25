@@ -1790,3 +1790,28 @@ html[data-adapt][data-input=touch] #touch-controls .joystick {
   transform: translate(calc(0% - var(--joy-x, 0%)), var(--joy-y, 0%));
 }
 .joystick-position-preview::after { content: ''; position: absolute; right: 8px; bottom: 6px; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #577356; }
+/* 批3：手机顶栏收成一行（原来钱包独占一行，顶栏 94px） */
+html[data-phone][data-input=touch][data-layout=sm] .topbar{display:flex;align-items:center;gap:6px;height:44px;padding-block:0}
+html[data-phone][data-input=touch][data-layout=sm] .topbar .brand{position:static;flex:0 0 auto}
+html[data-phone][data-input=touch][data-layout=sm] .brand h1{font-size:18px}
+html[data-phone][data-input=touch][data-layout=sm] .brand-mark{width:24px;height:24px}
+html[data-phone][data-input=touch][data-layout=sm] .top-actions{flex:1 1 auto;flex-wrap:nowrap;justify-content:flex-end;gap:2px;margin-left:auto}
+html[data-phone][data-input=touch][data-layout=sm] .top-actions .wallet{width:auto;min-height:0;padding-left:0;margin-right:2px}
+html[data-phone][data-input=touch][data-layout=sm] .day-pill{display:none}
+html[data-phone] [data-panel=editor] .task-footer>span:not(.toolbar-label){display:none}
+html[data-phone] [data-panel=editor] .task-footer{flex-wrap:nowrap;gap:10px}
+/* 批3：手机端订单卡收成紧凑条，别盖住整个场景 */
+@media(max-width:760px){
+ html[data-phone] .commissions{top:calc(var(--mt-top-inset, 0px) + 50px);left:8px;right:8px;padding:8px 10px;max-height:none}
+ html[data-phone] .commissions .scene-path,
+ html[data-phone] .commissions .preset-path,
+ html[data-phone] .commissions .decal-goal,
+ html[data-phone] .commissions .collection-link{display:none}
+ html[data-phone] .commissions .reference-card{padding:8px 10px;gap:2px}
+ html[data-phone] .commissions .reference-card img,
+ html[data-phone] .commissions .reference-card p{display:none}
+ html[data-phone] .commissions .scene-heading h2{font-size:18px}
+}
+
+/* 批3：竖屏全屏壳里编辑器单列别把画布行拉满，工具行紧跟画布 */
+@media(max-width:760px){html[data-shell=full] [data-panel=editor] .editor-layout{grid-template-rows:auto auto;align-content:start}}

@@ -1,0 +1,11 @@
+import fs from 'fs';
+import {execSync} from 'child_process';
+const head=execSync('git show HEAD:src/challenge.css',{encoding:'utf8'});
+const cur=fs.readFileSync('src/challenge.css','utf8');
+console.log('head bytes',head.length,'lines',head.split('\n').length);
+console.log('cur bytes',cur.length,'lines',cur.split('\n').length);
+const hl=head.split('\n')[0], cl=cur.split('\n')[0];
+console.log('head l1 len',hl.length,'cur l1 len',cl.length);
+console.log('cur has reference-heading?',cur.includes('reference-heading'));
+console.log('missing tail sample:', JSON.stringify(hl.slice(cl.length, cl.length+80)));
+fs.writeFileSync('qa/audit/challenge_head.css',head);

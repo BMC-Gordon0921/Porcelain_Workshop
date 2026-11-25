@@ -1,0 +1,29 @@
+/* 新手聚光灯卡片：与教练纸卡同一套纸张与站色，但贴在上方按钮旁边。 */
+.tour-hole{position:fixed;z-index:70;border-radius:14px;pointer-events:none;
+ box-shadow:0 0 0 9999px color-mix(in srgb,var(--xz-ink) 52%,transparent),0 0 0 2px var(--xz-station);
+ transition:left .24s var(--xz-ease-out),top .24s var(--xz-ease-out),width .24s var(--xz-ease-out),height .24s var(--xz-ease-out);}
+.tour-card{position:fixed;z-index:71;width:min(340px,calc(100vw - 24px));padding:16px 18px 14px;
+ background-color:var(--xz-station-mist);background-image:var(--xz-grain);background-size:160px 160px;
+ border:1px solid var(--xz-station-line);border-radius:14px;box-shadow:var(--xz-shadow-1);
+ font-family:var(--xz-font-body);color:var(--xz-ink);animation:tour-in .26s var(--xz-ease-out);}
+@keyframes tour-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.tour-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.tour-count{font-family:var(--xz-font-display);font-size:12px;letter-spacing:.14em;color:var(--xz-station-mid);}
+.tour-dots{display:flex;gap:5px;}
+.tour-dots span{width:6px;height:6px;border-radius:50%;background:color-mix(in srgb,var(--xz-station) 26%,transparent);}
+.tour-dots span.now{background:var(--xz-station);}
+.tour-card h3{margin:10px 0 6px;font-family:var(--xz-font-display);font-size:19px;font-weight:600;line-height:1.3;}
+.tour-card p{margin:0 0 14px;font-size:13px;line-height:1.6;color:var(--xz-ink-3);}
+.tour-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.tour-actions .primary-button{min-height:44px;padding:0 18px;font-size:13px;}
+.tour-skip{min-height:44px;padding:0 6px;border:0;background:none;color:var(--xz-ink-3);font:inherit;font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.tour-skip:hover{color:var(--xz-ink);}
+body.tour-on #first-workshop-hint,body.tour-on #interaction,body.tour-on #mobile-guidance{display:none!important;}
+@media (max-width:760px){
+ .tour-card{padding:14px 15px 12px;}
+ .tour-card h3{font-size:18px;}
+}
+@media (prefers-reduced-motion:reduce){
+ .tour-hole{transition:none;}
+ .tour-card{animation:none;}
+}

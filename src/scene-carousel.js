@@ -62,7 +62,7 @@ export function createSceneCarousel(host,{onChange,initial=0,presentation='inter
   if(!interactive()&&last&&ms-last<1000/30)return;
   const dt=last?Math.min(.1,(ms-last)/1000):0;last=ms;
   let frozen=paused||world.loading||!!world.loadError;
-  if(demo.tick(dt,{paused:frozen,blocked:interactive()&&(hovered||focused||gesture.active)})){playback.show(active+1);present();frozen=true;}
+  if(demo.tick(dt,{paused:frozen,blocked:interactive()&&(hovered||focused||gesture.active)})){if(interactive()){playback.show(active+1);present();}frozen=true;}
   const frame=demo.frame,station=world.stations.find(s=>s.id===frame.step);world.setDemoFrame(reduced.matches?{...frame,x:station.approach[0],z:station.approach[1],time:0,moving:false}:frame);
   const stage=['clay','wheel','carve'].includes(frame.step)?frame.step:'paint';
   if(pieceStage!==stage){pieceStage=stage;state.piece.pixels=stage==='clay'?makeBlank():stage==='paint'?state.target.slice():state.target.map(v=>v?1:0);state.piece.revision++;}

@@ -58,7 +58,7 @@ const EN = {
   '到上色台完成彩绘': 'Paint it at the painting table',
   '到塑形台制作胚体': 'Shape the body at the wheel',
   '到取泥台领取瓷泥': 'Collect clay at the clay station',
-  '烧成后补绘青花': 'Add cobalt after firing',
+  '烧成后补绘釉色': 'Add glaze after firing',
   '烧制瓷器 · 按住空格鼓风': 'Fire porcelain · hold Space to stoke',
   '先到塑形台完成制胚，再来烧窑。': 'Shape the body first, then fire it.',
   '先到上色台完成彩绘，再来烧窑。': 'Paint the piece first, then fire it.',
@@ -214,7 +214,7 @@ const EN = {
   '景德镇瓷器之旅开场': 'Jingdezhen porcelain journey opening',
   '景德镇 · 瓷器之旅': 'Jingdezhen · A Porcelain Journey',
   '跳过动画': 'Skip',
-  '江西 · 景德镇': 'Jingdezhen, Jiangxi',
+  '文旅融合 · 江西 · 景德镇': 'Culture & tourism · Jingdezhen, Jiangxi',
   '景德镇': 'Jingdezhen',
   '千年瓷都 · 窑火不息': 'A thousand years of kiln fire',
   '展开游历地图': 'Unfold the journey map',
@@ -305,7 +305,7 @@ const EN = {
   '✂ 雕刻 · 刻刀': '✂ Carve · knife',
   '这里只能去除瓷泥。推压造型请去塑形台，绘制颜色请去上色台。':
     'Only cutting happens here. Press at the shaping bench, paint at the painting bench.',
-  '画上你的青花': 'Paint your blue-and-white',
+  '画上你的釉色': 'Paint your glaze',
   '选择颜色，在瓷器表面拖动画笔。上色只改变颜色，不改变轮廓。':
     'Pick a colour and drag the brush on the surface. Painting changes colour, not shape.',
   '● 上色 · 画笔': '● Paint · brush',
@@ -328,9 +328,14 @@ const EN = {
   '选择颜色': 'Pick a colour',
   '瓷白': 'Porcelain white',
   '钴蓝': 'Cobalt blue',
+  '赭石釉': 'Ochre glaze',
+  '影青釉': 'Shadow-blue glaze',
+  '朱砂釉': 'Cinnabar glaze',
+  '藕荷釉': 'Lotus-pink glaze',
 
   // ——— briefs & orders ———
-  '对照形状与蓝色装饰，自由制作。': 'Match the shape and blue decoration freely.',
+  '对照形状与釉色装饰，自由制作。': 'Match the shape and glaze decoration freely.',
+  '给瓷坯上色': 'Glaze the clay body',
   '达到 80% 通关': 'Reach 80% to pass',
   '未通过则重试本关，已获得硬币保留。': 'Below that you retry this level; earned coins are kept.',
   '累计 400 币购买贴画': 'Save 400 coins for the decal',
@@ -411,7 +416,7 @@ const EN = {
   // ——— decal shop & collection ———
   '场景 {} / 4 · 贴画工坊': 'Scene {} / 4 · decal workshop',
   '成品预览 · 拖动旋转': 'Finished preview · drag to rotate',
-  '参考图 {} · 按上传顺序': 'Reference {} · upload order',
+  '贴画纹样 {} · 环绕贴图': 'Decal pattern {} · wrap texture',
   '完成本场景三关，用 400 硬币购买贴画；亲手贴到白瓷碗上，开启下一场景。':
     'Clear this scene’s three levels, buy the decal for 400 coins, then apply it yourself to open the next scene.',
   '三关通过': 'Three levels cleared',
@@ -458,7 +463,12 @@ const EN = {
     'Exploration route · levels, coins and porcelain progress save automatically',
   '瓷都游历手记': 'Notes from the porcelain capital',
   '一件瓷器完成 · 新的一站启程': 'A piece finished · a new stop begins',
-  '返回当前站': 'Back to this stop',
+  '从这里开始': 'Start here',
+  '继续体验已通关的工坊？': 'Replay a finished workshop?',
+  '这间工坊的三单与贴花都已完成，收藏、金币与评分记录会保留；继续体验将以练习模式重做这件瓷碗。':
+    'Its three commissions and decal are already done. Collection, coins and scores stay; continuing restarts the bowl in practice mode.',
+  '先看看别处': 'Pick somewhere else',
+  '继续体验': 'Replay it',
   '重播地图开场 ↗': 'Replay the map opening ↗',
   '重新开启旅程': 'Restart the journey',
   '从第一间工坊重新开始？': 'Start over from the first workshop?',
@@ -480,26 +490,26 @@ const EN = {
   '按 F 开始操作': 'Press F to start',
 
   // ——— presets ———
-  '一抹青花罐': 'A Stroke of Blue Jar',
-  '把瓷泥做成圆润的罐子，在中间画一条宽宽的蓝色横带，其余保持白色。':
-    'Make a round jar and paint one broad blue band around the middle, leaving the rest white.',
+  '一抹水纹罐': 'A Jar of Ripples',
+  '把瓷泥做成圆润的罐子，在中间画一条宽宽的主色横带，其余保持白色。':
+    'Make a round jar and paint one broad band of the main glaze around the middle, leaving the rest white.',
   '横带保持平整，上下留出白色。': 'Keep the band level, with white above and below.',
-  '双环青花瓶': 'Double Ring Vase',
-  '做一个细高、短颈的白瓷瓶，在瓶身画两条宽蓝色横带。':
-    'Make a tall, slim vase with a short neck and paint two broad blue bands around it.',
+  '双环弦纹瓶': 'Double Ring Vase',
+  '做一个细高、短颈的白瓷瓶，在瓶身画两条宽主色横带。':
+    'Make a tall, slim vase with a short neck and paint two broad bands of the main glaze around it.',
   '两条横带中间留出清楚的白色间隔。': 'Leave a clean white gap between the two bands.',
-  '三点青花坛': 'Three Dot Jar',
-  '做一个宽肚瓷坛，在白色瓶身的中间画三个大蓝点。':
-    'Make a wide-bellied jar and paint three big blue dots across the middle.',
+  '三点苔痕坛': 'Three Moss Dots Jar',
+  '做一个宽肚瓷坛，在白色瓶身的中间画三个大主色圆点。':
+    'Make a wide-bellied jar and paint three big dots of the main glaze across the middle.',
   '用中等画笔，分别画出三个圆点。': 'Use a medium brush and paint three separate dots.',
-  '蓝沿瓷罐': 'Blue Rim Jar',
-  '把罐口做宽、底部收窄，再沿顶部画一圈宽蓝边。':
-    'Widen the mouth, narrow the base, then paint a thick blue rim.',
-  '只需要在宽罐口上画一条厚实的蓝边。': 'Just one generous blue band along the wide rim.',
-  '青带月光罐': 'Moon Jar with Blue Bands',
-  '做一个短颈的圆形月光罐，在瓶身画两条宽的竖向蓝带。':
-    'Make a round moon jar with a short neck and paint two wide vertical blue bands.',
-  '两条蓝带中间留出一条白色区域。': 'Keep a white strip between the two bands.',
+  '沿口瓷罐': 'Rimmed Porcelain Jar',
+  '把罐口做宽、底部收窄，再沿顶部画一圈宽主色边。':
+    'Widen the mouth, narrow the base, then paint a thick rim of the main glaze.',
+  '只需要在宽罐口上画一条厚实的主色边。': 'Just one generous band of the main glaze along the wide rim.',
+  '双带月光罐': 'Moon Jar with Twin Bands',
+  '做一个短颈的圆形月光罐，在瓶身画两条宽的竖向主色带。':
+    'Make a round moon jar with a short neck and paint two wide vertical bands of the main glaze.',
+  '两条主色带中间留出一条白色区域。': 'Keep a white strip between the two bands.',
 
   // ——— hero carousel ———
   '四件藏品 · 拖动旋转': 'Four keepsakes · drag to spin',

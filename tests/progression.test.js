@@ -111,3 +111,21 @@ test('normal firing uses 70% heat and cooling rates and legacy saves restore at 
  assert.equal(resumed.kiln.heat,fast.kiln.heat);
  assert.equal(resumed.kiln.remaining,fast.kiln.remaining);
 });
+
+test('从菜单重看教学：按现有进度挑步骤，不逼玩家重领瓷泥',()=>{
+ const c=new SculptureChallenge({tutorial:false});
+ assert.equal(c.restartTutorial().id,'move');
+ c.hasClay=true;
+ assert.equal(c.restartTutorial().id,'wheel');
+ c.shapeEdits=1;
+ assert.equal(c.restartTutorial().id,'paint');
+ c.piece.pixels[0]=2;
+ assert.equal(c.restartTutorial().id,'kiln');
+ c.fired=true;
+ assert.equal(c.restartTutorial().id,'serve');
+ assert.equal(c.tutorialStep.id,'serve');
+ assert.equal(c.tutorial.status,'active');
+ // 已有瓷泥时不会退回 move，玩家的进行中作品不会被重领冲掉
+ c.hasClay=true;
+ assert.notEqual(c.restartTutorial().id,'move');
+});

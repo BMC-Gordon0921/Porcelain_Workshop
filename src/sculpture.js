@@ -14,12 +14,17 @@ export const KILN_GRADES = {
 };
 export const PALETTE = [null, '#f2efe5', '#315fa9'];
 export const COLOR_NAMES = ['', '瓷白', '钴蓝'];
+// 站点釉色由 updateUI 写进调色板：像素只存色号索引，换色不影响评分。
+export function setGlaze(hex, name){
+ if(hex)PALETTE[2]=hex;
+ if(name)COLOR_NAMES[2]=name;
+}
 export const PRESETS = [
- {id:'band-pot',name:'一抹青花罐',customer:'Mabel',species:'rabbit',task:'把瓷泥做成圆润的罐子，在中间画一条宽宽的蓝色横带，其余保持白色。',hint:'横带保持平整，上下留出白色。'},
- {id:'tall-pot',name:'双环青花瓶',customer:'Bramble',species:'bear',task:'做一个细高、短颈的白瓷瓶，在瓶身画两条宽蓝色横带。',hint:'两条横带中间留出清楚的白色间隔。'},
- {id:'dot-jar',name:'三点青花坛',customer:'Clover',species:'cat',task:'做一个宽肚瓷坛，在白色瓶身的中间画三个大蓝点。',hint:'用中等画笔，分别画出三个圆点。'},
- {id:'rim-pot',name:'蓝沿瓷罐',customer:'Juniper',species:'bear',task:'把罐口做宽、底部收窄，再沿顶部画一圈宽蓝边。',hint:'只需要在宽罐口上画一条厚实的蓝边。'},
- {id:'moon-jar',name:'青带月光罐',customer:'Hazel',species:'rabbit',task:'做一个短颈的圆形月光罐，在瓶身画两条宽的竖向蓝带。',hint:'两条蓝带中间留出一条白色区域。'}
+ {id:'band-pot',name:'一抹水纹罐',customer:'Mabel',species:'rabbit',task:'把瓷泥做成圆润的罐子，在中间画一条宽宽的主色横带，其余保持白色。',hint:'横带保持平整，上下留出白色。'},
+ {id:'tall-pot',name:'双环弦纹瓶',customer:'Bramble',species:'bear',task:'做一个细高、短颈的白瓷瓶，在瓶身画两条宽主色横带。',hint:'两条横带中间留出清楚的白色间隔。'},
+ {id:'dot-jar',name:'三点苔痕坛',customer:'Clover',species:'cat',task:'做一个宽肚瓷坛，在白色瓶身的中间画三个大主色圆点。',hint:'用中等画笔，分别画出三个圆点。'},
+ {id:'rim-pot',name:'沿口瓷罐',customer:'Juniper',species:'bear',task:'把罐口做宽、底部收窄，再沿顶部画一圈宽主色边。',hint:'只需要在宽罐口上画一条厚实的主色边。'},
+ {id:'moon-jar',name:'双带月光罐',customer:'Hazel',species:'rabbit',task:'做一个短颈的圆形月光罐，在瓶身画两条宽的竖向主色带。',hint:'两条主色带中间留出一条白色区域。'}
 ];
 export const DESIGNS = Object.fromEntries(PRESETS.map(p=>[p.id,p]));
 export const CAMPAIGN_PRESETS = PRESETS.slice(0,ORDERS_PER_SCENE);
@@ -83,10 +88,10 @@ export function protectedCut(pixels,before,target,level){
 }
 export const pixelsEqual=(a,b)=>a.length===b.length&&a.every((v,i)=>v===b[i]);
 // Pick an exterior edge once, independently of the eventual drag direction.
-export function clayEdge(pixels,x,y,radius=18,tolerance=0){
+export function clayEdge(pixels,x,y,radius=18,tolerance=0,axis=null){
  if(!Number.isFinite(x+y+radius))return null;
  radius=Math.max(14,Math.min(26,radius))+tolerance;let best=null,distance=radius;
- for(const horizontal of [true,false]){
+ for(const horizontal of axis===null?[true,false]:[axis]){
   const cross=horizontal?y:x;
   const index=(a,b)=>horizontal?b*SIZE+a:a*SIZE+b;
   for(let row=Math.max(0,Math.floor(cross-radius));row<Math.min(SIZE,Math.ceil(cross+radius));row++){
@@ -104,7 +109,12 @@ export function pushClay(pixels,x0,y0,x1,y1,radius=18,grab=undefined,options={})
  if(!Number.isFinite(x0+y0+x1+y1+radius))return false;
  radius=Math.max(14,Math.min(26,radius));
  const dx=x1-x0,dy=y1-y0;if(Math.hypot(dx,dy)<.75)return false;
- grab=grab===undefined?clayEdge(pixels,x0,y0,radius):grab;if(!grab)return false;
+ // 抓取方向跟随主拖动方向：抓到水平边就只认水平拖动，抓到竖直边只认垂直拖动。
+ const wantsHorizontal=Math.abs(dx)>=Math.abs(dy);
+ if(grab&&grab.horizontal!==wantsHorizontal)grab=null;
+ // 任意位置都能起笔：先按拖动轴找近边，深按在瓷泥内部时放宽搜索，只移动手下那一带。
+ grab=grab||clayEdge(pixels,x0,y0,radius,5,wantsHorizontal)||clayEdge(pixels,x0,y0,radius,90,wantsHorizontal);
+ if(!grab)return false;
  const {horizontal,fromLeft}=grab,along=horizontal?grab.x:grab.y,cross=horizontal?grab.y:grab.x,rawDelta=horizontal?dx:dy,delta=options.target?Math.max(-28,Math.min(28,rawDelta)):rawDelta,before=pixels.slice();let changed=false;
  const index=(a,b)=>horizontal?b*SIZE+a:a*SIZE+b;
  // Compress/stretch whole bands of clay under a broad hand. Paint moves with the clay.
@@ -151,6 +161,9 @@ export class SculptureChallenge {
  constructor({tutorial=true}={}){this.tutorial=tutorial?freshTutorial():completedTutorial();this.scene=0;this.phase='levels';this.level=0;this.attempt=1;this.money=0;this.delivered=0;this.submissions=0;this.results=[];this.collection=[];this.workshopLevels=freshWorkshopLevels();this.shelf=[0,0,0,0];this.kiln=null;this.revision=0;this.newPiece();}
  get tutorialStep(){return tutorialInfo(this.tutorial);}
  advanceTutorial(action){this.tutorial=nextTutorialStep(this.tutorial,action);}
+ // 从菜单重看教学：手上还没有作品就回到第 1 步；已经有瓷泥/造型/彩绘/烧成，就从对应的下一步开始，
+ // 否则为了看第一步得先重做（甚至重领瓷泥），会把进行中的作品冲掉。
+ restartTutorial(){const step=!this.hasClay?'move':!this.hasShape?'wheel':!this.hasPaint?'paint':this.fired?'serve':'kiln';this.tutorial={status:'active',step};return this.tutorialStep;}
  allowsStation(station){return tutorialAllows(this.tutorial,station);}
  stationLevel(id){return this.workshopLevels[this.scene][id]||1;}
  upgradeStation(id,expectedLevel=this.stationLevel(id)){
@@ -175,10 +188,10 @@ export class SculptureChallenge {
   this.activeStation=null;this.setStoking(false);return true;
  }
  stationAccess(id){
-  const deny=(reason,next)=>({allowed:false,reason,next});
+  const deny=(reason,next,kind)=>({allowed:false,reason,next,kind});
   if(!WORKBENCH_IDS.includes(id))return deny('请选择一个工作台。',null);
   if(!this.canWork)return {allowed:true,reason:'查看本站进度',next:null};
-  if(!this.allowsStation(id))return deny(this.tutorialStep.copy,this.nextStation());
+  if(!this.allowsStation(id))return deny(this.tutorialStep.copy,this.nextStation(),'tutorial');
   if(id==='clay')return {allowed:true,reason:'领取瓷泥',next:id};
   if(!this.hasClay)return deny('请先到取泥台领取瓷泥。','clay');
   if(['wheel','carve','paint'].includes(id)){
@@ -221,12 +234,12 @@ export class SculptureChallenge {
  endStation(){this.finishStroke();this.activeStation=null;}
  beginStroke(){
   if(!this.hasClay||!this.activeStation)return false;this.finishStroke();
-  this.pendingStroke={pixels:this.piece.pixels.slice(),station:this.activeStation,edits:this.edits,kiln:this.kiln,kilnResult:this.kilnResult,tutorial:{...this.tutorial}};return true;
+  this.pendingStroke={pixels:this.piece.pixels.slice(),station:this.activeStation,edits:this.edits,shapeEdits:this.shapeEdits,kiln:this.kiln,kilnResult:this.kilnResult};return true;
  }
  finishStroke(){
   const before=this.pendingStroke;if(!before)return false;this.pendingStroke=null;
   if(pixelsEqual(before.pixels,this.piece.pixels)){this.edits=before.edits;this.kiln=before.kiln;this.kilnResult=before.kilnResult;this.fired=!!this.kilnResult;return false;}
-  this.undoStack.push({pixels:before.pixels,station:before.station,tutorial:before.tutorial});if(this.undoStack.length>50)this.undoStack.shift();this.redoStack=[];this.advanceTutorial(before.station);return true;
+  this.undoStack.push({pixels:before.pixels,station:before.station,edits:before.edits,shapeEdits:before.shapeEdits});if(this.undoStack.length>50)this.undoStack.shift();this.redoStack=[];this.advanceTutorial(before.station);return true;
  }
  invalidateFiring(){this.kiln=null;this.kilnResult=null;this.fired=false;}
  stroke(x0,y0,x1,y1,radius,tool,color,base=null,grab=undefined,options={}){
@@ -250,16 +263,14 @@ export class SculptureChallenge {
  }
  undo(){
   this.finishStroke();const last=this.undoStack.at(-1);if(!last||last.station!==this.activeStation||this.fired&&last.station!=='paint')return false;
-  this.redoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation,tutorial:{...this.tutorial}});
-  this.piece.pixels=this.undoStack.pop().pixels;this.piece.revision=++this.revision;
-  if(this.tutorialStep&&last.tutorial)this.tutorial={...last.tutorial};
+  this.redoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation,edits:this.edits,shapeEdits:this.shapeEdits});
+  const entry=this.undoStack.pop();this.piece.pixels=entry.pixels;this.piece.revision=++this.revision;this.edits=entry.edits;this.shapeEdits=entry.shapeEdits;
   if(last.station!=='paint')this.invalidateFiring();this.piece.stage=this.fired?'fired':this.hasPaint?'painted':this.hasShape?'shaped':'sculpting';return true;
  }
  redo(){
   this.finishStroke();const last=this.redoStack.at(-1);if(!last||last.station!==this.activeStation||this.fired&&last.station!=='paint')return false;
-  this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation,tutorial:{...this.tutorial}});
-  this.piece.pixels=this.redoStack.pop().pixels;this.piece.revision=++this.revision;
-  if(this.tutorialStep&&last.tutorial)this.tutorial={...last.tutorial};
+  this.undoStack.push({pixels:this.piece.pixels.slice(),station:this.activeStation,edits:this.edits,shapeEdits:this.shapeEdits});
+  const entry=this.redoStack.pop();this.piece.pixels=entry.pixels;this.piece.revision=++this.revision;this.edits=entry.edits;this.shapeEdits=entry.shapeEdits;
   if(last.station!=='paint')this.invalidateFiring();this.piece.stage=this.fired?'fired':this.hasPaint?'painted':this.hasShape?'shaped':'sculpting';return true;
  }
  restart(){if(!this.canWork)return false;this.attempt++;this.newPiece();if(this.tutorialStep)this.tutorial={status:'active',step:'clay'};return true;}

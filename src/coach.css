@@ -1,0 +1,52 @@
+/* 新手教练卡：纸感卡片 + 站点色细线，世界左下角；面板打开时收成顶部一条提示。 */
+#first-workshop-hint.coach-card{position:absolute;left:22px;bottom:74px;z-index:12;width:min(352px,calc(100vw - 44px));margin:0;padding:13px 16px 12px;border:1px solid var(--xz-station-line);border-radius:14px;background-color:var(--xz-station-mist);background-image:var(--xz-grain);background-blend-mode:multiply;color:var(--xz-ink);box-shadow:0 18px 44px color-mix(in srgb,var(--xz-ink) 16%,transparent),inset 0 1px 0 color-mix(in srgb,var(--xz-paper-0) 70%,transparent);animation:coach-in 260ms cubic-bezier(.22,.9,.3,1) both;pointer-events:auto}
+#first-workshop-hint.coach-card[hidden]{display:none}
+.coach-top{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.06em;color:var(--xz-ink-3)}
+.coach-count{font-variant-numeric:tabular-nums;color:var(--xz-station)}
+.coach-place{padding:1px 7px;border:1px solid var(--xz-station-line);border-radius:999px;color:var(--xz-station);background:color-mix(in srgb,var(--xz-station) 6%,var(--xz-paper-0))}
+.coach-skip{margin-left:auto;min-height:44px;padding:0 8px;border:0;background:none;color:var(--xz-ink-3);font:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.coach-skip:hover{color:var(--xz-station)}
+.coach-skip:focus-visible{outline:2px solid var(--xz-station);outline-offset:2px;border-radius:6px}
+.coach-rail{display:flex;gap:4px;margin:9px 0 10px;padding:0;list-style:none}
+.coach-rail li{flex:1;height:3px;border-radius:2px;background:color-mix(in srgb,var(--xz-station) 16%,var(--xz-line))}
+.coach-rail li.done{background:var(--xz-station)}
+.coach-rail li.now{background:var(--xz-station);box-shadow:0 0 0 3px color-mix(in srgb,var(--xz-station) 18%,transparent)}
+.coach-title{margin:0;font-family:var(--xz-font-title);font-size:20px;font-weight:500;line-height:1.32;color:var(--xz-ink)}
+.coach-copy{margin:6px 0 0;font-size:13px;line-height:1.72;color:var(--xz-ink-2)}
+.coach-goal{display:flex;gap:8px;align-items:baseline;margin:10px 0 0;padding-top:9px;border-top:1px dashed color-mix(in srgb,var(--xz-station) 28%,transparent);font-size:12px;line-height:1.6;color:var(--xz-ink-2)}
+.coach-goal span{flex:none;padding:1px 6px;border-radius:4px;background:color-mix(in srgb,var(--xz-station) 12%,var(--xz-paper-0));color:var(--xz-station);font-size:10px;letter-spacing:.08em}
+
+/* 面板里的一条提示：不挡画布，只在正文顶部占一行。 */
+.coach-strip{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:9px 12px;border:1px solid var(--xz-station-line);border-left-width:3px;border-radius:10px;background-color:var(--xz-station-mist);background-image:var(--xz-grain);background-blend-mode:multiply;animation:coach-in 220ms ease both}
+.coach-strip-count{flex:none;font-size:11px;font-variant-numeric:tabular-nums;color:var(--xz-station);letter-spacing:.04em}
+.coach-strip-text{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;min-width:0}
+.coach-strip-text b{font-family:var(--xz-font-title);font-size:14px;font-weight:500;color:var(--xz-ink)}
+.coach-strip-text span{font-size:12px;line-height:1.55;color:var(--xz-ink-2)}
+.coach-strip-skip{flex:none;margin-left:auto;min-height:44px;padding:0 6px;border:0;background:none;color:var(--xz-ink-3);font:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+/* 当前该动的地方：一圈站点色柔光，不盖内容。 */
+.coach-focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--xz-station) 30%,transparent) !important;border-radius:10px;animation:coach-pulse 1.8s ease-in-out infinite}
+.coach-focus.sculpt-canvas-wrap{border-radius:14px}
+
+@keyframes coach-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes coach-pulse{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--xz-station) 24%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--xz-station) 38%,transparent)}}
+
+@media (max-width:760px){
+ /* 小工具容器有一条按 layout 分档的 #first-workshop-hint 定位规则，特异性更高，这里用 #app 前缀压过它。 */
+ #app #first-workshop-hint.coach-card{left:12px;right:12px;bottom:calc(188px + env(safe-area-inset-bottom));width:auto;max-width:none;padding:11px 13px 10px}
+ .coach-title{font-size:17px}
+ .coach-copy{display:none}
+ .coach-goal{margin-top:8px;padding-top:7px;font-size:12px}
+ .coach-strip{padding:8px 10px;gap:8px}
+ .coach-strip-text b{font-size:13px}
+ .coach-strip-text span{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+ #first-workshop-hint.coach-card{animation:none}
+ .coach-strip{animation:none}
+ .coach-focus{animation:none}
+}
+
+/* 教练卡在场时停用世界里的 F 提示卡，避免两套引导叠在屏幕下方。 */
+body.coach-on #interaction,
+body.coach-on #mobile-guidance{display:none!important}

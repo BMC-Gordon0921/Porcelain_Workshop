@@ -1,0 +1,159 @@
+/* 新手重构覆盖层：只叠样式，不改旧表。加载顺序在 platform/minitool.css 之后。 */
+
+/* ---------- 1. 世界屏右栏：一屏只讲一件事 ---------- */
+aside.commissions{display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.commissions .scene-heading{order:0}
+.commissions .scene-path{order:1;margin:6px 0 2px}
+.commissions .reference-card{order:2}
+.commissions .quest-board{order:3}
+.commissions .decal-goal{order:4}
+.commissions .collection-link{order:5}
+
+.commissions .preset-path{display:none}
+.commissions .reference-card{
+ display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-areas:"img head" "img title";
+ gap:2px 10px;align-items:center;text-align:left;padding:8px 10px;margin:0;
+ border:1px solid #e3dacb;border-radius:12px;background:#fffdf8;color:#2a2723;
+}
+.commissions .reference-card>img{grid-area:img;width:64px;height:64px;object-fit:cover;border-radius:8px;margin:0}
+.commissions .reference-card .reference-heading{grid-area:head;display:flex;gap:10px;font-size:12px;color:#8b8271}
+.commissions .reference-card h3{grid-area:title;margin:0;font-family:var(--xz-font-display);font-size:17px;line-height:1.2}
+.commissions .reference-card>p,
+.commissions .reference-card .efficiency-indicator,
+.commissions .reference-card .reference-link{display:none}
+
+.quest-board{
+ display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;
+ background:color-mix(in srgb,var(--scene-accent) 7%,#fffdf8);
+ border:1px solid color-mix(in srgb,var(--scene-accent) 24%,#fff);
+}
+.quest-kicker{margin:0;font-size:11px;letter-spacing:2px;color:var(--scene-accent)}
+.quest-goal{margin:0;font-size:16px;line-height:1.45;color:#2a2723}
+.quest-cta{
+ display:flex;justify-content:space-between;align-items:center;min-height:46px;padding:0 14px;
+ border:0;border-radius:11px;background:var(--scene-accent);color:#fff;
+ font-size:15px;font-weight:600;cursor:pointer;
+ box-shadow:0 3px 0 color-mix(in srgb,var(--scene-accent),#000 22%);
+}
+.quest-cta:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--scene-accent),#000 22%)}
+.quest-cta span{font-size:17px}
+.quest-steps{display:flex;flex-direction:column;gap:5px;margin:2px 0 0;padding:0;list-style:none}
+.quest-steps li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#8b8271;line-height:1.3}
+.quest-steps li>span{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;
+ font-size:11px;border:1px solid #cfc6b6;background:#fff;color:#8b8271;flex:none}
+.quest-steps li.done{color:#6b7d5e}
+.quest-steps li.done>span{background:#7d9367;border-color:#7d9367;color:#fff}
+.quest-steps li.now{color:#2a2723;font-weight:600}
+.quest-steps li.now>span{background:var(--scene-accent);border-color:var(--scene-accent);color:#fff}
+
+.commissions .decal-goal{margin:6px 0 0;padding:8px;gap:8px;min-height:44px}
+.commissions .decal-goal>img{width:30px;height:36px}
+.commissions .decal-goal small{display:block;font-size:11px}
+.commissions .decal-goal b{font-size:13px;margin:2px 0 0}
+.commissions .decal-goal div>span,.commissions .decal-goal>span{display:none}
+.commissions .collection-link{padding:10px 4px;font-size:13px}
+
+/* ---------- 2. 世界里每个工位自己报名 ---------- */
+#station-labels .station-label{opacity:.78}
+#station-labels .station-label>span+span{display:inline!important;margin-left:5px;font-size:12px}
+#station-labels .station-label.near,
+#station-labels .station-label.next{opacity:1}
+#station-labels .station-label:not(.near):not(.next){opacity:.5}
+
+/* ---------- 3. 顶栏与页脚 ---------- */
+#map-button,#upgrades-button,#more-button,#settings-button{min-width:44px;min-height:44px}
+@media(min-width:761px){
+ }
+.bottom-bar{opacity:.55}
+.bottom-bar .prototype-tag{display:none}
+
+/* ---------- 4. 制作面板：步骤条 + 参考图常显 ---------- */
+.panel-steps{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;padding:0;list-style:none}
+.panel-steps li{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid #d9d0c0;color:#8b8271;background:#fffdf8}
+.panel-steps li.now{background:var(--scene-accent);border-color:var(--scene-accent);color:#fff;font-weight:600}
+.panel-steps li.done{color:#6b7d5e;border-color:#c3cdb4}
+
+[data-panel="editor"] .editor-layout{grid-template-columns:minmax(0,1fr) minmax(250px,320px);gap:16px;align-items:start}
+[data-panel="editor"] .sculpt-canvas-wrap{max-width:min(100%,42vh);margin:0 auto}
+[data-panel="editor"] .editor-reference{max-height:min(54vh,470px);overflow:auto;padding-right:4px}
+[data-panel="editor"] .sculpt-canvas-wrap canvas{max-width:100%;height:auto}
+[data-panel="editor"] .editor-views{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+[data-panel="editor"] .editor-views figure:first-child{display:block}
+[data-panel="editor"] .editor-views figcaption{font-size:11px;color:#8b8271}
+@media(min-width:1101px){[data-panel="editor"] .editor-more{display:block!important;margin-top:10px;border-radius:10px}}
+[data-panel="editor"] #save-editor{background:var(--scene-accent);color:#fff;min-height:46px;border:0}
+[data-panel="editor"] .task-action-row{gap:8px}
+[data-panel="editor"] .tool-row{position:sticky;bottom:0;z-index:3;background:#fbf7ee;padding:6px 0}
+[data-panel="upgrades"] .upgrade-detail canvas{max-height:140px}
+
+/* ---------- 5. 预览面板：自查清单，不给分 ---------- */
+.review-check{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:#fffdf8;border:1px solid #e3dacb}
+.review-check b{display:block;font-size:13px;letter-spacing:1px;color:#2a2723;margin-bottom:6px}
+.review-check ul{margin:0;padding-left:18px;font-size:13px;line-height:1.8;color:#5a5348}
+
+/* ---------- 6. 结算面板：标准一出场就看得见 ---------- */
+.result-explain{margin:14px 0 0;padding:14px;border-radius:12px;background:#fffdf8;border:1px solid #e3dacb}
+.explain-verdict{font-size:15px;font-weight:600;margin-bottom:8px}
+.explain-verdict.pass{color:#3f6b3f}
+.explain-verdict.fail{color:#b4442f}
+.explain-table{width:100%;border-collapse:collapse;font-size:13px}
+.explain-table th{font-weight:500;color:#8b8271;text-align:left;padding:4px 6px}
+.explain-table td{padding:5px 6px;border-top:1px solid #efe7d8}
+.explain-table tr.weak td{color:#b4442f;font-weight:600}
+.explain-diagnosis{margin:10px 0 0;font-size:13.5px;line-height:1.7;color:#2a2723}
+.explain-reward{margin:6px 0 0;font-size:13px;color:#5a5348}
+.explain-standard{margin:6px 0 0;font-size:12px;color:#8b8271}
+
+/* ---------- 7. 手机 ---------- */
+@media(max-width:760px){
+ aside.commissions{
+  display:flex!important;flex-direction:column;gap:6px;
+  top:76px;bottom:auto;max-height:38vh;overflow:auto;padding:0 6px 6px;
+ }
+ .commissions .reference-card{grid-template-columns:44px minmax(0,1fr);padding:6px 8px;min-height:52px}
+ .commissions .reference-card>img{width:44px;height:44px}
+ .commissions .reference-card h3{font-size:15px}
+ .commissions .reference-heading{font-size:11px}
+ .quest-board{padding:8px 10px;gap:6px}
+ .quest-goal{font-size:14px}
+ .quest-cta{min-height:48px;font-size:15px}
+ .quest-steps{flex-direction:row;flex-wrap:wrap;gap:4px 10px}
+ .quest-steps li{font-size:11px}
+ .quest-steps li>span{width:16px;height:16px}
+ .commissions .decal-goal,.commissions .collection-link{
+  min-height:44px;margin:0;padding:8px 10px;font-size:13px;
+ }
+ .commissions .decal-goal>img{display:none}
+ .commissions .collection-link{align-items:center}
+ [data-panel="editor"] .editor-layout{grid-template-columns:1fr}
+ [data-panel="editor"] .sculpt-canvas-wrap{max-width:100%}
+ [data-panel="editor"] .editor-views{display:none}
+ [data-panel="editor"] #task-body{display:flex;flex-direction:column;gap:8px}
+ [data-panel="editor"] .editor-layout{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+ [data-panel="editor"] .sculpt-canvas-wrap{max-height:40vh;overflow:hidden}
+ [data-panel="editor"] .sculpt-canvas-wrap canvas{max-height:40vh;width:auto}
+ [data-panel="editor"] .editor-reference{max-height:24vh;overflow:auto}
+ .panel-steps li{font-size:11px;padding:3px 8px}
+}
+
+/* ---------- 8. 矮屏（笔记本 / 横屏手机） ---------- */
+@media(max-height:760px) and (min-width:761px){
+ .commissions .reference-card>img{width:52px;height:52px}
+ .quest-board{padding:10px}
+ .quest-steps{gap:3px}
+ .quest-steps li{font-size:12px}
+}
+
+/* ---------- 9. 升级卡价格 · 开场主按钮 ---------- */
+.workbench-price{font-size:13px;font-weight:600;color:#8b8271}
+.workbench-price.affordable{color:#3f6b3f}
+.workbench-card.selected .workbench-price.affordable{color:#fff}
+.prologue-unfold.intro-primary{
+ background:var(--scene-accent);color:#fff;min-height:50px;padding:0 22px;
+ font-size:16px;font-weight:600;border:0;border-radius:12px;margin-right:10px;
+ box-shadow:0 4px 0 color-mix(in srgb,var(--scene-accent),#000 22%);
+}
+.prologue-unfold.intro-secondary{background:transparent;color:#5a5348;border:1px solid #d9d0c0}
+[data-panel="citymap"] .city-map-art{max-height:min(52vh,460px);max-width:min(100%,460px);margin:0 auto}
+[data-panel="citymap"] .city-map-art img{height:100%;width:100%;object-fit:contain}
+@media(max-width:760px){[data-panel="citymap"] .city-map-art{max-height:26vh;max-width:min(100%,26vh)}}

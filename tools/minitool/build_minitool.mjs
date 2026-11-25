@@ -69,12 +69,14 @@ async function main() {
   console.log('[4/6] 后处理 index.html');
   const htmlPath = join(DIST, 'index.html');
   let html = await readFile(htmlPath, 'utf8');
-  html = html.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/, '<script src="$1"></script>');
+  // vite 把入口放在 <head>（module 天然 defer）；去掉 type=module 后必须补 defer，
+  // 否则经典脚本在 <body> 解析前执行，取 #world 得到 null，整局初始化中断。
+  html = html.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/, '<script defer src="$1"></script>');
   html = html.replace(/<link rel="stylesheet" crossorigin href="([^"]+)">/, '<link rel="stylesheet" href="$1">');
   // vite 会把 favicon 的 PNG 原图打进来；小工具包里同一张图是 WebP
   html = html.replace('./assets/logo-mark.png', './assets/logo-mark.webp');
   if (!html.includes('models/manifest.js')) {
-    html = html.replace('<script src="./assets/app.js"></script>', '<script src="./models/manifest.js"></script>\n  <script src="./assets/app.js"></script>');
+    html = html.replace('<script defer src="./assets/app.js"></script>', '<script defer src="./models/manifest.js"></script>\n  <script defer src="./assets/app.js"></script>');
   }
   await writeFile(htmlPath, html, 'utf8');
   await rm(join(DIST, 'assets', 'logo-mark.png'), {force: true});

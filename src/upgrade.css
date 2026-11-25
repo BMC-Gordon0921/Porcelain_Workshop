@@ -15,8 +15,8 @@
 .hero-canvas.is-hover{cursor:pointer}
 .hero-caption{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);width:min(94%,430px);display:flex;gap:11px;align-items:flex-start;padding:11px 15px;border-radius:15px;background:#fbf8eeea;border:1px solid #e3ddc9;box-shadow:0 12px 34px #4d55401c;backdrop-filter:blur(7px);transition:transform .35s ease,background .35s ease}
 .hero-caption.is-hover{transform:translateX(-50%) translateY(-3px);background:#fffdf6f5}
-.hero-index{font-family:'Fraunces',Georgia,serif;font-size:22px;line-height:1;color:#a46c4f;padding-top:2px}
-.hero-caption b{display:block;font-family:Georgia,'Songti SC',serif;font-size:15px;font-weight:600;color:#2f4757}
+.hero-index{font-family:var(--xz-font-display);font-size:22px;line-height:1;color:#a46c4f;padding-top:2px}
+.hero-caption b{display:block;font-family:var(--xz-font-display);font-size:15px;font-weight:600;color:#2f4757}
 .hero-caption small{display:block;margin-top:3px;font-size:12px;letter-spacing:1.1px;color:#8b8574}
 .hero-caption p{margin-top:6px;font-size:12px;line-height:1.65;color:#6f7568}
 .hero-hint{position:absolute;right:6%;top:6%;font-size:12px;letter-spacing:1.6px;color:#9a9c8b;background:#fbf8eecc;border:1px solid #e2dcc9;border-radius:999px;padding:5px 11px}
@@ -33,7 +33,7 @@
 #kiln-needle.live line{stroke:#cf4f24}
 #kiln-needle.live circle{fill:#cf4f24}
 .kiln-readout{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
-.kiln-readout strong{display:block;font-family:'Fraunces',Georgia,serif;font-size:32px;font-weight:600;color:#7c4a2a;line-height:1}
+.kiln-readout strong{display:block;font-family:var(--xz-font-display);font-size:32px;font-weight:600;color:#7c4a2a;line-height:1}
 .kiln-readout strong small{font-size:13px;margin-left:1px}
 .kiln-readout span{display:block;margin-top:4px;font-size:12px;letter-spacing:2px;color:#9a7a52}
 .kiln-readout span.grade-perfect{color:#c2502a}

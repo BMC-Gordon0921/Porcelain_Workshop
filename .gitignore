@@ -106,4 +106,9 @@ dist-probe/
 minitool/gen/
 tools/minitool/probe/assets/tone.mp3
 tools/minitool/probe/assets/tone.wav
+# 圆体子集重建时的原始 17 MB TTF 与 npm pack 包（由 npm run font:round 重新拉取）
+tools/fonts/.cache/
 terra-cover-3x4.png
+
+# ── 11. 本地 agent 状态（灵枢会话、插件缓存）──────────────────────────────
+.dsh/
