@@ -13,6 +13,9 @@ const cache = new Map();
 const queue = new Map();
 let tool = null;
 let mode = MINITOOL ? 'memory' : 'localStorage';
+// 小工具产物被部署到普通网站（没有 window.xhs 容器桥）时回退浏览器存储，
+// 否则 memory 态每次刷新都会丢档。容器内桥一定存在，所以不会在容器里误用 localStorage。
+let browserFallback = false;
 let flushTimer = 0;
 
 const FLUSH_DELAY = 600;
@@ -33,10 +36,26 @@ function parseStored(data) {
   return data;
 }
 
+function browserStorageUsable() {
+  try {
+    window.localStorage.setItem('__terra_probe__', '1');
+    window.localStorage.removeItem('__terra_probe__');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function initStorage(keys) {
   if (!MINITOOL) return mode;
   tool = resolveTool();
-  if (!tool) return mode;
+  if (!tool) {
+    if (browserStorageUsable()) {
+      browserFallback = true;
+      mode = 'localStorage';
+    }
+    return mode;
+  }
   mode = 'miniTool';
   await Promise.all(keys.map(async key => {
     try {
@@ -53,7 +72,7 @@ export function storageMode() {
 }
 
 export function readStorage(key) {
-  if (!MINITOOL) {
+  if (!MINITOOL || browserFallback) {
     try {
       const value = window.localStorage.getItem(key);
       if (value !== null) return value;
@@ -87,7 +106,7 @@ export function flushStorage() {
 
 export function writeStorage(key, value) {
   const text = String(value);
-  if (!MINITOOL) {
+  if (!MINITOOL || browserFallback) {
     try {
       window.localStorage.setItem(key, text);
     } catch {}
@@ -110,7 +129,7 @@ export function writeStorage(key, value) {
 export function removeStorage(key) {
   cache.delete(key);
   queue.delete(key);
-  if (!MINITOOL) {
+  if (!MINITOOL || browserFallback) {
     try {
       window.localStorage.removeItem(key);
     } catch {}
